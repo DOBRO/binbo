@@ -294,7 +294,7 @@ magic_index = ((occupied & mask) * magic_number) >> shift;
 ----
 
 in Erlang:
-[source]
+[source,erlang]
 ----
 MagicIndex = (((Occupied band Mask) * MagicNumber) bsr Shift).
 ----
