@@ -1,0 +1,428 @@
+= Binbo
+
+Binbo is a Chess representation written in pure Erlang using https://www.chessprogramming.org/Bitboards[Bitboards]. It is basically aimed to be used on game servers where people play chess online.
+
+It's called `Binbo` because its ground is a **bin**ary **bo**ard containing only zeros and ones (`0` and `1`) since this is the main meaning of Bitboards as an internal chessboard representation.
+
+Binbo also uses the https://www.chessprogramming.org/Magic_Bitboards[Magic Bitboards] approach for a **blazing fast** move generation of sliding pieces (rook, bishop, and queen).
+
+**Note:** it's not a chess engine but it could be a good starting point for it. It can play the role of a core (regarding move generation and validation) for multiple chess engines running on distributed Erlang nodes, since Binbo is an OTP application itself.
+
+== Features
+
+* Blazing fast move generation and validation.
+* No bottlenecks. Every game is an Erlang process (`gen_server`) with its own game state.
+* Ability to create as many concurrent games as many Erlang processes allowed in VM.
+* Unicode chess symbols support for the board visualization right in Erlang shell: +
+&#9817;{nbsp}&#9816;{nbsp}&#9815;{nbsp}&#9814;{nbsp}&#9813;{nbsp}&#9812;{nbsp}{nbsp}{nbsp}{nbsp}&#9823;{nbsp}&#9822;{nbsp}&#9821;{nbsp}&#9820;{nbsp}&#9819;{nbsp}&#9818;
+* Ready for use on game servers.
+
+== Requirements
+
+** https://www.erlang.org/[Erlang/OTP] 19.0 or higher.
+** https://www.rebar3.org/[rebar3]
+
+== Quick start
+
+Run `make shell` or `rebar3 shell` and then:
+
+[source,erlang]
+----
+%% Start Binbo application first:
+binbo:start().
+
+%% Start new process for the game:
+{ok, Pid} = binbo:new_server().
+
+%% Start new game in the process:
+binbo:new_game(Pid).
+
+%% Or start new game with a given FEN:
+binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>).
+
+%% Look at the board with ascii or unicode pieces:
+binbo:print_board(Pid).
+binbo:print_board(Pid, [unicode]).
+
+%% Make move for White and Black:
+binbo:move(Pid, <<"e2e4">>).
+binbo:move(Pid, <<"e7e5">>).
+
+%% Have a look at the board again:
+binbo:print_board(Pid).
+binbo:print_board(Pid, [unicode]).
+----
+
+== Interface
+
+There are three steps to be done before making game moves:
+
+. Start Binbo application.
+. Create process for the game.
+. Initialize game state in the process.
+
+**Note:** process creation and game initialization are separated for the following reason: since Binbo is aimed to handle a number of concurrent games, the game process should be started as quick as possible leaving the http://erlang.org/doc/design_principles/sup_princ.html[supervisor] doing the same job for another game. It's important for high-load systems where game creation is very frequent event.
+
+=== Starting application
+
+To start Binbo, call:
+
+[source,erlang]
+----
+binbo:start().
+----
+
+=== Creating game process
+
+[source,erlang]
+----
+binbo:new_server() -> {ok, pid()}.
+----
+
+So, to start one or more game processes:
+
+[source,erlang]
+----
+{ok, Pid1} = binbo:new_server(),
+{ok, Pid2} = binbo:new_server(),
+{ok, Pid3} = binbo:new_server().
+----
+
+=== Initializing new game
+
+[source,erlang]
+----
+binbo:new_game(Pid) -> {ok, GameStatus} | {error, Reason}.
+
+binbo:new_game(Pid, Fen) -> {ok, GameStatus} | {error, Reason}.
+----
+
+where:
+
+* `Pid` is the `pid` of the process where the game is to be initialized;
+* `Fen` (`string()` or `binary()`) is the https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation[Forsyth–Edwards Notation] (FEN).
+
+It is possible to reinitilize game in the same process. For example:
+
+[source,erlang]
+----
+binbo:new_game(Pid),
+binbo:new_game(Pid, Fen2),
+binbo:new_game(Pid, Fen3).
+----
+
+
+**Example:**
+
+[source,erlang]
+----
+%% In Erlang shell.
+
+> {ok, Pid} = binbo:new_server().
+{ok,<0.185.0>}
+
+% New game from the starting position:
+> binbo:new_game(Pid).
+{ok,continue}
+
+% New game with the given FEN:
+> binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1">>).
+{ok,continue}
+----
+
+=== Making moves
+
+==== API
+
+[source,erlang]
+----
+binbo:move(Pid, Move) -> {ok, GameStatus} | {error, Reason}.
+----
+
+where:
+
+* `Pid` is the pid of the game process;
+* `Move` is of `binary()` or `string()` type.
+
+
+**Examples:**
+
+[source,erlang]
+----
+%% In Erlang shell.
+
+% New game from the starting position:
+> binbo:new_game(Pid).
+{ok,continue}
+
+% Start making moves
+> binbo:move(Pid, <<"e2e4">>). % e4
+{ok,continue}
+
+> binbo:move(Pid, <<"e7e5">>). % e5
+{ok,continue}
+
+> binbo:move(Pid, <<"f1c4">>). % Bc4
+{ok,continue}
+
+> binbo:move(Pid, <<"d7d6">>). % d6
+{ok,continue}
+
+> binbo:move(Pid, <<"d1f3">>). % Qf3
+{ok,continue}
+
+> binbo:move(Pid, <<"b8c6">>). % Nc6
+{ok,continue}
+
+% And here is checkmate!
+> binbo:move(Pid, <<"f3f7">>). % Qf7#
+{ok,checkmate}
+----
+
+==== Castling
+
+Binbo recognizes https://en.wikipedia.org/wiki/Castling[castling] when:
+
+* White king moves from `E1` to `G1` (`O-O`);
+* White king moves from `E1` to `C1` (`O-O-O`);
+* Black king moves from `E8` to `G8` (`O-O`);
+* Black king moves from `E8` to `C8` (`O-O-O`).
+
+Binbo also checks whether castling allowed or not acording to the chess rules.
+
+**Castling examples:**
+[source,erlang]
+----
+% White castling kingside
+binbo:move(Pid, <<"e1g1">>).
+
+% White castling queenside
+binbo:move(Pid, <<"e1c1">>).
+
+% Black castling kingside
+binbo:move(Pid, <<"e8g8">>).
+
+% Black castling queenside
+binbo:move(Pid, <<"e8c8">>).
+----
+
+==== Promotion
+
+Binbo recognizes https://en.wikipedia.org/wiki/Promotion_(chess)[promotion] when:
+
+* White pawn moves from square of `rank 7` to square of `rank 8`;
+* Black pawn moves from square of `rank 2` to square of `rank 1`.
+
+**Promotion examples:**
+
+[source,erlang]
+----
+% White pawn promoted to Queen:
+binbo:move(Pid, <<"a7a8q">>).
+% or just:
+binbo:move(Pid, <<"a7a8">>).
+
+% White pawn promoted to Knight:
+binbo:move(Pid, <<"a7a8n">>).
+
+% Black pawn promoted to Queen:
+binbo:move(Pid, <<"a2a1q">>).
+% or just:
+binbo:move(Pid, <<"a2a1">>).
+
+% Black pawn promoted to Knight:
+binbo:move(Pid, <<"a2a1n">>).
+----
+
+==== En passant
+
+Binbo also recognizes the https://en.wikipedia.org/wiki/En_passant[en passant capture] in strict accordance with the chess rules.
+
+=== Getting FEN
+
+[source,erlang]
+----
+binbo:get_fen(Pid) -> {ok, Fen}.
+----
+
+**Example:**
+
+[source,erlang]
+----
+> binbo:get_fen(Pid).
+{ok, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>}.
+----
+
+
+=== Board visualization
+
+[source,erlang]
+----
+binbo:print_board(Pid) -> ok.
+binbo:print_board(Pid, [unicode|ascii|flip]) -> ok.
+----
+
+You may want to see the current position right in Elang shell. To do it, call:
+[source,erlang]
+----
+% With ascii pieces:
+binbo:print_board(Pid).
+
+% With unicode pieces:
+binbo:print_board(Pid, [unicode]).
+
+% Flipped board:
+binbo:print_board(Pid, [flip]).
+binbo:print_board(Pid, [unicode, flip]).
+----
+
+
+== Binbo and Magic Bitboards
+
+As mentioned above, Binbo uses https://www.chessprogramming.org/Magic_Bitboards[Magic Bitboards], the fastest solution for move generation of sliding pieces
+(rook, bishop, and queen). Good explanations of this aproach can also be found https://stackoverflow.com/questions/16925204/sliding-move-generation-using-magic-bitboard/30862064#30862064[here]
+and http://vicki-chess.blogspot.com/2013/04/magics.html[here].
+
+The main problem is to find the index which is then used to lookup legal moves
+of sliding pieces in a preinitialized move database.
+The formula for the index is:
+
+in C/C++:
+[source]
+----
+magic_index = ((occupied & mask) * magic_number) >> shift;
+----
+
+in Erlang:
+[source]
+----
+MagicIndex = (((Occupied band Mask) * MagicNumber) bsr Shift).
+----
+
+where:
+
+* `Occupied` is the bitboard of all pieces.
+* `Mask` is the attack mask of a piece for a given square.
+* `MagicNumber` is the magic number, see &quot;https://www.chessprogramming.org/Looking_for_Magics[Looking for Magics]&quot;.
+* `Shift = (64 - Bits)`, where `Bits` is the number of bits corresponding to attack mask of a given square.
+
+All values for magic numbers and shifts are precalculated before and stored in `binbo_magic.hrl`.
+
+To be accurate, Binbo uses https://www.chessprogramming.org/Magic_Bitboards#Fancy[Fancy Magic Bitboards].
+It means that all moves are stored in a table of its own (individual) size for each square.
+In C/C++ such tables are actually two-dimensional arrays and any move can be accessed by
+a simple lookup:
+
+[source]
+----
+move = global_move_table[square][magic_index]
+----
+
+If detailed:
+[source]
+----
+moves_from = global_move_table[square];
+move = moves_from[magic_index];
+----
+
+The size of `moves_from` table depends on piece and square where it is placed on. For example:
+
+* for rook on `A1` the size of `moves_from` is `4096` (2^12 = 4096, 12 bits requred for the attack mask);
+* for bishop on `A1` it is `64` (2^6 = 64, 6 bits requred for the attack mask).
+
+There are no two-dimensional arrays in Erlang, and no global variables which could help us
+to get the fast access to the move tables **from everywhere**.
+
+So, how does Binbo beat this? Well, it's simple :&#41;.
+
+Erlang gives us the power of tuples and maps with their blazing fast lookup of elements/values by their index/key.
+
+Since the number of squares on the chessboard is the constant value (it's always **64**, right?),
+our `global_move_table` can be constructed as a tuple of 64 elements, and each element of this tuple
+is a map containing the key-value association as `MagicIndex =&gt; Moves`.
+
+If detailed, for moves:
+
+[source,erlang]
+----
+GlobalMovesTable = { MoveMap1, ..., MoveMap64 }
+----
+
+where:
+
+[source,erlang]
+----
+MoveMap1  = #{
+  MagicIndex_1_1 => Moves_1_1,
+  ...
+  MagicIndex_1_K => Moves_1_K
+},
+MoveMap64 = #{
+  MagicIndex_64_1 => Moves_64_1, ...
+  ...
+  MagicIndex_64_N => Moves_64_N
+},
+----
+
+and then we lookup legal moves from a square, say, `E4` (29th element of the tuple):
+
+[source,erlang]
+----
+E4 = 29,
+MoveMapE4   = erlang:element(E4, GlobalMovesTable),
+MovesFromE4 = maps:get(MagicIndex, MovesMapE4).
+----
+
+To calculate magic index we also need the attack mask for a given square.
+Every attack mask generated is stored in a tuple of 64 elements:
+
+[source,erlang]
+----
+GlobalMaskTable = {Mask1, Mask2, ..., Mask64}
+----
+
+where `Mask1`, `Mask2`, ..., `Mask64` are bitboards (integers).
+
+Finally, if we need to get all moves from `E4`:
+
+[source,erlang]
+----
+E4 = 29,
+Mask = erlang:element(E4, GlobalMaskTable),
+MagicIndex = ((Occupied band Mask) * MagicNumber) bsr Shift,
+MoveMapE4   = erlang:element(E4, GlobalMovesTable),
+MovesFromE4 = maps:get(MagicIndex, MovesMapE4).
+----
+
+Next, no global variables? We make them global!
+
+How do we get the fastest access to the move tables and to the atack masks **from everywhere**?
+ETS? No! Using ETS as a storage for static terms we get the overhead due to extra data copying during lookup.
+
+And now we are coming to the fastest solution.
+
+When Binbo starts up, all move tables are initialized.
+Once these tables (tuples, actually) initialized, they are "injected" into **dynamically generated
+modules compiled at Binbo start**. Then, to get the values, we just call a getter function
+(`binbo_global:get/1`) with the argument as the name of the corresponding dynamic module.
+
+This awesome trick is used in MochiWeb library, see module https://github.com/mochi/mochiweb/blob/master/src/mochiglobal.erl[mochiglobal].
+
+Using http://erlang.org/doc/man/persistent_term.html[persistent_term] (since OTP 21.2) for storing static data is also a good idea.
+But it doesn't seem to be a better way for the following reason with respect to dynamic modules.
+When Binbo stops, it gets them **unloaded** as they are not necessary anymore.
+It should do the similar things for `persistent_term` data, say, delete all unused terms to free memory.
+In this case we run into the issue regarding scanning the heaps in all processes.
+
+So, using `global` dynamic modules with large static data seems to be more reasonable in spite of that fact that it significantly slows down the application startup due to the run-time compilation of these modules.
+
+== To be done
+
+There are some chess rules that Binbo does not detect yet (regarding a draw):
+
+* https://en.wikipedia.org/wiki/Threefold_repetition[Threefold repetition]
+* Immediate draw when (insufficient material):
+** king versus king;
+** king and bishop versus king;
+** king and knight versus king;
+** king and bishop versus king and bishop with the bishops on the same color.

@@ -1,0 +1,11 @@
+{application, binbo, [
+	{description, "Chess representation using Bitboards"},
+	{vsn, "0.0.1"},
+	{modules, []},
+	{registered, [binbo_sup]},
+	{applications, [kernel, stdlib, compiler, syntax_tools, uef]},
+    {mod, {binbo_app, []}},
+	{env, []},
+	{licenses, ["Apache-2.0"]},
+	{links, [{"Github", "https://github.com/DOBRO/binbo"}]}
+]}.

@@ -1,0 +1,4 @@
+[{<<"uef">>,
+  {git,"https://github.com/DOBRO/uef-lib.git",
+       {ref,"7d57a6691be20fa60738ddf06125a56bee6f9f92"}},
+  0}].
