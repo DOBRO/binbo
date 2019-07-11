@@ -62,7 +62,11 @@
 -type game_status_checkmate() :: ?GAME_STATUS_CHECKMATE.
 -type game_draw_stalemate() :: ?GAME_STATUS_DRAW_STALEMATE.
 -type game_draw_rule50() :: ?GAME_STATUS_DRAW_RULE50.
--type why_draw() :: game_draw_stalemate() | game_draw_rule50() | {manual, term()}.
+-type game_draw_material() :: ?GAME_STATUS_DRAW_MATERIAL.
+-type why_draw() :: game_draw_stalemate()
+				| game_draw_rule50()
+				| game_draw_material()
+				| {manual, term()}.
 -type game_status_draw() :: {draw, why_draw()}.
 -type game_over_status() :: game_status_checkmate() | game_status_draw().
 -type game_status() :: game_status_inprogress() | game_over_status().
@@ -150,17 +154,72 @@ set_sidetomove(Color, Game) ->
 get_status(Game) ->
 	maps:get(?GAME_KEY_STATUS, Game).
 
-%% maybe_rule50/1
+%% is_rule50/1
 %% https://en.wikipedia.org/wiki/Fifty-move_rule
--spec maybe_rule50(bb_game()) -> bb_game().
-maybe_rule50(Game) ->
+-spec is_rule50(bb_game()) -> boolean().
+is_rule50(Game) ->
 	case (get_halfmove(Game) < 50) of
 		true  ->
-			Game;
+			false;
 		false ->
 			case (get_fullmove(Game) < 75) of
-				true  -> Game;
-				false -> set_status_draw(?GAME_STATUS_DRAW_RULE50, Game)
+				true  -> false;
+				false -> true
+			end
+	end.
+
+%% is_k_vs_k/2
+%% Returns true when:
+%% King versus King.
+-spec is_k_vs_k(bb(), bb()) -> boolean().
+is_k_vs_k(Kings, AllPieces) ->
+	(AllPieces bxor Kings) =:= ?EMPTY_BB.
+
+%% is_kb_vs_k/2
+%% Returns true when:
+%% King and Bishop versus King.
+-spec is_kb_vs_k(bb(), bb(), bb_game()) -> boolean().
+is_kb_vs_k(Kings, AllPieces, Game) ->
+	AllBishops = white_bishops_bb(Game) bor black_bishops_bb(Game),
+	(((Kings bor AllBishops) bxor AllPieces) =:= ?EMPTY_BB)
+	andalso
+	uef_num:popcount(AllBishops) =:= 1.
+
+%% is_kn_vs_k/2
+%% Returns true when:
+%% King and Knight versus King
+-spec is_kn_vs_k(bb(), bb(), bb_game()) -> boolean().
+is_kn_vs_k(Kings, AllPieces, Game) ->
+	AllKnights = white_knights_bb(Game) bor black_knights_bb(Game),
+	(((Kings bor AllKnights) bxor AllPieces) =:= ?EMPTY_BB)
+	andalso
+	uef_num:popcount(AllKnights) =:= 1.
+
+
+%% is_insufficient_material/1
+-spec is_insufficient_material(bb_game()) -> boolean().
+is_insufficient_material(Game) ->
+	WKing = white_king_bb(Game),
+	BKing = black_king_bb(Game),
+	Kings = WKing bor BKing,
+	AllPieces = all_pieces_bb(Game),
+	is_k_vs_k(Kings, AllPieces)          % King versus King
+	orelse
+	is_kb_vs_k(Kings, AllPieces, Game)   % King and Bishop versus King
+	orelse
+	is_kn_vs_k(Kings, AllPieces, Game).  % King and Knight versus King
+
+
+%% maybe_draw/1
+-spec maybe_draw(bb_game()) -> false | {true, game_draw_rule50() | game_draw_material()}.
+maybe_draw(Game) ->
+	case is_rule50(Game) of
+		true  ->
+			{true, ?GAME_STATUS_DRAW_RULE50};
+		false ->
+			case is_insufficient_material(Game) of
+				true  -> {true, ?GAME_STATUS_DRAW_MATERIAL};
+				false -> false
 			end
 	end.
 
@@ -169,7 +228,10 @@ maybe_rule50(Game) ->
 with_status(Game, HasValidMoves, IsCheck) ->
 	case HasValidMoves of
 		true  ->
-			maybe_rule50(Game);
+			case maybe_draw(Game) of
+				false           -> Game;
+				{true, WhyDraw} -> set_status_draw(WhyDraw, Game)
+			end;
 		false ->
 			case IsCheck of
 				true  -> set_status_checkmate(Game);

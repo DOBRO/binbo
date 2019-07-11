@@ -458,11 +458,8 @@ So, using `global` dynamic modules with large static data seems to be more reaso
 
 == To be done
 
-There are some chess rules that Binbo does not detect yet (regarding a draw):
+There are two chess rules that Binbo does not detect yet (regarding a draw):
 
 * https://en.wikipedia.org/wiki/Threefold_repetition[Threefold repetition]
 * Immediate draw when (insufficient material):
-** king versus king;
-** king and bishop versus king;
-** king and knight versus king;
 ** king and bishop versus king and bishop with the bishops on the same color.

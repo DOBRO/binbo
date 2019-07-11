@@ -58,6 +58,8 @@
 -define(GAME_STATUS_CHECKMATE,      checkmate).
 -define(GAME_STATUS_DRAW_STALEMATE, stalemate).
 -define(GAME_STATUS_DRAW_RULE50,    rule50).
+-define(GAME_STATUS_DRAW_MATERIAL,  insufficient_material).
+
 
 %%%------------------------------------------------------------------------------
 %%%   Helper functions
