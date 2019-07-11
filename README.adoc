@@ -16,6 +16,8 @@ image::https://user-images.githubusercontent.com/296845/61051652-32ba6400-a3f2-1
 
 toc::[]
 
+'''
+
 == Features
 
 * Blazing fast move generation and validation.
