@@ -276,6 +276,36 @@ binbo:print_board(Pid, [flip]).
 binbo:print_board(Pid, [unicode, flip]).
 ----
 
+=== Setting a draw
+
+It is possible to set a draw via API:
+
+[source,erlang]
+----
+binbo:game_draw(Pid) -> ok | {error, Reason}.
+binbo:game_draw(Pid, WhyDraw) -> ok | {error, Reason}.
+----
+
+where:
+
+* `Pid` is the pid of the game process;
+* `WhyDraw` is the reason why a draw is to be set.
+
+Calling `binbo:game_draw(Pid)` is the same as: `binbo:game_draw(Pid, undefined)`.
+
+**Example:**
+
+[source,erlang]
+----
+% Players agreed to a draw:
+> binbo:game_draw(Pid, by_agreement).
+ok
+
+% Trying to set a draw for the other reason:
+> binbo:game_draw(Pid, other_reason).
+{error,{already_has_status,{draw,{manual,by_agreement}}}}
+----
+
 
 == Binbo and Magic Bitboards
 
