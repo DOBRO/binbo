@@ -10,7 +10,7 @@ Binbo also uses the https://www.chessprogramming.org/Magic_Bitboards[Magic Bitbo
 
 **Note:** it's not a chess engine but it could be a good starting point for it. It can play the role of a core (regarding move generation and validation) for multiple chess engines running on distributed Erlang nodes, since Binbo is an OTP application itself.
 
-image::https://user-images.githubusercontent.com/296845/61049807-10264c00-a3ee-11e9-8aac-aa74a1e16de7.png[Binbo sample]
+image::https://user-images.githubusercontent.com/296845/61051652-32ba6400-a3f2-11e9-883e-2e5cdf9b9e72.png[Binbo sample]
 
 '''
 
