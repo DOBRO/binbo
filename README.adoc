@@ -1,4 +1,6 @@
 = Binbo
+:toc: macro
+:toclevels: 4
 
 Binbo is a Chess representation written in pure Erlang using https://www.chessprogramming.org/Bitboards[Bitboards]. It is basically aimed to be used on game servers where people play chess online.
 
@@ -7,6 +9,8 @@ It's called `Binbo` because its ground is a **bin**ary **bo**ard containing only
 Binbo also uses the https://www.chessprogramming.org/Magic_Bitboards[Magic Bitboards] approach for a **blazing fast** move generation of sliding pieces (rook, bishop, and queen).
 
 **Note:** it's not a chess engine but it could be a good starting point for it. It can play the role of a core (regarding move generation and validation) for multiple chess engines running on distributed Erlang nodes, since Binbo is an OTP application itself.
+
+toc::[]
 
 == Features
 
