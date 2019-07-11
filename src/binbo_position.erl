@@ -195,6 +195,26 @@ is_kn_vs_k(Kings, AllPieces, Game) ->
 	andalso
 	uef_num:popcount(AllKnights) =:= 1.
 
+%% is_kb_vs_kb/2
+%% Returns true when:
+%% King and Bishop versus King and Bishop with the Bishops on the same color.
+-spec is_kb_vs_kb(bb(), bb(), bb_game()) -> boolean().
+is_kb_vs_kb(Kings, AllPieces, Game) ->
+	WBishops = white_bishops_bb(Game),
+	BBishops = black_bishops_bb(Game),
+	AllBishops = WBishops bor BBishops,
+	(((Kings bor AllBishops) bxor AllPieces) =:= ?EMPTY_BB)
+	andalso
+	(
+		((AllBishops band ?DARK_SQUARES_BB)  =:= AllBishops)
+		orelse
+		((AllBishops band ?LIGHT_SQUARES_BB) =:= AllBishops)
+	)
+	andalso
+	(uef_num:popcount(WBishops) =:= 1)
+	andalso
+	(uef_num:popcount(BBishops) =:= 1).
+
 
 %% is_insufficient_material/1
 -spec is_insufficient_material(bb_game()) -> boolean().
@@ -203,11 +223,17 @@ is_insufficient_material(Game) ->
 	BKing = black_king_bb(Game),
 	Kings = WKing bor BKing,
 	AllPieces = all_pieces_bb(Game),
-	is_k_vs_k(Kings, AllPieces)          % King versus King
+	% King versus King
+	is_k_vs_k(Kings, AllPieces)
 	orelse
-	is_kb_vs_k(Kings, AllPieces, Game)   % King and Bishop versus King
+	% King and Bishop versus King
+	is_kb_vs_k(Kings, AllPieces, Game)
 	orelse
-	is_kn_vs_k(Kings, AllPieces, Game).  % King and Knight versus King
+	% King and Knight versus King
+	is_kn_vs_k(Kings, AllPieces, Game)
+	orelse
+	% King and Bishop versus King and Bishop with the Bishops on the same color
+	is_kb_vs_kb(Kings, AllPieces, Game).
 
 
 %% maybe_draw/1
