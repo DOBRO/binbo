@@ -316,6 +316,16 @@ ok
 {error,{already_has_status,{draw,{manual,by_agreement}}}}
 ----
 
+=== Stopping game process
+
+If, for some reason, you want to stop the game process and free resources, use:
+
+[source,erlang]
+----
+binbo:stop_server(Pid) -> ok | {error, {not_pid, Pid}}.
+----
+
+Function terminates the game process with pid `Pid`.
 
 == Binbo and Magic Bitboards
 
