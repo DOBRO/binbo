@@ -169,9 +169,9 @@
 -spec bishop_attacks_bb(sq_idx(), bb()) -> bb().
 bishop_attacks_bb(SqIdx, Occupied) ->
 	TupleIndex = SqIdx + 1,
-	Mask = erlang:element(TupleIndex, binbo_global:get(?MAGIC_BISHOP_MASK_KEY)),
+	Mask = erlang:element(TupleIndex, binbo_global:get(?GLOBAL_MAGIC_BISHOP_MASK_MOD)),
 	MagicIndex = magic_bishop_index(SqIdx, Occupied, Mask),
-	Attacks = erlang:element(TupleIndex, binbo_global:get(?MAGIC_BISHOP_ATTACKS_KEY)),
+	Attacks = erlang:element(TupleIndex, binbo_global:get(?GLOBAL_MAGIC_BISHOP_ATTACKS_MOD)),
 	maps:get(MagicIndex, Attacks).
 
 
@@ -179,9 +179,9 @@ bishop_attacks_bb(SqIdx, Occupied) ->
 -spec rook_attacks_bb(sq_idx(), bb()) -> bb().
 rook_attacks_bb(SqIdx, Occupied) ->
 	TupleIndex = SqIdx + 1,
-	Mask = erlang:element(TupleIndex, binbo_global:get(?MAGIC_ROOK_MASK_KEY)),
+	Mask = erlang:element(TupleIndex, binbo_global:get(?GLOBAL_MAGIC_ROOK_MASK_MOD)),
 	MagicIndex = magic_rook_index(SqIdx, Occupied, Mask),
-	Attacks = erlang:element(TupleIndex, binbo_global:get(?MAGIC_ROOK_ATTACKS_KEY)),
+	Attacks = erlang:element(TupleIndex, binbo_global:get(?GLOBAL_MAGIC_ROOK_ATTACKS_MOD)),
 	maps:get(MagicIndex, Attacks).
 
 
@@ -213,14 +213,14 @@ init_rook_attacks() ->
 init_br_attacks(Ptype) ->
 	{MaskKey, AttacksKey, AttackFun, MagicIndexFun} = case Ptype of
 		bishop -> {
-			?MAGIC_BISHOP_MASK_KEY,
-			?MAGIC_BISHOP_ATTACKS_KEY,
+			?GLOBAL_MAGIC_BISHOP_MASK_MOD,
+			?GLOBAL_MAGIC_BISHOP_ATTACKS_MOD,
 			fun binbo_bb:bishop_attacks_bb/2,
 			fun magic_bishop_index/3
 		};
 		rook   -> {
-			?MAGIC_ROOK_MASK_KEY,
-			?MAGIC_ROOK_ATTACKS_KEY,
+			?GLOBAL_MAGIC_ROOK_MASK_MOD,
+			?GLOBAL_MAGIC_ROOK_ATTACKS_MOD,
 			fun binbo_bb:rook_attacks_bb/2,
 			fun magic_rook_index/3
 		}
