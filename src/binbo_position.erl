@@ -122,7 +122,7 @@
 -type move_info() :: binbo_move:move_info().
 -type unset_castling_flag() :: ?CASTLING_W_ANY | ?CASTLING_B_ANY | binbo_board:side_castling().
 -type make_move_step() :: remove_piece | set_piece | is_in_check | enpassant.
--type finalize_move_step() :: lastmove | sidetomove | halfmove | fullmove | status.
+-type finalize_move_step() :: lastmove | sidetomove | halfmove | fullmove | hashmap | status.
 -type make_move_error() :: own_king_in_check.
 
 -export_type([bb_game/0, castling/0, pretty_board_opts/0]).
@@ -1047,7 +1047,7 @@ make_rook_move(MoveInfo, Game) ->
 %% finalize_move/2
 -spec finalize_move(move_info(), bb_game()) -> bb_game().
 finalize_move(MoveInfo, Game) ->
-	Steps = [lastmove, sidetomove, halfmove, fullmove, status],
+	Steps = [lastmove, sidetomove, halfmove, fullmove, hashmap, status],
 	finalize_move(Steps, MoveInfo, Game).
 
 %% finalize_move/3
@@ -1084,10 +1084,22 @@ finalize_move([fullmove | Tail], MoveInfo, Game) ->
 		?BLACK -> increase_fullmove(Game)
 	end,
 	finalize_move(Tail, MoveInfo, Game2);
+finalize_move([hashmap | Tail], MoveInfo, Game) ->
+	% Update position hashmap. We need it for detecting threefold repetition.
+	Game2 = update_hashmap(Game),
+	finalize_move(Tail, MoveInfo, Game2);
 finalize_move([status | Tail], MoveInfo, Game) ->
 	#move_info{is_check = IsCheck, has_valid_moves = HasValidMoves} = MoveInfo,
 	Game2 = with_status(Game, HasValidMoves, IsCheck),
 	finalize_move(Tail, MoveInfo, Game2).
+
+%% update_hashmap/1
+-spec update_hashmap(bb_game()) -> bb_game().
+update_hashmap(Game) ->
+	PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
+	Keys = [?GAME_KEY_POSITION_HASHMAP, PosHash],
+	Repetitions = uef_maps:get_nested(Keys, Game, 0),
+	uef_maps:put_nested(Keys, Repetitions + 1, Game).
 
 
 %%%------------------------------------------------------------------------------
