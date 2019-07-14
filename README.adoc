@@ -23,6 +23,12 @@ toc::[]
 * Blazing fast move generation and validation.
 * No bottlenecks. Every game is an Erlang process (`gen_server`) with its own game state.
 * Ability to create as many concurrent games as many Erlang processes allowed in VM.
+* All the chess rules are completely covered including:
+** https://en.wikipedia.org/wiki/En_passant[En-passant move];
+** https://en.wikipedia.org/wiki/Castling[Castling];
+** https://en.wikipedia.org/wiki/Fifty-move_rule[Fifty-move rule];
+** Draw by insufficient material;
+** https://en.wikipedia.org/wiki/Threefold_repetition[Threefold repetition].
 * Unicode chess symbols support for the board visualization right in Erlang shell: +
 &#9817;{nbsp}&#9816;{nbsp}&#9815;{nbsp}&#9814;{nbsp}&#9813;{nbsp}&#9812;{nbsp}{nbsp}{nbsp}{nbsp}&#9823;{nbsp}&#9822;{nbsp}&#9821;{nbsp}&#9820;{nbsp}&#9819;{nbsp}&#9818;
 * Ready for use on game servers.
