@@ -14,7 +14,7 @@
 
 -module(binbo_hash).
 
--export([init/0]).
+-export([init/0, init/1]).
 -export([piece_hash/2, enpa_hash/1, side_hash/1, castling_hash/1]).
 
 %%%------------------------------------------------------------------------------
@@ -29,7 +29,8 @@
 %%%   Types
 %%%------------------------------------------------------------------------------
 
--type rnd() :: 1 .. ?MAX_RANDOM_NUMBER.
+-type max_random() :: pos_integer().
+-type rnd() :: pos_integer().
 -type piece() :: binbo_board:piece().
 -type color() :: binbo_board:color().
 -type sq_idx() :: binbo_board:square_index().
@@ -68,13 +69,16 @@ init() ->
 	init(?MAX_RANDOM_NUMBER).
 
 %% init/1
--spec init(?MAX_RANDOM_NUMBER) -> [module()].
+-spec init(max_random()) -> [module()].
 init(MaxRandom) ->
 	_ = crypto:rand_seed(),
 	PiecesMod = init_pieces_hash_map(MaxRandom),
 	EnpaMod = init_enpassant_hash_map(MaxRandom),
 	SideMod = init_side_hash_map(MaxRandom),
 	CastlingMod = init_castling_hash_map(MaxRandom),
+	% Here we check random numbers whether they are unique or not.
+	% If not, it fails with exception.
+	_ = check_randoms(),
 	[PiecesMod, EnpaMod, SideMod, CastlingMod].
 
 %% piece_hash/2
@@ -107,12 +111,12 @@ castling_hash(Castling) ->
 %%%------------------------------------------------------------------------------
 
 %% random/1
--spec random(?MAX_RANDOM_NUMBER) -> rnd().
+-spec random(max_random()) -> rnd().
 random(MaxRandom) ->
 	rand:uniform(MaxRandom).
 
 %% init_pieces_hash_map/1
--spec init_pieces_hash_map(?MAX_RANDOM_NUMBER) -> ?GLOBAL_HASH_PIECE_MOD.
+-spec init_pieces_hash_map(max_random()) -> ?GLOBAL_HASH_PIECE_MOD.
 init_pieces_hash_map(MaxRandom) ->
 	Mod = ?GLOBAL_HASH_PIECE_MOD,
 	PiecesHashMap = pieces_hash_map(MaxRandom),
@@ -120,7 +124,7 @@ init_pieces_hash_map(MaxRandom) ->
 	Mod.
 
 %% pieces_hash_map/1
--spec pieces_hash_map(?MAX_RANDOM_NUMBER) -> pieces_hash_map().
+-spec pieces_hash_map(max_random()) -> pieces_hash_map().
 pieces_hash_map(MaxRandom) ->
 	BoardPieces = binbo_board:pieces(),
 	lists:foldl(fun(Piece, MapAcc) ->
@@ -129,7 +133,7 @@ pieces_hash_map(MaxRandom) ->
 	end, #{}, BoardPieces).
 
 %% piece_hash_tuple/1
--spec piece_hash_tuple(?MAX_RANDOM_NUMBER) -> piece_hash_tuple().
+-spec piece_hash_tuple(max_random()) -> piece_hash_tuple().
 piece_hash_tuple(MaxRandom) ->
 	lists:foldl(fun(SqIdx, TupleAcc) ->
 		Random = random(MaxRandom),
@@ -138,7 +142,7 @@ piece_hash_tuple(MaxRandom) ->
 
 
 %% init_enpassant_hash_map/1
--spec init_enpassant_hash_map(?MAX_RANDOM_NUMBER) -> ?GLOBAL_HASH_ENPASSANT_MOD.
+-spec init_enpassant_hash_map(max_random()) -> ?GLOBAL_HASH_ENPASSANT_MOD.
 init_enpassant_hash_map(MaxRandom) ->
 	Mod = ?GLOBAL_HASH_ENPASSANT_MOD,
 	EnpaHashMap = enpassant_hash_map(MaxRandom),
@@ -146,7 +150,7 @@ init_enpassant_hash_map(MaxRandom) ->
 	Mod.
 
 %% enpassant_hash_map/1
--spec enpassant_hash_map(?MAX_RANDOM_NUMBER) -> enpassant_hash_map().
+-spec enpassant_hash_map(max_random()) -> enpassant_hash_map().
 enpassant_hash_map(MaxRandom) ->
 	lists:foldl(fun(File, MapAcc) ->
 		Random = random(MaxRandom),
@@ -155,7 +159,7 @@ enpassant_hash_map(MaxRandom) ->
 
 
 %% init_side_hash_map/1
--spec init_side_hash_map(?MAX_RANDOM_NUMBER) -> ?GLOBAL_HASH_SIDE_MOD.
+-spec init_side_hash_map(max_random()) -> ?GLOBAL_HASH_SIDE_MOD.
 init_side_hash_map(MaxRandom) ->
 	Mod = ?GLOBAL_HASH_SIDE_MOD,
 	SideHashMap = side_hash_map(MaxRandom),
@@ -163,7 +167,7 @@ init_side_hash_map(MaxRandom) ->
 	Mod.
 
 %% side_hash_map/1
--spec side_hash_map(?MAX_RANDOM_NUMBER) -> side_hash_map().
+-spec side_hash_map(max_random()) -> side_hash_map().
 side_hash_map(MaxRandom) ->
 	lists:foldl(fun(Side, MapAcc) ->
 		Random = random(MaxRandom),
@@ -172,7 +176,7 @@ side_hash_map(MaxRandom) ->
 
 
 %% init_castling_hash_map/1
--spec init_castling_hash_map(?MAX_RANDOM_NUMBER) -> ?GLOBAL_HASH_CASTLING_MOD.
+-spec init_castling_hash_map(max_random()) -> ?GLOBAL_HASH_CASTLING_MOD.
 init_castling_hash_map(MaxRandom) ->
 	Mod = ?GLOBAL_HASH_CASTLING_MOD,
 	HashMap = castling_hash_map(MaxRandom),
@@ -181,9 +185,67 @@ init_castling_hash_map(MaxRandom) ->
 
 
 %% castling_hash_map/1
--spec castling_hash_map(?MAX_RANDOM_NUMBER) -> castling_hash_map().
+-spec castling_hash_map(max_random()) -> castling_hash_map().
 castling_hash_map(MaxRandom) ->
 	lists:foldl(fun(Castling, MapAcc) ->
 		Random = random(MaxRandom),
 		MapAcc#{Castling => Random}
 	end, #{}, binbo_board:castling_list()).
+
+
+
+%% check_randoms/0
+-spec check_randoms() -> ok | no_return().
+check_randoms() ->
+	check_randoms([piece, enpa, side, castling], #{}).
+
+%% check_randoms/2
+-spec check_randoms([piece|enpa|side|castling], #{rnd() => 0}) -> ok | no_return().
+check_randoms([], _Map) ->
+	ok;
+check_randoms([piece | Tail], Map0) ->
+	Map = lists:foldl(fun(Piece, MapAcc) ->
+		lists:foldl(fun(SqIdx, MapAcc2) ->
+			PieceHash = piece_hash(Piece, SqIdx),
+			case maps:find(PieceHash, MapAcc2) of
+				{ok, _} ->
+					erlang:error({duplicated_piece_hash, PieceHash});
+				error ->
+					MapAcc2#{PieceHash => 0}
+			end
+		end, MapAcc, binbo_board:index_list())
+	end, Map0, binbo_board:pieces()),
+	check_randoms(Tail, Map);
+check_randoms([enpa | Tail], Map0) ->
+	Map = lists:foldl(fun(File, MapAcc) ->
+		EnpaHash = enpa_hash(File),
+		case maps:find(EnpaHash, MapAcc) of
+			{ok, _} ->
+				erlang:error({duplicated_enpa_hash, EnpaHash});
+			error ->
+				MapAcc#{EnpaHash => 0}
+		end
+	end, Map0, binbo_board:file_list()),
+	check_randoms(Tail, Map);
+check_randoms([side | Tail], Map0) ->
+	Map = lists:foldl(fun(Side, MapAcc) ->
+		SideHash = side_hash(Side),
+		case maps:find(SideHash, MapAcc) of
+			{ok, _} ->
+				erlang:error({duplicated_side_hash, SideHash});
+			error ->
+				MapAcc#{SideHash => 0}
+		end
+	end, Map0, binbo_board:side_list()),
+	check_randoms(Tail, Map);
+check_randoms([castling | Tail], Map0) ->
+	Map = lists:foldl(fun(Castling, MapAcc) ->
+		CastlingHash = castling_hash(Castling),
+		case maps:find(CastlingHash, MapAcc) of
+			{ok, _} ->
+				erlang:error({duplicated_castling_hash, CastlingHash});
+			error ->
+				MapAcc#{CastlingHash => 0}
+		end
+	end, Map0, binbo_board:castling_list()),
+	check_randoms(Tail, Map).
