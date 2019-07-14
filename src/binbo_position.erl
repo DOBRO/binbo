@@ -731,6 +731,13 @@ get_lastmove(Game) ->
 get_lastmove_piece(Game) ->
 	maps:get(?GAME_KEY_LASTMOVE_PIECE, Game).
 
+%% update_hashmap/1
+-spec update_hashmap(bb_game()) -> bb_game().
+update_hashmap(Game) ->
+	PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
+	Keys = [?GAME_KEY_POSITION_HASHMAP, PosHash],
+	Repetitions = uef_maps:get_nested(Keys, Game, 0),
+	uef_maps:put_nested(Keys, Repetitions + 1, Game).
 
 %%%------------------------------------------------------------------------------
 %%%   Load parsed FEN and validate position according to the Chess rules
@@ -1095,14 +1102,6 @@ finalize_move([status | Tail], MoveInfo, Game) ->
 	#move_info{is_check = IsCheck, has_valid_moves = HasValidMoves} = MoveInfo,
 	Game2 = with_status(Game, HasValidMoves, IsCheck),
 	finalize_move(Tail, MoveInfo, Game2).
-
-%% update_hashmap/1
--spec update_hashmap(bb_game()) -> bb_game().
-update_hashmap(Game) ->
-	PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
-	Keys = [?GAME_KEY_POSITION_HASHMAP, PosHash],
-	Repetitions = uef_maps:get_nested(Keys, Game, 0),
-	uef_maps:put_nested(Keys, Repetitions + 1, Game).
 
 
 %%%------------------------------------------------------------------------------
