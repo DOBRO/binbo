@@ -739,12 +739,12 @@ get_lastmove_piece(Game) ->
 %% load_parsed_fen/2
 -spec load_parsed_fen(parsed_fen(), bb_game()) -> bb_game().
 load_parsed_fen(ParsedFen, Game) ->
-	Steps = [position, sidetomove, castling, enpassant, halfmove, fullmove],
+	Steps = [position, sidetomove, castling, enpassant, halfmove, fullmove, hashmap],
 	load_parsed_fen(Steps, ParsedFen, Game).
 
 %% load_parsed_fen/3
 -spec load_parsed_fen([Step], parsed_fen(), bb_game()) -> bb_game() when
-	Step :: position | sidetomove | castling | enpassant | halfmove | fullmove.
+	Step :: position | sidetomove | castling | enpassant | halfmove | fullmove | hashmap.
 load_parsed_fen([], _ParsedFen, Game) ->
 	Game;
 load_parsed_fen([position|Tail], #parsed_fen{position = Pos} = ParsedFen, Game) -> % position
@@ -783,6 +783,9 @@ load_parsed_fen([halfmove|Tail], #parsed_fen{halfmove = Halfmove} = ParsedFen, G
 	load_parsed_fen(Tail, ParsedFen, Game2);
 load_parsed_fen([fullmove|Tail], #parsed_fen{fullmove = Fullmove} = ParsedFen, Game) -> % fullmove
 	Game2 = set_fullmove(Fullmove, Game),
+	load_parsed_fen(Tail, ParsedFen, Game2);
+load_parsed_fen([hashmap|Tail], ParsedFen, Game) -> % hashmap
+	Game2 = update_hashmap(Game),
 	load_parsed_fen(Tail, ParsedFen, Game2).
 
 
