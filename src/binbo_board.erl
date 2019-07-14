@@ -19,9 +19,10 @@
 -export([notation_to_index/1]).
 -export([index_to_notation/1]).
 -export([is_valid_square_notation/1, validate_square_notation/1]).
--export([index_list/0, board_tuple/1]).
--export([castling_rook_squares/1]).
+-export([index_list/0, file_list/0, side_list/0, board_tuple/1]).
+-export([castling_list/0, castling_rook_squares/1]).
 -export([enemy_color/1]).
+-export([pieces/0]).
 
 %%%------------------------------------------------------------------------------
 %%%   Includes
@@ -117,7 +118,22 @@ validate_square_notation(_) ->
 %% index_list/0
 -spec index_list() -> [square_index()].
 index_list() ->
-	lists:seq(0, ?H8_IDX, 1).
+	lists:seq(?A1_IDX, ?H8_IDX, 1).
+
+%% file_list/0
+-spec file_list() -> [file()].
+file_list() ->
+	[0,1,2,3,4,5,6,7].
+
+%% castling_list/0
+-spec castling_list() -> [binbo_position:castling()].
+castling_list() ->
+	lists:seq(?CASTLING_NONE, ?CASTLING_ANY, 1).
+
+%% side_list/0
+-spec side_list() -> [color()].
+side_list() ->
+	[?WHITE, ?BLACK].
 
 %% enemy_color/1
 -spec enemy_color(?WHITE) -> ?BLACK; (?BLACK) -> ?WHITE.
@@ -140,6 +156,11 @@ castling_rook_squares(CastlingFlag) ->
 		?CASTLING_B_OOO -> {?A8_IDX, ?D8_IDX}
 	end.
 
+%% pieces/0
+-spec pieces() -> [piece()].
+pieces() ->
+	[?WHITE_PAWN, ?WHITE_KNIGHT, ?WHITE_BISHOP, ?WHITE_ROOK, ?WHITE_QUEEN, ?WHITE_KING,
+	 ?BLACK_PAWN, ?BLACK_KNIGHT, ?BLACK_BISHOP, ?BLACK_ROOK, ?BLACK_QUEEN, ?BLACK_KING].
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions

@@ -69,7 +69,7 @@ pawn_attacks_bb(FromIdx, Color) ->
 %% knight_attacks_bb/1
 -spec knight_attacks_bb(sq_idx()) -> bb().
 knight_attacks_bb(FromIdx) ->
-	persistent_attacks_bb(FromIdx, ?GLOBAL_KNIGHT_ATTACKS_MOD).
+	persistent_attacks_bb(FromIdx, ?GLOBAL_ATTACKS_KNIGHT_MOD).
 
 %% bishop_attacks_bb/2
 -spec bishop_attacks_bb(sq_idx(), occupied()) -> bb().
@@ -89,7 +89,7 @@ queen_attacks_bb(FromIdx, Occupied) ->
 %% king_attacks_bb/1
 -spec king_attacks_bb(sq_idx()) -> bb().
 king_attacks_bb(FromIdx) ->
-	persistent_attacks_bb(FromIdx, ?GLOBAL_KING_ATTACKS_MOD).
+	persistent_attacks_bb(FromIdx, ?GLOBAL_ATTACKS_KING_MOD).
 
 
 %%%------------------------------------------------------------------------------
@@ -111,8 +111,8 @@ init_king_attacks() ->
 -spec init_kn_attacks(?KNIGHT | ?KING) -> module().
 init_kn_attacks(Ptype) ->
 	{AttacksKey, AttackFun} = case Ptype of
-		?KING   -> {?GLOBAL_KING_ATTACKS_MOD,   fun binbo_bb:king_attacks_bb/1};
-		?KNIGHT -> {?GLOBAL_KNIGHT_ATTACKS_MOD, fun binbo_bb:knight_attacks_bb/1}
+		?KING   -> {?GLOBAL_ATTACKS_KING_MOD,   fun binbo_bb:king_attacks_bb/1};
+		?KNIGHT -> {?GLOBAL_ATTACKS_KNIGHT_MOD, fun binbo_bb:knight_attacks_bb/1}
 	end,
 	AttacksTuple = lists:foldl(fun(SqIdx, Tuple) ->
 		SqBB = ?SQUARE_BB(SqIdx),
@@ -138,8 +138,8 @@ init_pawn_attacks(Color) ->
 
 %% pawn_static_module/1
 -spec pawn_static_module(color()) -> module().
-pawn_static_module(?WHITE) -> ?GLOBAL_WHITE_PAWN_ATTACKS_MOD;
-pawn_static_module(?BLACK) -> ?GLOBAL_BLACK_PAWN_ATTACKS_MOD.
+pawn_static_module(?WHITE) -> ?GLOBAL_ATTACKS_WHITE_PAWN_MOD;
+pawn_static_module(?BLACK) -> ?GLOBAL_ATTACKS_BLACK_PAWN_MOD.
 
 
 %% persistent_attacks_bb/2
