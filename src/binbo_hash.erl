@@ -88,7 +88,7 @@ side_hash(Side) ->
 	maps:get(Side, Map).
 
 %% castling_hash/1
--spec castling_hash(color()) -> rnd().
+-spec castling_hash(castling()) -> rnd().
 castling_hash(Castling) ->
 	Map = binbo_global:get(?GLOBAL_HASH_CASTLING_MOD),
 	maps:get(Castling, Map).
