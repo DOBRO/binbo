@@ -465,7 +465,3 @@ It should do the similar things for `persistent_term` data, say, delete all unus
 In this case we run into the issue regarding scanning the heaps in all processes.
 
 So, using `global` dynamic modules with large static data seems to be more reasonable in spite of that fact that it significantly slows down the application startup due to the run-time compilation of these modules.
-
-== To be done
-
-https://en.wikipedia.org/wiki/Threefold_repetition[Threefold repetition] is the only one event that Binbo does not detect yet.

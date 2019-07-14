@@ -56,12 +56,12 @@
 %%%   Game status
 %%%------------------------------------------------------------------------------
 
--define(GAME_STATUS_INPROGRESS,     continue).
--define(GAME_STATUS_CHECKMATE,      checkmate).
--define(GAME_STATUS_DRAW_STALEMATE, stalemate).
--define(GAME_STATUS_DRAW_RULE50,    rule50).
--define(GAME_STATUS_DRAW_MATERIAL,  insufficient_material).
-
+-define(GAME_STATUS_INPROGRESS,      continue).
+-define(GAME_STATUS_CHECKMATE,       checkmate).
+-define(GAME_STATUS_DRAW_STALEMATE,  stalemate).
+-define(GAME_STATUS_DRAW_RULE50,     rule50).
+-define(GAME_STATUS_DRAW_MATERIAL,   insufficient_material).
+-define(GAME_STATUS_DRAW_REPETITION, threefold_repetition).
 
 %%%------------------------------------------------------------------------------
 %%%   Helper functions

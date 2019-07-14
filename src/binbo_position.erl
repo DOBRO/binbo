@@ -244,6 +244,15 @@ is_insufficient_material(Game) ->
 	is_kb_vs_kb(Kings, AllPieces, Game).
 
 
+%% is_repetition/1
+-spec is_repetition(bb_game()) -> boolean().
+is_repetition(Game) ->
+	PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
+	Keys = [?GAME_KEY_POSITION_HASHMAP, PosHash],
+	Repetitions = uef_maps:get_nested(Keys, Game),
+	(Repetitions > 2).
+
+
 %% maybe_draw/1
 -spec maybe_draw(bb_game()) -> false | {true, game_draw_rule50() | game_draw_material()}.
 maybe_draw(Game) ->
@@ -252,8 +261,13 @@ maybe_draw(Game) ->
 			{true, ?GAME_STATUS_DRAW_RULE50};
 		false ->
 			case is_insufficient_material(Game) of
-				true  -> {true, ?GAME_STATUS_DRAW_MATERIAL};
-				false -> false
+				true  ->
+					{true, ?GAME_STATUS_DRAW_MATERIAL};
+				false ->
+					case is_repetition(Game) of
+						true  -> {true, ?GAME_STATUS_DRAW_REPETITION};
+						false -> false
+					end
 			end
 	end.
 
