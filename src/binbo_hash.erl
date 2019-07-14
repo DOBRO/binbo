@@ -35,7 +35,16 @@
 -type sq_idx() :: binbo_board:square_index().
 -type file() :: binbo_board:file().
 -type castling() :: binbo_position:castling().
--type piece_hash_tuple() :: tuple().
+-type piece_hash_tuple() :: {
+	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
+	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
+	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
+	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
+	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
+	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
+	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
+	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd()
+}.
 -type pieces_hash_map() :: #{
 	piece() => piece_hash_tuple()
 }.
