@@ -15,7 +15,7 @@
 -module(binbo_bb).
 
 -export([bb_not/2, bb_or/1]).
--export([to_index/1, to_index_list/1, to_notation/1]).
+-export([to_index/1, to_file/1, to_index_list/1, to_notation/1]).
 -export([rank_bb/1, file_bb/1]).
 -export([edges_bb/1, empty_bb/0]).
 -export([
@@ -96,6 +96,12 @@ file_bb(Idx) ->
 -spec to_index(sq_bb()) -> sq_idx().
 to_index(SqBB) ->
 	uef_num:ctz(SqBB).
+
+%% to_file/1
+-spec to_file(sq_bb()) -> binbo_board:file().
+to_file(SqBB) ->
+	Idx = to_index(SqBB),
+	binbo_board:file_of_index(Idx).
 
 %% to_index_list/1
 -spec to_index_list(bb()) -> [sq_idx()].

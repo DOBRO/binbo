@@ -37,7 +37,6 @@
 -define(GAME_KEY_BLACK,    bbb).
 -define(GAME_KEY_OCCUPIED, bball).
 
-
 -define(GAME_KEY_SIDETOMOVE, sidetomove).
 -define(GAME_KEY_CASTLING,   castling).
 -define(GAME_KEY_ENPASSANT,  bbenpa).
@@ -47,6 +46,9 @@
 
 -define(GAME_KEY_HALFMOVE, halfmove).
 -define(GAME_KEY_FULLMOVE, fullmove).
+
+-define(GAME_KEY_POSITION_HASHMAP, phashmap).
+-define(GAME_KEY_POS_HASH, phash).
 
 -define(GAME_KEY_STATUS, status).
 

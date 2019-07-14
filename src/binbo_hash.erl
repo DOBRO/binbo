@@ -30,34 +30,36 @@
 %%%------------------------------------------------------------------------------
 
 -type max_random() :: pos_integer().
--type rnd() :: pos_integer().
+-type hash() :: pos_integer().
 -type piece() :: binbo_board:piece().
 -type color() :: binbo_board:color().
 -type sq_idx() :: binbo_board:square_index().
 -type file() :: binbo_board:file().
 -type castling() :: binbo_position:castling().
 -type piece_hash_tuple() :: {
-	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
-	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
-	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
-	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
-	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
-	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
-	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(),
-	rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd(), rnd()
+	hash(), hash(), hash(), hash(), hash(), hash(), hash(), hash(),
+	hash(), hash(), hash(), hash(), hash(), hash(), hash(), hash(),
+	hash(), hash(), hash(), hash(), hash(), hash(), hash(), hash(),
+	hash(), hash(), hash(), hash(), hash(), hash(), hash(), hash(),
+	hash(), hash(), hash(), hash(), hash(), hash(), hash(), hash(),
+	hash(), hash(), hash(), hash(), hash(), hash(), hash(), hash(),
+	hash(), hash(), hash(), hash(), hash(), hash(), hash(), hash(),
+	hash(), hash(), hash(), hash(), hash(), hash(), hash(), hash()
 }.
 -type pieces_hash_map() :: #{
 	piece() => piece_hash_tuple()
 }.
 -type enpassant_hash_map() :: #{
-	file() => rnd()
+	file() => hash()
 }.
 -type side_hash_map() :: #{
-	color() => rnd()
+	color() => hash()
 }.
 -type castling_hash_map() :: #{
-	castling() => rnd()
+	castling() => hash()
 }.
+
+-export_type([hash/0]).
 
 %%%------------------------------------------------------------------------------
 %%%   API
@@ -82,26 +84,26 @@ init(MaxRandom) ->
 	[PiecesMod, EnpaMod, SideMod, CastlingMod].
 
 %% piece_hash/2
--spec piece_hash(piece(), sq_idx()) -> rnd().
+-spec piece_hash(piece(), sq_idx()) -> hash().
 piece_hash(Piece, SqIdx) ->
 	Map = binbo_global:get(?GLOBAL_HASH_PIECE_MOD),
 	Tuple = maps:get(Piece, Map),
 	erlang:element(SqIdx + 1, Tuple).
 
 %% enpa_hash/1
--spec enpa_hash(file()) -> rnd().
+-spec enpa_hash(file()) -> hash().
 enpa_hash(File) ->
 	Map = binbo_global:get(?GLOBAL_HASH_ENPASSANT_MOD),
 	maps:get(File, Map).
 
 %% side_hash/1
--spec side_hash(color()) -> rnd().
+-spec side_hash(color()) -> hash().
 side_hash(Side) ->
 	Map = binbo_global:get(?GLOBAL_HASH_SIDE_MOD),
 	maps:get(Side, Map).
 
 %% castling_hash/1
--spec castling_hash(castling()) -> rnd().
+-spec castling_hash(castling()) -> hash().
 castling_hash(Castling) ->
 	Map = binbo_global:get(?GLOBAL_HASH_CASTLING_MOD),
 	maps:get(Castling, Map).
@@ -111,7 +113,7 @@ castling_hash(Castling) ->
 %%%------------------------------------------------------------------------------
 
 %% random/1
--spec random(max_random()) -> rnd().
+-spec random(max_random()) -> hash().
 random(MaxRandom) ->
 	rand:uniform(MaxRandom).
 
@@ -200,7 +202,7 @@ check_randoms() ->
 	check_randoms([piece, enpa, side, castling], #{}).
 
 %% check_randoms/2
--spec check_randoms([piece|enpa|side|castling], #{rnd() => 0}) -> ok | no_return().
+-spec check_randoms([piece|enpa|side|castling], #{hash() => 0}) -> ok | no_return().
 check_randoms([], _Map) ->
 	ok;
 check_randoms([piece | Tail], Map0) ->

@@ -58,6 +58,8 @@
 -type enpa_bb() :: binbo_bb:enpa_bb().
 -type oo_move_bb() :: ?G1_BB | ?G8_BB | empty_bb().
 -type ooo_move_bb() :: ?C1_BB | ?C8_BB | empty_bb().
+-type hash() :: binbo_hash:hash().
+-type hashmap() :: #{hash() => pos_integer()}.
 -type game_status_inprogress() :: ?GAME_STATUS_INPROGRESS.
 -type game_status_checkmate() :: ?GAME_STATUS_CHECKMATE.
 -type game_draw_stalemate() :: ?GAME_STATUS_DRAW_STALEMATE.
@@ -87,6 +89,8 @@
 	?GAME_KEY_FULLMOVE := fullmove(),
 	?GAME_KEY_LASTMOVE := undefined | {sq_idx(), sq_idx()},
 	?GAME_KEY_LASTMOVE_PIECE := piece() | empty_sq(),
+	?GAME_KEY_POS_HASH := 0 | hash(),
+	?GAME_KEY_POSITION_HASHMAP := hashmap(),
 	?GAME_KEY_STATUS := game_status(),
 	sq_idx() => piece()
 }.
@@ -105,6 +109,8 @@
 	?GAME_KEY_FULLMOVE := 1,
 	?GAME_KEY_LASTMOVE := undefined,
 	?GAME_KEY_LASTMOVE_PIECE := empty_sq(),
+	?GAME_KEY_POS_HASH := 0,
+	?GAME_KEY_POSITION_HASHMAP := hashmap(),
 	?GAME_KEY_STATUS := game_status_inprogress()
 }.
 
@@ -147,7 +153,9 @@ get_sidetomove(Game) ->
 %% set_sidetomove/2
 -spec set_sidetomove(color(), bb_game()) -> bb_game().
 set_sidetomove(Color, Game) ->
-	maps:update(?GAME_KEY_SIDETOMOVE, Color, Game).
+	PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
+	PosHash2 = PosHash bxor binbo_hash:side_hash(Color),
+	Game#{?GAME_KEY_SIDETOMOVE := Color, ?GAME_KEY_POS_HASH := PosHash2}.
 
 %% get_status/1
 -spec get_status(bb_game()) -> game_status().
@@ -359,6 +367,8 @@ empty_bb_game() -> #{
 	?GAME_KEY_FULLMOVE => 1,
 	?GAME_KEY_LASTMOVE => undefined,
 	?GAME_KEY_LASTMOVE_PIECE => ?EMPTY_SQUARE,
+	?GAME_KEY_POS_HASH => 0,
+	?GAME_KEY_POSITION_HASHMAP => #{},
 	?GAME_KEY_STATUS => ?GAME_STATUS_INPROGRESS
 	}.
 
@@ -369,13 +379,15 @@ set_piece(Idx, Piece, Game) ->
 	Pkey = ?PIECE_GAME_KEY(Piece),
 	Pcolor = ?COLOR(Piece),
 	SideKey = ?OWN_SIDE_KEY(Pcolor),
-	#{Pkey := PiecesBB, SideKey := SideBB, ?GAME_KEY_OCCUPIED := AllPiecesBB} = Game,
+	#{Pkey := PiecesBB, SideKey := SideBB, ?GAME_KEY_OCCUPIED := AllPiecesBB, ?GAME_KEY_POS_HASH := PosHash} = Game,
 	SquareBB = ?SQUARE_BB(Idx),
+	PosHash2 = PosHash bxor binbo_hash:piece_hash(Piece, Idx),
 	Game#{
 		Idx => Piece,
 		Pkey := (PiecesBB bor SquareBB),
 		SideKey := (SideBB bor SquareBB),
-		?GAME_KEY_OCCUPIED := (AllPiecesBB bor SquareBB)
+		?GAME_KEY_OCCUPIED := (AllPiecesBB bor SquareBB),
+		?GAME_KEY_POS_HASH := PosHash2
 	}.
 
 %% remove_piece/2
@@ -385,13 +397,15 @@ remove_piece(Idx, Game) ->
 	Pkey = ?PIECE_GAME_KEY(Piece),
 	Pcolor = ?COLOR(Piece),
 	SideKey = ?OWN_SIDE_KEY(Pcolor),
-	#{Pkey := PiecesBB, SideKey := SideBB, ?GAME_KEY_OCCUPIED := AllPiecesBB} = Game,
+	#{Pkey := PiecesBB, SideKey := SideBB, ?GAME_KEY_OCCUPIED := AllPiecesBB, ?GAME_KEY_POS_HASH := PosHash} = Game,
 	SquareBB = ?SQUARE_BB(Idx),
 	Game2 = maps:remove(Idx, Game),
+	PosHash2 = PosHash bxor binbo_hash:piece_hash(Piece, Idx),
 	Game2#{
 		Pkey := binbo_bb:bb_not(PiecesBB, SquareBB),
 		SideKey := binbo_bb:bb_not(SideBB, SquareBB),
-		?GAME_KEY_OCCUPIED := binbo_bb:bb_not(AllPiecesBB, SquareBB)
+		?GAME_KEY_OCCUPIED := binbo_bb:bb_not(AllPiecesBB, SquareBB),
+		?GAME_KEY_POS_HASH := PosHash2
 	}.
 
 
@@ -402,7 +416,9 @@ unset_castling_flag(Flag, Game) ->
 	case ?IS_AND(Flag, OldCastling) of
 		true ->
 			NewCastling = OldCastling band (bnot Flag),
-			maps:update(?GAME_KEY_CASTLING, NewCastling, Game);
+			PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
+			PosHash2 = PosHash bxor binbo_hash:castling_hash(NewCastling),
+			Game#{?GAME_KEY_CASTLING := NewCastling, ?GAME_KEY_POS_HASH := PosHash2};
 		false ->
 			Game
 	end.
@@ -743,14 +759,25 @@ load_parsed_fen([sidetomove|Tail], #parsed_fen{sidetomove = Char} = ParsedFen, G
 	load_parsed_fen(Tail, ParsedFen, Game2);
 load_parsed_fen([castling|Tail], ParsedFen, Game) -> % castling
 	#parsed_fen{castling = Castling} = ParsedFen,
-	Game2 = Game#{?GAME_KEY_CASTLING := Castling},
+	PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
+	PosHash2  = PosHash bxor Castling,
+	Game2 = Game#{?GAME_KEY_CASTLING := Castling, ?GAME_KEY_POS_HASH := PosHash2},
 	load_parsed_fen(Tail, ParsedFen, Game2);
 load_parsed_fen([enpassant|Tail], #parsed_fen{enpassant = Idx} = ParsedFen, Game) -> % enpassant
 	EnpaBB = case is_integer(Idx) of
 		true  -> ?SQUARE_BB(Idx);
 		false -> ?EMPTY_BB
 	end,
-	load_parsed_fen(Tail, ParsedFen, Game#{?GAME_KEY_ENPASSANT := EnpaBB});
+	Game2 = case (EnpaBB > ?EMPTY_BB) of
+		true  ->
+			PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
+			File = binbo_bb:to_file(EnpaBB),
+			PosHash2 = PosHash bxor binbo_hash:enpa_hash(File),
+			Game#{?GAME_KEY_ENPASSANT := EnpaBB, ?GAME_KEY_POS_HASH := PosHash2};
+		false ->
+			Game#{?GAME_KEY_ENPASSANT := EnpaBB}
+	end,
+	load_parsed_fen(Tail, ParsedFen, Game2);
 load_parsed_fen([halfmove|Tail], #parsed_fen{halfmove = Halfmove} = ParsedFen, Game) -> % halfmove
 	Game2 =  set_halfmove(Halfmove, Game),
 	load_parsed_fen(Tail, ParsedFen, Game2);
@@ -875,7 +902,6 @@ validate_fen_enpassant(#{?GAME_KEY_ENPASSANT := EnpaBB} = Game) ->
 	end.
 
 
-
 %%%------------------------------------------------------------------------------
 %%%   Updating game state after move
 %%%------------------------------------------------------------------------------
@@ -919,7 +945,15 @@ make_move([enpassant | Tail], MoveInfo, Game) ->
 	% Update enpassant info
 	#move_info{from_bb = FromBB, to_bb = ToBB, piece = Piece} = MoveInfo,
 	EnpaBB = binbo_bb:enpassant_bb(Piece, FromBB, ToBB),
-	Game2 = Game#{?GAME_KEY_ENPASSANT := EnpaBB},
+	Game2 = case (EnpaBB > ?EMPTY_BB) of
+		true  ->
+			PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
+			File = binbo_bb:to_file(EnpaBB),
+			PosHash2 = PosHash bxor binbo_hash:enpa_hash(File),
+			Game#{?GAME_KEY_ENPASSANT := EnpaBB, ?GAME_KEY_POS_HASH := PosHash2};
+		false ->
+			Game#{?GAME_KEY_ENPASSANT := EnpaBB}
+	end,
 	make_move(Tail, MoveInfo, Game2).
 
 
