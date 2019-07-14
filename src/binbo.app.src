@@ -3,7 +3,7 @@
 	{vsn, "0.0.1"},
 	{modules, []},
 	{registered, [binbo_sup]},
-	{applications, [kernel, stdlib, compiler, syntax_tools, uef]},
+	{applications, [kernel, stdlib, crypto, compiler, syntax_tools, uef]},
     {mod, {binbo_app, []}},
 	{env, []},
 	{licenses, ["Apache-2.0"]},

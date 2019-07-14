@@ -47,8 +47,8 @@
 -define(GAME_KEY_HALFMOVE, halfmove).
 -define(GAME_KEY_FULLMOVE, fullmove).
 
+-define(GAME_KEY_POS_HASH,         phash).
 -define(GAME_KEY_POSITION_HASHMAP, phashmap).
--define(GAME_KEY_POS_HASH, phash).
 
 -define(GAME_KEY_STATUS, status).
 
