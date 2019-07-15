@@ -352,6 +352,16 @@ binbo:stop_server(Pid) -> ok | {error, {not_pid, Pid}}.
 
 Function terminates the game process with pid `Pid`.
 
+=== Stopping application
+
+To stop Binbo, call:
+
+[source,erlang]
+----
+binbo:stop().
+----
+
+
 == Binbo and Magic Bitboards
 
 As mentioned above, Binbo uses https://www.chessprogramming.org/Magic_Bitboards[Magic Bitboards], the fastest solution for move generation of sliding pieces
