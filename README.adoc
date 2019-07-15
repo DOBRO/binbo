@@ -104,6 +104,7 @@ So, to start one or more game processes:
 {ok, Pid3} = binbo:new_server().
 ----
 
+[[initializing-new-game]]
 === Initializing new game
 
 [source,erlang]
@@ -113,10 +114,10 @@ binbo:new_game(Pid) -> {ok, GameStatus} | {error, Reason}.
 binbo:new_game(Pid, Fen) -> {ok, GameStatus} | {error, Reason}.
 ----
 
-where:
-
+.where:
 * `Pid` is the `pid` of the process where the game is to be initialized;
-* `Fen` (`string()` or `binary()`) is the https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation[Forsyth–Edwards Notation] (FEN).
+* `Fen` (`string()` or `binary()`) is the https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation[Forsyth–Edwards Notation] (FEN);
+* `GameStatus` is the link:#game-status[game status].
 
 It is possible to reinitilize game in the same process. For example:
 
@@ -128,8 +129,7 @@ binbo:new_game(Pid, Fen3).
 ----
 
 
-**Example:**
-
+.Example:
 [source,erlang]
 ----
 %% In Erlang shell.
@@ -158,11 +158,11 @@ binbo:move(Pid, Move) -> {ok, GameStatus} | {error, Reason}.
 where:
 
 * `Pid` is the pid of the game process;
-* `Move` is of `binary()` or `string()` type.
+* `Move` is of `binary()` or `string()` type;
+* `GameStatus` is the link:#game-status[game status].
 
 
-**Examples:**
-
+.Examples:
 [source,erlang]
 ----
 %% In Erlang shell.
@@ -206,7 +206,7 @@ Binbo recognizes https://en.wikipedia.org/wiki/Castling[castling] when:
 
 Binbo also checks whether castling allowed or not acording to the chess rules.
 
-**Castling examples:**
+.Castling examples:
 [source,erlang]
 ----
 % White castling kingside
@@ -229,8 +229,7 @@ Binbo recognizes https://en.wikipedia.org/wiki/Promotion_(chess)[promotion] when
 * White pawn moves from square of `rank 7` to square of `rank 8`;
 * Black pawn moves from square of `rank 2` to square of `rank 1`.
 
-**Promotion examples:**
-
+.Promotion examples:
 [source,erlang]
 ----
 % White pawn promoted to Queen:
@@ -261,8 +260,7 @@ Binbo also recognizes the https://en.wikipedia.org/wiki/En_passant[en passant ca
 binbo:get_fen(Pid) -> {ok, Fen}.
 ----
 
-**Example:**
-
+.Example:
 [source,erlang]
 ----
 > binbo:get_fen(Pid).
@@ -292,6 +290,29 @@ binbo:print_board(Pid, [flip]).
 binbo:print_board(Pid, [unicode, flip]).
 ----
 
+[[game-status]]
+=== Game status
+
+[source,erlang]
+----
+binbo:game_status(Pid) -> {ok, GameStatus} | {error, Reason}.
+----
+
+.where:
+* `Pid` is the the pid of the game process;
+* `GameStatus` is the game status itself;
+* `Reason` is the reason why the game status cannot be obtained (usually due to the fact that the game is not initialized via link:#initializing-new-game[binbo:new_game/1,2]).
+
+.The value of `GameStatus`:
+* `continue` - game in progress;
+* `checkmate` - one of the sides (White or Black) checkmated;
+* `{draw, stalemate}` - draw because of stalemate;
+* `{draw, rule50}` - draw according to the fifty-move rule;
+* `{draw, insufficient_material}` - draw because of insufficient material;
+* `{draw, threefold_repetition}` - draw according to the threefold repetition rule;
+* `{draw, {manual, WhyDraw}}` - draw was set link:#setting-a-draw[manually] for the reason of `WhyDraw`.
+
+[[setting-a-draw]]
 === Setting a draw
 
 It is possible to set a draw via API:
@@ -302,15 +323,13 @@ binbo:game_draw(Pid) -> ok | {error, Reason}.
 binbo:game_draw(Pid, WhyDraw) -> ok | {error, Reason}.
 ----
 
-where:
-
+.where:
 * `Pid` is the pid of the game process;
 * `WhyDraw` is the reason why a draw is to be set.
 
 Calling `binbo:game_draw(Pid)` is the same as: `binbo:game_draw(Pid, undefined)`.
 
-**Example:**
-
+.Example:
 [source,erlang]
 ----
 % Players agreed to a draw:
@@ -343,20 +362,19 @@ The main problem is to find the index which is then used to lookup legal moves
 of sliding pieces in a preinitialized move database.
 The formula for the index is:
 
-in C/C++:
+.in C/C++:
 [source]
 ----
 magic_index = ((occupied & mask) * magic_number) >> shift;
 ----
 
-in Erlang:
+.in Erlang:
 [source,erlang]
 ----
 MagicIndex = (((Occupied band Mask) * MagicNumber) bsr Shift).
 ----
 
-where:
-
+.where:
 * `Occupied` is the bitboard of all pieces.
 * `Mask` is the attack mask of a piece for a given square.
 * `MagicNumber` is the magic number, see &quot;https://www.chessprogramming.org/Looking_for_Magics[Looking for Magics]&quot;.
@@ -374,7 +392,7 @@ a simple lookup:
 move = global_move_table[square][magic_index]
 ----
 
-If detailed:
+.If detailed:
 [source]
 ----
 moves_from = global_move_table[square];
@@ -397,15 +415,13 @@ Since the number of squares on the chessboard is the constant value (it's always
 our `global_move_table` can be constructed as a tuple of 64 elements, and each element of this tuple
 is a map containing the key-value association as `MagicIndex =&gt; Moves`.
 
-If detailed, for moves:
-
+.If detailed, for moves:
 [source,erlang]
 ----
 GlobalMovesTable = { MoveMap1, ..., MoveMap64 }
 ----
 
-where:
-
+.where:
 [source,erlang]
 ----
 MoveMap1  = #{
