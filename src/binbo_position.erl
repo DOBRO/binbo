@@ -65,9 +65,11 @@
 -type game_draw_stalemate() :: ?GAME_STATUS_DRAW_STALEMATE.
 -type game_draw_rule50() :: ?GAME_STATUS_DRAW_RULE50.
 -type game_draw_material() :: ?GAME_STATUS_DRAW_MATERIAL.
+-type game_draw_repetition() :: ?GAME_STATUS_DRAW_REPETITION.
 -type why_draw() :: game_draw_stalemate()
 				| game_draw_rule50()
 				| game_draw_material()
+				| game_draw_repetition()
 				| {manual, term()}.
 -type game_status_draw() :: {draw, why_draw()}.
 -type game_over_status() :: game_status_checkmate() | game_status_draw().
@@ -254,7 +256,7 @@ is_repetition(Game) ->
 
 
 %% maybe_draw/1
--spec maybe_draw(bb_game()) -> false | {true, game_draw_rule50() | game_draw_material()}.
+-spec maybe_draw(bb_game()) -> false | {true, game_draw_rule50() | game_draw_material() | game_draw_repetition()}.
 maybe_draw(Game) ->
 	case is_rule50(Game) of
 		true  ->
