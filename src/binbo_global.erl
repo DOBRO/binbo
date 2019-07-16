@@ -41,7 +41,7 @@ get(Mod) ->
 -spec put(module(), value()) -> ok.
 put(Mod, V) ->
 	Bin = compile(Mod, V),
-	code:purge(Mod),
+	_ = code:purge(Mod),
 	Filename = atom_to_list(Mod) ++ ".erl",
 	{module, Mod} = code:load_binary(Mod, Filename, Bin),
 	ok.
@@ -49,7 +49,7 @@ put(Mod, V) ->
 %% delete/1
 -spec delete(module()) -> boolean().
 delete(Mod) ->
-	code:purge(Mod),
+	_ = code:purge(Mod),
 	code:delete(Mod).
 
 

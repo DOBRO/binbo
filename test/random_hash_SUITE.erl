@@ -27,4 +27,14 @@ all() -> [{testcase, test_random_hash, [{repeat_until_fail, 100}]}].
 
 %% test_random_hash/1
 test_random_hash(_Config) ->
-	[_|_] = binbo_hash:init().
+	Mods = binbo_hash:init(),
+	[_|_] = Mods,
+	ok = unload_mods(Mods).
+
+%% unload_mods/1
+unload_mods([]) -> ok;
+unload_mods([Mod|Tail]) ->
+	true = erlang:is_atom(Mod),
+	Bool = binbo_global:delete(Mod),
+	true = erlang:is_boolean(Bool),
+	unload_mods(Tail).
