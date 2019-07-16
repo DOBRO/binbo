@@ -48,7 +48,7 @@ xref:
 	@$(REBAR3) xref
 
 cover:
-	@$(REBAR3) do ct, cover
+	@$(REBAR3) cover
 
 $(REBAR3):
 	curl -Lo rebar3 $(REBAR3_URL) || wget $(REBAR3_URL)

@@ -58,6 +58,7 @@
 -type castling_hash_map() :: #{
 	castling() => hash()
 }.
+-type hash_error() :: {duplicated_piece_hash | duplicated_enpa_hash | duplicated_side_hash | duplicated_castling_hash, hash()}.
 
 -export_type([hash/0]).
 
@@ -80,7 +81,7 @@ init(MaxRandom) ->
 	CastlingMod = init_castling_hash_map(MaxRandom),
 	% Here we check random numbers whether they are unique or not.
 	% If not, it fails with exception.
-	_ = check_randoms(),
+	ok = check_randoms(),
 	[PiecesMod, EnpaMod, SideMod, CastlingMod].
 
 %% piece_hash/2
@@ -195,59 +196,85 @@ castling_hash_map(MaxRandom) ->
 	end, #{}, binbo_board:castling_list()).
 
 
-
 %% check_randoms/0
--spec check_randoms() -> ok | no_return().
+-spec check_randoms() -> ok | {error, hash_error()}.
 check_randoms() ->
 	check_randoms([piece, enpa, side, castling], #{}).
 
 %% check_randoms/2
--spec check_randoms([piece|enpa|side|castling], #{hash() => 0}) -> ok | no_return().
+-spec check_randoms([piece|enpa|side|castling], #{hash() => 0}) -> ok | {error, hash_error()}.
 check_randoms([], _Map) ->
 	ok;
 check_randoms([piece | Tail], Map0) ->
-	Map = lists:foldl(fun(Piece, MapAcc) ->
-		lists:foldl(fun(SqIdx, MapAcc2) ->
-			PieceHash = piece_hash(Piece, SqIdx),
-			case maps:find(PieceHash, MapAcc2) of
-				{ok, _} ->
-					erlang:error({duplicated_piece_hash, PieceHash});
-				error ->
-					MapAcc2#{PieceHash => 0}
-			end
-		end, MapAcc, binbo_board:index_list())
+	Map = lists:foldl(fun
+		(Piece, MapAcc) when is_map(MapAcc) ->
+			lists:foldl(fun
+				(SqIdx, MapAcc2) when is_map(MapAcc2) ->
+					PieceHash = piece_hash(Piece, SqIdx),
+					case maps:find(PieceHash, MapAcc2) of
+						{ok, _} ->
+							{duplicated, PieceHash};
+						error ->
+							MapAcc2#{PieceHash => 0}
+					end;
+				(_, {duplicated, Hash}) ->
+					{duplicated, Hash}
+			end, MapAcc, binbo_board:index_list());
+		(_, {duplicated, Hash}) ->
+			{duplicated, Hash}
 	end, Map0, binbo_board:pieces()),
-	check_randoms(Tail, Map);
+	case Map of
+		#{} -> check_randoms(Tail, Map);
+		{duplicated, Hash} -> {error, {duplicated_piece_hash, Hash}}
+	end;
 check_randoms([enpa | Tail], Map0) ->
-	Map = lists:foldl(fun(File, MapAcc) ->
-		EnpaHash = enpa_hash(File),
-		case maps:find(EnpaHash, MapAcc) of
-			{ok, _} ->
-				erlang:error({duplicated_enpa_hash, EnpaHash});
-			error ->
-				MapAcc#{EnpaHash => 0}
-		end
+	Map = lists:foldl(fun
+		(File, MapAcc) when is_map(MapAcc) ->
+			EnpaHash = enpa_hash(File),
+			case maps:find(EnpaHash, MapAcc) of
+				{ok, _} ->
+					{duplicated, EnpaHash};
+				error ->
+					MapAcc#{EnpaHash => 0}
+			end;
+		(_, {duplicated, Hash}) ->
+			{duplicated, Hash}
 	end, Map0, binbo_board:file_list()),
-	check_randoms(Tail, Map);
+	case Map of
+		#{} -> check_randoms(Tail, Map);
+		{duplicated, Hash} -> {error, {duplicated_enpa_hash, Hash}}
+	end;
 check_randoms([side | Tail], Map0) ->
-	Map = lists:foldl(fun(Side, MapAcc) ->
-		SideHash = side_hash(Side),
-		case maps:find(SideHash, MapAcc) of
-			{ok, _} ->
-				erlang:error({duplicated_side_hash, SideHash});
-			error ->
-				MapAcc#{SideHash => 0}
-		end
+	Map = lists:foldl(fun
+		(Side, MapAcc) when is_map(MapAcc) ->
+			SideHash = side_hash(Side),
+			case maps:find(SideHash, MapAcc) of
+				{ok, _} ->
+					{duplicated, SideHash};
+				error ->
+					MapAcc#{SideHash => 0}
+			end;
+		(_, {duplicated, Hash}) ->
+			{duplicated, Hash}
 	end, Map0, binbo_board:side_list()),
-	check_randoms(Tail, Map);
+	case Map of
+		#{} -> check_randoms(Tail, Map);
+		{duplicated, Hash} -> {error, {duplicated_side_hash, Hash}}
+	end;
 check_randoms([castling | Tail], Map0) ->
-	Map = lists:foldl(fun(Castling, MapAcc) ->
-		CastlingHash = castling_hash(Castling),
-		case maps:find(CastlingHash, MapAcc) of
-			{ok, _} ->
-				erlang:error({duplicated_castling_hash, CastlingHash});
-			error ->
-				MapAcc#{CastlingHash => 0}
-		end
+	Map = lists:foldl(fun
+		(Castling, MapAcc) when is_map(MapAcc) ->
+			CastlingHash = castling_hash(Castling),
+			case maps:find(CastlingHash, MapAcc) of
+				{ok, _} ->
+					{duplicated, CastlingHash};
+				error ->
+					MapAcc#{CastlingHash => 0}
+			end;
+		(_, {duplicated, Hash}) ->
+			{duplicated, Hash}
 	end, Map0, binbo_board:castling_list()),
-	check_randoms(Tail, Map).
+	case Map of
+		#{} -> check_randoms(Tail, Map);
+		{duplicated, Hash} -> {error, {duplicated_castling_hash, Hash}}
+	end.

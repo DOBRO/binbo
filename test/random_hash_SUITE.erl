@@ -19,10 +19,12 @@
 -export([all/0]).
 -export([test_random_hash/1]).
 
+%% all/0
 %% Generate random numbers (hashes), check them for uniqueness,
 %% and repeat the test 100 times.
 all() -> [{testcase, test_random_hash, [{repeat_until_fail, 100}]}].
 
 
+%% test_random_hash/1
 test_random_hash(_Config) ->
-	[_|_] = (catch binbo_hash:init()).
+	[_|_] = binbo_hash:init().
