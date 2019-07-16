@@ -23,7 +23,7 @@ deps: $(REBAR3)
 	@$(REBAR3) deps
 
 test:
-	@$(REBAR3) eunit
+	@$(REBAR3) ct
 
 dialyzer:
 	@$(REBAR3) dialyzer
@@ -48,7 +48,7 @@ xref:
 	@$(REBAR3) xref
 
 cover:
-	@$(REBAR3) do eunit, cover
+	@$(REBAR3) do ct, cover
 
 $(REBAR3):
 	curl -Lo rebar3 $(REBAR3_URL) || wget $(REBAR3_URL)
