@@ -21,7 +21,7 @@
 
 %% all/0
 %% Generate random numbers (hashes), check them for uniqueness,
-%% and repeat the test 100 times.
+%% and repeat the test 10 times.
 all() -> [{testcase, random_hash_test, [{repeat_until_fail, 10}]}].
 
 
