@@ -65,7 +65,7 @@ rank_of_index(Idx) ->
 	(Idx bsr 3).
 
 %% file_of_index/1
--spec file_of_index(square_index()) -> rank().
+-spec file_of_index(square_index()) -> file().
 file_of_index(Idx) ->
 	(Idx band 7).
 
