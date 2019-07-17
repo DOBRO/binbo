@@ -13,6 +13,8 @@
 %% limitations under the License.
 
 -module(binbo_board_SUITE).
+-include_lib("common_test/include/ct.hrl").
+
 -compile(export_all).
 -compile(nowarn_export_all).
 
