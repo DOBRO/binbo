@@ -12,21 +12,21 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
--module(random_hash_SUITE).
+-module(binbo_hash_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
 
 -export([all/0]).
--export([test_random_hash/1]).
+-export([random_hash_test/1]).
 
 %% all/0
 %% Generate random numbers (hashes), check them for uniqueness,
 %% and repeat the test 100 times.
-all() -> [{testcase, test_random_hash, [{repeat_until_fail, 100}]}].
+all() -> [{testcase, random_hash_test, [{repeat_until_fail, 10}]}].
 
 
 %% test_random_hash/1
-test_random_hash(_Config) ->
+random_hash_test(_Config) ->
 	Mods = binbo_hash:init(),
 	[_|_] = Mods,
 	ok = unload_mods(Mods).
