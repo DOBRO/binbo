@@ -23,7 +23,7 @@
 
 -include("binbo_global.hrl").
 
--define(MAX_RANDOM_NUMBER, 9223372036854775808). % (1 bsl 63)
+-define(MAX_RANDOM_NUMBER, 2147483648). % (1 bsl 31)
 
 %%%------------------------------------------------------------------------------
 %%%   Types
@@ -74,7 +74,7 @@ init() ->
 %% init/1
 -spec init(max_random()) -> [module()].
 init(MaxRandom) ->
-	_ = crypto:rand_seed(),
+	_ = rand:seed(exs64, 1070372),
 	PiecesMod = init_pieces_hash_map(MaxRandom),
 	EnpaMod = init_enpassant_hash_map(MaxRandom),
 	SideMod = init_side_hash_map(MaxRandom),
