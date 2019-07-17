@@ -14,8 +14,6 @@
 
 -module(binbo_hash_SUITE).
 
--include_lib("common_test/include/ct.hrl").
-
 -export([all/0]).
 -export([random_hash_test/1]).
 

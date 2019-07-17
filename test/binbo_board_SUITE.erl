@@ -16,7 +16,7 @@
 -compile(export_all).
 -compile(nowarn_export_all).
 
--include_lib("common_test/include/ct.hrl").
+-define(value(Key,Config), proplists:get_value(Key,Config)).
 
 
 %% all/0
@@ -64,14 +64,14 @@ file_list_test(_Config) ->
 
 %% side_list_test/1
 side_list_test(Config) ->
-	White = ?config(white, Config),
-	Black = ?config(black, Config),
+	White = ?value(white, Config),
+	Black = ?value(black, Config),
 	[White, Black] = binbo_board:side_list().
 
 %% enemy_color_test/1
 enemy_color_test(Config) ->
-	White = ?config(white, Config),
-	Black = ?config(black, Config),
+	White = ?value(white, Config),
+	Black = ?value(black, Config),
 	Black = binbo_board:enemy_color(White),
 	White = binbo_board:enemy_color(Black).
 
@@ -81,14 +81,14 @@ castling_list_test(_Config) ->
 
 %% rank_of_index_test/1
 rank_of_index_test(Config) ->
-	0 = binbo_board:rank_of_index(?config(a1, Config)),
-	1 = binbo_board:rank_of_index(?config(b2, Config)),
-	2 = binbo_board:rank_of_index(?config(c3, Config)),
-	3 = binbo_board:rank_of_index(?config(d4, Config)),
-	4 = binbo_board:rank_of_index(?config(e5, Config)),
-	5 = binbo_board:rank_of_index(?config(f6, Config)),
-	6 = binbo_board:rank_of_index(?config(g7, Config)),
-	7 = binbo_board:rank_of_index(?config(h8, Config)),
+	0 = binbo_board:rank_of_index(?value(a1, Config)),
+	1 = binbo_board:rank_of_index(?value(b2, Config)),
+	2 = binbo_board:rank_of_index(?value(c3, Config)),
+	3 = binbo_board:rank_of_index(?value(d4, Config)),
+	4 = binbo_board:rank_of_index(?value(e5, Config)),
+	5 = binbo_board:rank_of_index(?value(f6, Config)),
+	6 = binbo_board:rank_of_index(?value(g7, Config)),
+	7 = binbo_board:rank_of_index(?value(h8, Config)),
 	lists:foreach(fun(Idx) ->
 		RankNum = binbo_board:rank_number(Idx),
 		RankNum = binbo_board:rank_of_index(Idx) + 1
@@ -96,25 +96,25 @@ rank_of_index_test(Config) ->
 
 %% file_of_index_test/1
 file_of_index_test(Config) ->
-	0 = binbo_board:file_of_index(?config(a1, Config)),
-	1 = binbo_board:file_of_index(?config(b2, Config)),
-	2 = binbo_board:file_of_index(?config(c3, Config)),
-	3 = binbo_board:file_of_index(?config(d4, Config)),
-	4 = binbo_board:file_of_index(?config(e5, Config)),
-	5 = binbo_board:file_of_index(?config(f6, Config)),
-	6 = binbo_board:file_of_index(?config(g7, Config)),
-	7 = binbo_board:file_of_index(?config(h8, Config)).
+	0 = binbo_board:file_of_index(?value(a1, Config)),
+	1 = binbo_board:file_of_index(?value(b2, Config)),
+	2 = binbo_board:file_of_index(?value(c3, Config)),
+	3 = binbo_board:file_of_index(?value(d4, Config)),
+	4 = binbo_board:file_of_index(?value(e5, Config)),
+	5 = binbo_board:file_of_index(?value(f6, Config)),
+	6 = binbo_board:file_of_index(?value(g7, Config)),
+	7 = binbo_board:file_of_index(?value(h8, Config)).
 
 %% sq_distance_test/1
 sq_distance_test(Config) ->
-	0 = binbo_board:sq_distance(?config(a1, Config), ?config(a1, Config)),
-	1 = binbo_board:sq_distance(?config(a1, Config), ?config(b2, Config)),
-	2 = binbo_board:sq_distance(?config(a1, Config), ?config(c3, Config)),
-	3 = binbo_board:sq_distance(?config(a1, Config), ?config(d4, Config)),
-	4 = binbo_board:sq_distance(?config(a1, Config), ?config(e5, Config)),
-	5 = binbo_board:sq_distance(?config(a1, Config), ?config(f6, Config)),
-	6 = binbo_board:sq_distance(?config(a1, Config), ?config(g7, Config)),
-	7 = binbo_board:sq_distance(?config(a1, Config), ?config(h8, Config)).
+	0 = binbo_board:sq_distance(?value(a1, Config), ?value(a1, Config)),
+	1 = binbo_board:sq_distance(?value(a1, Config), ?value(b2, Config)),
+	2 = binbo_board:sq_distance(?value(a1, Config), ?value(c3, Config)),
+	3 = binbo_board:sq_distance(?value(a1, Config), ?value(d4, Config)),
+	4 = binbo_board:sq_distance(?value(a1, Config), ?value(e5, Config)),
+	5 = binbo_board:sq_distance(?value(a1, Config), ?value(f6, Config)),
+	6 = binbo_board:sq_distance(?value(a1, Config), ?value(g7, Config)),
+	7 = binbo_board:sq_distance(?value(a1, Config), ?value(h8, Config)).
 
 %% is_valid_square_notation_test/1
 is_valid_square_notation_test(_Config) ->
@@ -159,14 +159,14 @@ castling_rook_squares_test(Config) ->
 	CASTLING_B_OO  = 2#0100,
 	CASTLING_W_OOO = 2#0010,
 	CASTLING_B_OOO = 2#1000,
-	H1 = ?config(h1, Config),
-	F1 = ?config(f1, Config),
-	H8 = ?config(h8, Config),
-	F8 = ?config(f8, Config),
-	A1 = ?config(a1, Config),
-	D1 = ?config(d1, Config),
-	A8 = ?config(a8, Config),
-	D8 = ?config(d8, Config),
+	H1 = ?value(h1, Config),
+	F1 = ?value(f1, Config),
+	H8 = ?value(h8, Config),
+	F8 = ?value(f8, Config),
+	A1 = ?value(a1, Config),
+	D1 = ?value(d1, Config),
+	A8 = ?value(a8, Config),
+	D8 = ?value(d8, Config),
 	{H1, F1} = binbo_board:castling_rook_squares(CASTLING_W_OO),
 	{H8, F8} = binbo_board:castling_rook_squares(CASTLING_B_OO),
 	{A1, D1} = binbo_board:castling_rook_squares(CASTLING_W_OOO),
