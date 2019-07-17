@@ -18,7 +18,7 @@
 -export([rank_of_index/1, file_of_index/1]).
 -export([notation_to_index/1]).
 -export([index_to_notation/1]).
--export([is_valid_square_notation/1, validate_square_notation/1]).
+-export([is_valid_square_notation/1]).
 -export([index_list/0, file_list/0, side_list/0, board_tuple/1]).
 -export([castling_list/0, castling_rook_squares/1]).
 -export([enemy_color/1]).
@@ -102,18 +102,6 @@ index_to_notation(Idx) ->
 	Rank = rank_number(Idx) + $0,
 	File = file_of_index(Idx) + $a,
 	<<File, Rank>>.
-
-%% validate_square_notation/1
--spec validate_square_notation(term()) -> {ok, square_notation()} | error.
-validate_square_notation(Sq) when is_binary(Sq) ->
-	case is_valid_square_notation(Sq) of
-		true -> {ok, Sq};
-		false -> error
-	end;
-validate_square_notation([F,R]) when is_integer(F), is_integer(R) ->
-	validate_square_notation(<<F,R>>);
-validate_square_notation(_) ->
-	error.
 
 %% index_list/0
 -spec index_list() -> [square_index()].
