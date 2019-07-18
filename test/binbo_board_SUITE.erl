@@ -22,11 +22,14 @@
 
 
 %% all/0
-all() -> [board_tuple_test, index_list_test, file_list_test, side_list_test,
-			enemy_color_test, castling_list_test, rank_of_index_test, file_of_index_test,
-			sq_distance_test, is_valid_square_notation_test, notation_to_index_test,
-			index_to_notation_test, castling_rook_squares_test
-		].
+all() -> [{group, all_tests}].
+
+groups() -> [{all_tests, [parallel], [
+	board_tuple_test, index_list_test, file_list_test, side_list_test,
+	enemy_color_test, castling_list_test, rank_of_index_test, file_of_index_test,
+	sq_distance_test, is_valid_square_notation_test, notation_to_index_test,
+	index_to_notation_test, castling_rook_squares_test
+]}].
 
 %% init_per_suite/1
 init_per_suite(Config) ->
