@@ -1,0 +1,1 @@
+-define(value(Key,Config), (proplists:get_value(Key,Config))).

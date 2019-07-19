@@ -18,9 +18,11 @@
 -compile(export_all).
 -compile(nowarn_export_all).
 
+%% all/0
 all() -> [test].
 
 
+%% test/1
 test(_Config) ->
 	Mod = '$binbo_global_SUITE$test$',
 	Value = 'test',

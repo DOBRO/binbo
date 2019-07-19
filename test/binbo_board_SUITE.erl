@@ -14,11 +14,10 @@
 
 -module(binbo_board_SUITE).
 -include_lib("common_test/include/ct.hrl").
+-include("binbo_test_lib.hrl").
 
 -compile(export_all).
 -compile(nowarn_export_all).
-
--define(value(Key,Config), proplists:get_value(Key,Config)).
 
 
 %% all/0
