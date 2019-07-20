@@ -9,7 +9,8 @@
 -export([init_per_testcase/2, end_per_testcase/2]).
 -export([move_all_pieces/1,
 	checkmate_white/1, checkmate_black/1,
-	stalemate_white/1, stalemate_black/1
+	stalemate_white/1, stalemate_black/1,
+	castling_kingside/1, castling_queenside/1
 ]).
 
 
@@ -21,7 +22,8 @@ groups() ->
 	[{games, [parallel], [
 		move_all_pieces,
 		checkmate_white, checkmate_black,
-		stalemate_white, stalemate_black
+		stalemate_white, stalemate_black,
+		castling_kingside, castling_queenside
 	]}].
 
 %% init_per_suite/1
@@ -117,4 +119,24 @@ stalemate_black(Config) ->
 	Pid = get_pid(Config),
 	{ok, continue} = binbo:new_game(Pid, <<"1q2b1b1/8/8/8/8/7k/8/K7 b - -">>),
 	{ok, {draw,stalemate}} = binbo:move(Pid, <<"e8g6">>),
+	ok.
+
+%% castling_kingside/1
+castling_kingside(Config) ->
+	Pid = get_pid(Config),
+	{ok, continue} = binbo:new_game(Pid, <<"r3k2r/ppp1qppp/2np1n2/2b1p1B1/2B1P1b1/2NP1N2/PPP1QPPP/R3K2R w KQkq -">>),
+	% White castling
+	{ok, continue} = binbo:move(Pid, <<"e1g1">>),
+	% Black castling
+	{ok, continue} = binbo:move(Pid, <<"e8g8">>),
+	ok.
+
+%% castling_queenside/1
+castling_queenside(Config) ->
+	Pid = get_pid(Config),
+	{ok, continue} = binbo:new_game(Pid, <<"r3k2r/ppp1qppp/2np1n2/2b1p1B1/2B1P1b1/2NP1N2/PPP1QPPP/R3K2R w KQkq -">>),
+	% White castling
+	{ok, continue} = binbo:move(Pid, <<"e1c1">>),
+	% Black castling
+	{ok, continue} = binbo:move(Pid, <<"e8c8">>),
 	ok.
