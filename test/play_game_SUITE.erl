@@ -58,10 +58,11 @@ make_legal_moves(Pid, [Move | Tail]) ->
 %% move_all_pieces/1
 move_all_pieces(Config) ->
 	Pid = get_pid(Config),
+	% Init game from initial position
 	{ok, continue} = binbo:new_game(Pid),
 	ok = make_legal_moves(Pid, [
 		% white and black pawn push
-		<<"a2a3">>, <<"a7a6">>
+		  <<"a2a3">>, <<"a7a6">>
 		, <<"c2c3">>, <<"c7c6">>
 		% white and black pawn double push
 		, <<"e2e4">>, <<"e7e5">>
@@ -75,5 +76,10 @@ move_all_pieces(Config) ->
 		, <<"b1d2">>, <<"b8d7">>
 		% white and black queen
 		, <<"d1a4">>, <<"d8b6">>
+		% white and black rook
+		, <<"h1g1">>, <<"h8g8">>
+		, <<"a1d1">>, <<"a8d8">>
+		% white and black king
+		, <<"e1f1">>, <<"e8f8">>
 	]),
 	ok.
