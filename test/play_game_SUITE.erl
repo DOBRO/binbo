@@ -7,7 +7,10 @@
 -export([groups/0]).
 -export([init_per_suite/1, end_per_suite/1]).
 -export([init_per_testcase/2, end_per_testcase/2]).
--export([move_all_pieces/1, checkmate_white/1, checkmate_black/1]).
+-export([move_all_pieces/1,
+	checkmate_white/1, checkmate_black/1,
+	stalemate_white/1, stalemate_black/1
+]).
 
 
 %% all/0
@@ -15,7 +18,11 @@ all() -> [{group, games}].
 
 %% groups/0
 groups() ->
-	[{games, [parallel], [move_all_pieces, checkmate_white, checkmate_black]}].
+	[{games, [parallel], [
+		move_all_pieces,
+		checkmate_white, checkmate_black,
+		stalemate_white, stalemate_black
+	]}].
 
 %% init_per_suite/1
 init_per_suite(Config) ->
@@ -88,12 +95,26 @@ move_all_pieces(Config) ->
 checkmate_white(Config) ->
 	Pid = get_pid(Config),
 	{ok, continue} = binbo:new_game(Pid, <<"rnbqkbnr/3ppppp/ppp5/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq -">>),
-	{ok,checkmate} = binbo:move(Pid, <<"c4f7">>),
+	{ok, checkmate} = binbo:move(Pid, <<"c4f7">>),
 	ok.
 
 %% checkmate_black/1
 checkmate_black(Config) ->
 	Pid = get_pid(Config),
 	{ok, continue} = binbo:new_game(Pid, <<"rnb1k1nr/pppp1ppp/8/2b1p3/P6q/NP6/2PPPPPP/R1BQKBNR b KQkq -">>),
-	{ok,checkmate} = binbo:move(Pid, <<"h4f2">>),
+	{ok, checkmate} = binbo:move(Pid, <<"h4f2">>),
+	ok.
+
+%% stalemate_white/1
+stalemate_white(Config) ->
+	Pid = get_pid(Config),
+	{ok, continue} = binbo:new_game(Pid, <<"k7/8/8/8/7Q/8/3K4/1R6 w - -">>),
+	{ok, {draw,stalemate}} = binbo:move(Pid, <<"h4h7">>),
+	ok.
+
+%% stalemate_black/1
+stalemate_black(Config) ->
+	Pid = get_pid(Config),
+	{ok, continue} = binbo:new_game(Pid, <<"1q2b1b1/8/8/8/8/7k/8/K7 b - -">>),
+	{ok, {draw,stalemate}} = binbo:move(Pid, <<"e8g6">>),
 	ok.
