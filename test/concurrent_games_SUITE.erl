@@ -72,6 +72,7 @@ await_game_end(Parent, Ref) ->
 	Parent ! {self(), Ref, game_end},
 	ok.
 
+%% play_game/1
 play_game(Pid) ->
 	{ok, continue} = binbo:new_game(Pid),
 	{ok, continue} = binbo:move(Pid, <<"e2e4">>),
