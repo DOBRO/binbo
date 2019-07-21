@@ -14,7 +14,8 @@
 	castling_white_after_king_move/1,
 	castling_white_after_rook_move/1,
 	castling_black_after_king_move/1,
-	castling_black_after_rook_move/1
+	castling_black_after_rook_move/1,
+	castling_white_when_attacked/1
 ]).
 
 
@@ -31,7 +32,8 @@ groups() ->
 		castling_white_after_king_move,
 		castling_black_after_king_move,
 		castling_white_after_rook_move,
-		castling_black_after_rook_move
+		castling_black_after_rook_move,
+		castling_white_when_attacked
 	]}].
 
 %% init_per_suite/1
@@ -265,4 +267,36 @@ castling_black_after_rook_move(Config) ->
 	{error, {invalid_move, 'BLACK_KING'}} = binbo:move(Pid, <<"e8g8">>),
 	% Castling queenside not allowed
 	{error, {invalid_move, 'BLACK_KING'}} = binbo:move(Pid, <<"e8c8">>),
+	ok.
+
+
+%% castling_white_when_attacked/1
+castling_white_when_attacked(Config) ->
+	Pid = get_pid(Config),
+	% New game, white king is in check
+	{ok, continue} = binbo:new_game(Pid, <<"r3k2r/pppbq1pp/n2p1p1n/4p1B1/1bB1P3/N2P1P1N/PPP1Q1PP/R3K2R w KQkq -">>),
+	% No castling allowed
+	{error, {invalid_move, 'WHITE_KING'}} = binbo:move(Pid, <<"e1g1">>),
+	{error, {invalid_move, 'WHITE_KING'}} = binbo:move(Pid, <<"e1c1">>),
+
+	% New game, G1 is attacked. Castling kingside not allowed
+	{ok, continue} = binbo:new_game(Pid, <<"r3k2r/pppbq1pp/n2p1p1n/2b1p1B1/2B1P3/N2P1P1N/PPP1Q1PP/R3K2R w KQkq -">>),
+	{error, {invalid_move, 'WHITE_KING'}} = binbo:move(Pid, <<"e1g1">>),
+
+	% New game, F1 is attacked. Castling kingside not allowed
+	{ok, continue} = binbo:new_game(Pid, <<"r3k2r/pppbq1pp/n2p1p2/b3p1B1/2B1P3/N1PP1PnN/PP2Q1PP/R3K2R w KQkq -">>),
+	{error, {invalid_move, 'WHITE_KING'}} = binbo:move(Pid, <<"e1g1">>),
+
+	% New game, C1 is attacked. Castling queenside not allowed
+	{ok, continue} = binbo:new_game(Pid, <<"r3k2r/ppp1q1pp/n2p1pbn/4p1b1/2B1P2B/N1PP1P1N/PP2Q1PP/R3K2R w KQkq -">>),
+	{error, {invalid_move, 'WHITE_KING'}} = binbo:move(Pid, <<"e1c1">>),
+
+	% New game, D1 is attacked. Castling queenside not allowed
+	{ok, continue} = binbo:new_game(Pid, <<"r3k2r/ppp1q1pp/n2p1p1n/4p1b1/b1B1P2B/N1PP1P1N/PP2Q1PP/R3K2R w KQkq -">>),
+	{error, {invalid_move, 'WHITE_KING'}} = binbo:move(Pid, <<"e1c1">>),
+
+	% New game, B1 is attacked. Castling queenside is allowed
+	{ok, continue} = binbo:new_game(Pid, <<"r3k2r/ppp1q1pp/nb3pbn/3PP3/2B4B/N1P2P1N/PP2Q1PP/R3K2R w KQkq -">>),
+	{ok, continue} = binbo:move(Pid, <<"e1c1">>),
+
 	ok.
