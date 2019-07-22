@@ -4,7 +4,7 @@
 	{modules, []},
 	{registered, [binbo_sup]},
 	{applications, [kernel, stdlib, compiler, syntax_tools, uef]},
-    {mod, {binbo_app, []}},
+	{mod, {binbo_app, []}},
 	{env, []},
 	{licenses, ["Apache-2.0"]},
 	{links, [{"Github", "https://github.com/DOBRO/binbo"}]}

@@ -1,4 +1,6 @@
-[{<<"uef">>,
-  {git,"https://github.com/DOBRO/uef-lib.git",
-       {ref,"23b13ca59749ae37f8f19f2392b6265f67a96633"}},
-  0}].
+{"1.1.0",
+[{<<"uef">>,{pkg,<<"uef">>,<<"2.3.0">>},0}]}.
+[
+{pkg_hash,[
+ {<<"uef">>, <<"F3AD321E24A0ACA726795B746D2A963A616A83ADFC480396E486525199E99530">>}]}
+].
