@@ -36,31 +36,45 @@
 
 %% start/0
 -spec start() -> {ok, [atom()]} | {error, term()}.
+%% @doc
+%% Call to start application.
+%% @end
 start() ->
 	application:ensure_all_started(?APPLICATION).
 
 %% stop/0
 -spec stop() -> ok.
+%% @doc
+%% Call to stop application.
+%% @end
 stop() ->
 	application:stop(?APPLICATION).
 
 %% new_server/0
 -spec new_server() -> {ok, pid()}.
+%% @equiv new_server([])
 new_server() ->
 	new_server([]).
 
 %% new_server/0
 -spec new_server(Args :: term()) -> {ok, pid()}.
+%% @doc
+%% Call to start new game process.
+%% @end
 new_server(Args) ->
 	binbo_sup:start_child(Args).
 
 %% stop_server/1
 -spec stop_server(pid()) -> binbo_server:stop_ret().
+%% @doc
+%% Call to stop the game process.
+%% @end
 stop_server(Pid) ->
 	binbo_server:stop(Pid).
 
 %% new_game/1
 -spec new_game(pid()) -> binbo_server:new_game_ret().
+%% @equiv new_game(Pid, initial)
 new_game(Pid) ->
 	new_game(Pid, initial).
 

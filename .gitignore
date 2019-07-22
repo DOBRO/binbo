@@ -1,3 +1,5 @@
 _build
+doc/*
+!doc/overview.edoc
 # macOS annoying file
 .DS_Store

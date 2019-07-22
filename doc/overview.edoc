@@ -1,0 +1,14 @@
+** this is the overview.doc file for the application 'Binbo' **
+
+@author Sergei Semichev <chessvegas@chessvegas.com>
+@copyright 2019 Sergei Semichev
+@title The Binbo application
+@reference See <a href="https://github.com/DOBRO/binbo" target="_blank">Binbo page on github</a> for more information and examples.
+
+@doc `Binbo' is a Chess representation written in pure Erlang using Bitboards. It is basically aimed to be used on game servers where people play chess online.
+
+It’s called Binbo because its ground is a binary board containing only zeros and ones (0 and 1) since this is the main meaning of Bitboards as an internal chessboard representation.
+
+Binbo also uses the Magic Bitboards approach for a blazing fast move generation of sliding pieces (rook, bishop, and queen).
+
+Note: it’s not a chess engine but it could be a good starting point for it. It can play the role of a core (regarding move generation and validation) for multiple chess engines running on distributed Erlang nodes, since Binbo is an OTP application itself.
