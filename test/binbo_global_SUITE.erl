@@ -15,16 +15,25 @@
 -module(binbo_global_SUITE).
 -include_lib("common_test/include/ct.hrl").
 
--compile(export_all).
--compile(nowarn_export_all).
+-export([all/0]).
+-export([init_per_suite/1, end_per_suite/1]).
+-export([test_global/1]).
+
 
 %% all/0
-all() -> [test].
+all() -> [test_global].
 
+%% init_per_suite/1
+init_per_suite(Config) ->
+	Config.
+
+%% end_per_suite/1
+end_per_suite(_Config) ->
+	ok.
 
 %% test/1
-test(_Config) ->
-	Mod = '$binbo_global_SUITE$test$',
+test_global(_Config) ->
+	Mod = 'binbo_global_suite_test',
 	Value = 'test',
 	ok = binbo_global:put(Mod, Value),
 	{file, _} = code:is_loaded(Mod),

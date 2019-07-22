@@ -16,9 +16,15 @@
 -include_lib("common_test/include/ct.hrl").
 -include("binbo_test_lib.hrl").
 
--compile(export_all).
--compile(nowarn_export_all).
-
+-export([all/0]).
+-export([groups/0]).
+-export([init_per_suite/1, end_per_suite/1]).
+-export([
+board_tuple_test/1, index_list_test/1, file_list_test/1, side_list_test/1,
+enemy_color_test/1, castling_list_test/1, rank_of_index_test/1, file_of_index_test/1,
+sq_distance_test/1, is_valid_square_notation_test/1, notation_to_index_test/1,
+index_to_notation_test/1, castling_rook_squares_test/1
+]).
 
 %% all/0
 all() -> [{group, all_tests}].
