@@ -2,6 +2,7 @@
 :toc: macro
 :toclevels: 4
 
+image:https://img.shields.io/hexpm/v/binbo.svg?color=yellow["Binbo on Hex.pm", link="https://hex.pm/packages/binbo"]
 image:https://travis-ci.org/DOBRO/binbo.svg?branch=master["Build Status", link="https://travis-ci.org/DOBRO/binbo"]
 image:https://img.shields.io/badge/license-Apache%202.0-blue.svg["License", link="LICENSE"]
 
