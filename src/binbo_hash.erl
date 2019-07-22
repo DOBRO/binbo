@@ -74,7 +74,7 @@ init() ->
 %% init/1
 -spec init(max_random()) -> [module()].
 init(MaxRandom) ->
-	_ = rand:seed(exs64, 1070372),
+	_ = rand:seed(exs64, {1070372, 1070372, 1070372}),
 	PiecesMod = init_pieces_hash_map(MaxRandom),
 	EnpaMod = init_enpassant_hash_map(MaxRandom),
 	SideMod = init_side_hash_map(MaxRandom),
