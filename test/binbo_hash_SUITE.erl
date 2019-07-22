@@ -16,15 +16,27 @@
 -include_lib("common_test/include/ct.hrl").
 
 -export([all/0]).
+-export([groups/0]).
+-export([init_per_suite/1, end_per_suite/1]).
 -export([random_hash_test/1]).
 
 %% all/0
 %% Generate random numbers (hashes), check them for uniqueness,
 %% and repeat the test 10 times.
-all() -> [{testcase, random_hash_test, [{repeat_until_fail, 10}]}].
+all() -> [{group, rnd}].
 
+%% groups/0
+groups() -> [{rnd, [{repeat_until_any_fail, 10}], [random_hash_test]}].
 
-%% test_random_hash/1
+%% init_per_suite/1
+init_per_suite(Config) ->
+	Config.
+
+%% end_per_suite/1
+end_per_suite(_Config) ->
+	ok.
+
+%% random_hash_test/1
 random_hash_test(_Config) ->
 	Mods = binbo_hash:init(),
 	[_|_] = Mods,
