@@ -5,10 +5,9 @@ otp_release:
   - 21.3
   - 20.3
   - 19.0
-before_script: kerl list installations
+before_script: curl -O https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
 script:
-  - make test
-  - make dialyzer
+  - ./rebar3 do dialyzer, ct
 branches:
   only:
   - master
