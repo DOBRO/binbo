@@ -1,0 +1,17 @@
+language: erlang
+
+otp_release:
+  - 22.0
+  - 21.3
+  - 20.3
+  - 19.0
+before_script: kerl list installations
+script:
+  - make test
+  - make dialyzer
+branches:
+  only:
+  - master
+cache:
+  directories:
+    - _build
