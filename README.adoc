@@ -2,6 +2,9 @@
 :toc: macro
 :toclevels: 4
 
+image:https://travis-ci.org/DOBRO/binbo.svg?branch=master["Build Status", link="https://travis-ci.org/DOBRO/binbo"]
+image:https://img.shields.io/badge/license-Apache%202.0-blue.svg["License", link="LICENSE"]
+
 Binbo is a Chess representation written in pure Erlang using https://www.chessprogramming.org/Bitboards[Bitboards]. It is basically aimed to be used on game servers where people play chess online.
 
 It's called `Binbo` because its ground is a **bin**ary **bo**ard containing only zeros and ones (`0` and `1`) since this is the main meaning of Bitboards as an internal chessboard representation.
@@ -35,7 +38,7 @@ toc::[]
 
 == Requirements
 
-** https://www.erlang.org/[Erlang/OTP] 19.0 or higher.
+** https://www.erlang.org/[Erlang/OTP] 20.0 or higher.
 ** https://www.rebar3.org/[rebar3]
 
 == Quick start
