@@ -16,7 +16,8 @@
 	castling_black_after_king_move/1,
 	castling_black_after_rook_move/1,
 	castling_white_when_attacked/1,
-	castling_black_when_attacked/1
+	castling_black_when_attacked/1,
+	enpassant_moves/1
 ]).
 
 
@@ -35,7 +36,8 @@ groups() ->
 		castling_white_after_rook_move,
 		castling_black_after_rook_move,
 		castling_white_when_attacked,
-		castling_black_when_attacked
+		castling_black_when_attacked,
+		enpassant_moves
 	]}].
 
 %% init_per_suite/1
@@ -330,5 +332,18 @@ castling_black_when_attacked(Config) ->
 	% New game, B8 is attacked. Castling queenside is allowed
 	{ok, continue} = binbo:new_game(Pid, <<"r3k2r/pp3bpp/nbp1q2n/5p2/3P4/N1P1PPBB/PPQ1N1PP/R3K2R b KQkq -">>),
 	{ok, continue} = binbo:move(Pid, <<"e8c8">>),
+	ok.
 
+%% enpassant_moves/1
+enpassant_moves(Config) ->
+	Pid = get_pid(Config),
+	% New game, black king is in check
+	{ok, continue} = binbo:new_game(Pid),
+	ok = make_legal_moves(Pid, [
+		  <<"g2g4">>, <<"a7a5">>
+		, <<"g4g5">>, <<"a5a4">>
+		, <<"b2b4">>, <<"a4b3">> % black pawn enpassant move
+		, <<"c2b3">>, <<"h7h5">>
+		, <<"g5h6">> % white pawn enpassant move
+	]),
 	ok.
