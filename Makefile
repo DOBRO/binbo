@@ -23,7 +23,7 @@ deps: $(REBAR3)
 	@$(REBAR3) deps
 
 test:
-	@$(REBAR3) ct
+	@$(REBAR3) ct --verbose
 
 dialyzer:
 	@$(REBAR3) dialyzer
