@@ -4,7 +4,7 @@
 
 image:https://img.shields.io/hexpm/v/binbo.svg?color=yellow["Binbo on Hex.pm", link="https://hex.pm/packages/binbo"]
 image:https://travis-ci.org/DOBRO/binbo.svg?branch=master["Build Status", link="https://travis-ci.org/DOBRO/binbo"]
-image:https://img.shields.io/badge/erlang-%3E%3D%2020.0-red.svg["Erlang", link="https://www.erlang.org/"]
+image:https://img.shields.io/badge/erlang-%3E%3D%2020.0-0d6e8c.svg["Erlang", link="https://www.erlang.org/"]
 image:https://img.shields.io/badge/license-Apache%202.0-blue.svg["License", link="LICENSE"]
 
 Binbo is a Chess representation written in pure Erlang using https://www.chessprogramming.org/Bitboards[Bitboards]. It is basically aimed to be used on game servers where people play chess online.
@@ -364,6 +364,70 @@ To stop Binbo, call:
 [source,erlang]
 ----
 binbo:stop().
+----
+
+== Building and testing
+
+Two possible ways are presented here for building and testing the application (with `make` and `rebar3`).
+
+=== Building
+
+[source,bash]
+----
+$ make
+----
+
+[source,bash]
+----
+$ rebar3 compile
+----
+
+=== Dialyzer
+
+[source,bash]
+----
+$ make dialyze
+----
+
+[source,bash]
+----
+$ rebar3 dialyzer
+----
+
+=== Testing
+
+[source,bash]
+----
+$ make test
+----
+
+[source,bash]
+----
+$ rebar3 ct --verbose
+----
+
+=== Code coverage
+
+[source,bash]
+----
+$ make cover
+----
+
+[source,bash]
+----
+$ rebar3 cover
+----
+
+=== Generating Edoc files
+
+[source,bash]
+----
+$ make docs
+----
+
+[source,bash]
+----
+$ rebar3 edoc
 ----
 
 
