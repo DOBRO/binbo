@@ -445,19 +445,19 @@ The main problem is to find the _index_ which is then used to lookup legal moves
 of sliding pieces in a preinitialized move database.
 The formula for the _index_ is:
 
-.in C/C++:
+._in C/C++:_
 [source]
 ----
 magic_index = ((occupied & mask) * magic_number) >> shift;
 ----
 
-.in Erlang:
+._in Erlang:_
 [source,erlang]
 ----
 MagicIndex = (((Occupied band Mask) * MagicNumber) bsr Shift).
 ----
 
-.where:
+._where:_
 * `Occupied` is the bitboard of all pieces.
 * `Mask` is the attack mask of a piece for a given square.
 * `MagicNumber` is the magic number, see &quot;https://www.chessprogramming.org/Looking_for_Magics[Looking for Magics]&quot;.
@@ -475,7 +475,7 @@ a simple lookup:
 move = global_move_table[square][magic_index]
 ----
 
-.If detailed:
+._If detailed:_
 [source]
 ----
 moves_from = global_move_table[square];
@@ -498,13 +498,13 @@ Since the number of squares on the chessboard is the constant value (it's always
 our `global_move_table` can be constructed as a _tuple_ of 64 elements, and each element of this _tuple_
 is a _map_ containing the _key-value_ association as `MagicIndex =&gt; Moves`.
 
-.If detailed, for moves:
+._If detailed, for moves:_
 [source,erlang]
 ----
 GlobalMovesTable = { MoveMap1, ..., MoveMap64 }
 ----
 
-.where:
+._where:_
 [source,erlang]
 ----
 MoveMap1  = #{
@@ -552,11 +552,12 @@ MovesFromE4 = maps:get(MagicIndex, MovesMapE4).
 Next, no global variables? We make them global!
 
 How do we get the fastest access to the _move tables_ and to the _atack masks_ **from everywhere**?
-ETS? No! Using ETS as a storage for _static terms_ we get the overhead due to extra data copying during lookup.
+
+http://erlang.org/doc/man/ets.html[ETS]? No! Using ETS as a storage for _static terms_ we get the overhead due to extra data copying during lookup.
 
 And now we are coming to the fastest solution.
 
-When Binbo starts up, all move tables are initialized.
+When Binbo starts up, all _move tables_ are initialized.
 Once these tables (_tuples_, actually) initialized, they are "injected" into **dynamically generated
 modules compiled at Binbo start**. Then, to get the values, we just call a _getter function_
 (`binbo_global:get/1`) with the argument as the name of the corresponding dynamic module.
