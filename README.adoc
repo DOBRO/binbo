@@ -9,7 +9,7 @@ image:https://img.shields.io/badge/license-Apache%202.0-blue.svg["License", link
 
 Binbo is a Chess representation written in pure Erlang using https://www.chessprogramming.org/Bitboards[Bitboards]. It is basically aimed to be used on game servers where people play chess online.
 
-It's called `Binbo` because its ground is a **bin**ary **bo**ard containing only zeros and ones (`0` and `1`) since this is the main meaning of Bitboards as an internal chessboard representation.
+It's called `Binbo` because its ground is a **bin**ary **bo**ard containing only _zeros_ and _ones_ (`0` and `1`) since this is the main meaning of Bitboards as an internal chessboard representation.
 
 Binbo also uses the https://www.chessprogramming.org/Magic_Bitboards[Magic Bitboards] approach for a **blazing fast** move generation of sliding pieces (rook, bishop, and queen).
 
