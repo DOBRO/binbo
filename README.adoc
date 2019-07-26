@@ -86,7 +86,7 @@ There are three steps to be done before making game moves:
 . Create process for the game.
 . Initialize game state in the process.
 
-**Note:** process creation and game initialization are separated for the following reason: since Binbo is aimed to handle a number of concurrent games, the game process should be started as quick as possible leaving the http://erlang.org/doc/design_principles/sup_princ.html[supervisor] doing the same job for another game. It's important for high-load systems where game creation is very frequent event.
+**Note:** process creation and game initialization are separated for the following reason: since Binbo is aimed to handle a number of concurrent games, the game process should be started as quick as possible leaving the http://erlang.org/doc/design_principles/sup_princ.html[supervisor] doing the same job for another game. It's important for high-load systems where game creation is a very frequent event.
 
 === Starting application
 
@@ -441,9 +441,9 @@ As mentioned above, Binbo uses https://www.chessprogramming.org/Magic_Bitboards[
 (rook, bishop, and queen). Good explanations of this aproach can also be found https://stackoverflow.com/questions/16925204/sliding-move-generation-using-magic-bitboard/30862064#30862064[here]
 and http://vicki-chess.blogspot.com/2013/04/magics.html[here].
 
-The main problem is to find the index which is then used to lookup legal moves
+The main problem is to find the _index_ which is then used to lookup legal moves
 of sliding pieces in a preinitialized move database.
-The formula for the index is:
+The formula for the _index_ is:
 
 .in C/C++:
 [source]
@@ -463,11 +463,11 @@ MagicIndex = (((Occupied band Mask) * MagicNumber) bsr Shift).
 * `MagicNumber` is the magic number, see &quot;https://www.chessprogramming.org/Looking_for_Magics[Looking for Magics]&quot;.
 * `Shift = (64 - Bits)`, where `Bits` is the number of bits corresponding to attack mask of a given square.
 
-All values for magic numbers and shifts are precalculated before and stored in `binbo_magic.hrl`.
+All values for _magic numbers_ and _shifts_ are precalculated before and stored in `binbo_magic.hrl`.
 
 To be accurate, Binbo uses https://www.chessprogramming.org/Magic_Bitboards#Fancy[Fancy Magic Bitboards].
 It means that all moves are stored in a table of its own (individual) size for each square.
-In C/C++ such tables are actually two-dimensional arrays and any move can be accessed by
+In _C/C++_ such tables are actually two-dimensional arrays and any move can be accessed by
 a simple lookup:
 
 [source]
@@ -492,11 +492,11 @@ to get the fast access to the move tables **from everywhere**.
 
 So, how does Binbo beat this? Well, it's simple :&#41;.
 
-Erlang gives us the power of tuples and maps with their blazing fast lookup of elements/values by their index/key.
+Erlang gives us the power of _tuples_ and _maps_ with their blazing fast lookup of _elements/values_ by their _index/key_.
 
 Since the number of squares on the chessboard is the constant value (it's always **64**, right?),
-our `global_move_table` can be constructed as a tuple of 64 elements, and each element of this tuple
-is a map containing the key-value association as `MagicIndex =&gt; Moves`.
+our `global_move_table` can be constructed as a _tuple_ of 64 elements, and each element of this _tuple_
+is a _map_ containing the _key-value_ association as `MagicIndex =&gt; Moves`.
 
 .If detailed, for moves:
 [source,erlang]
@@ -519,7 +519,7 @@ MoveMap64 = #{
 },
 ----
 
-and then we lookup legal moves from a square, say, `E4` (29th element of the tuple):
+and then we lookup legal moves from a square, say, `E4` (29th element of the _tuple_):
 
 [source,erlang]
 ----
@@ -528,15 +528,15 @@ MoveMapE4   = erlang:element(E4, GlobalMovesTable),
 MovesFromE4 = maps:get(MagicIndex, MovesMapE4).
 ----
 
-To calculate magic index we also need the attack mask for a given square.
-Every attack mask generated is stored in a tuple of 64 elements:
+To calculate _magic index_ we also need the _attack mask_ for a given square.
+Every _attack mask_ generated is stored in a _tuple_ of 64 elements:
 
 [source,erlang]
 ----
 GlobalMaskTable = {Mask1, Mask2, ..., Mask64}
 ----
 
-where `Mask1`, `Mask2`, ..., `Mask64` are bitboards (integers).
+where `Mask1`, `Mask2`, ..., `Mask64` are _bitboards_ (integers).
 
 Finally, if we need to get all moves from `E4`:
 
@@ -551,14 +551,14 @@ MovesFromE4 = maps:get(MagicIndex, MovesMapE4).
 
 Next, no global variables? We make them global!
 
-How do we get the fastest access to the move tables and to the atack masks **from everywhere**?
-ETS? No! Using ETS as a storage for static terms we get the overhead due to extra data copying during lookup.
+How do we get the fastest access to the _move tables_ and to the _atack masks_ **from everywhere**?
+ETS? No! Using ETS as a storage for _static terms_ we get the overhead due to extra data copying during lookup.
 
 And now we are coming to the fastest solution.
 
 When Binbo starts up, all move tables are initialized.
-Once these tables (tuples, actually) initialized, they are "injected" into **dynamically generated
-modules compiled at Binbo start**. Then, to get the values, we just call a getter function
+Once these tables (_tuples_, actually) initialized, they are "injected" into **dynamically generated
+modules compiled at Binbo start**. Then, to get the values, we just call a _getter function_
 (`binbo_global:get/1`) with the argument as the name of the corresponding dynamic module.
 
 This awesome trick is used in MochiWeb library, see module https://github.com/mochi/mochiweb/blob/master/src/mochiglobal.erl[mochiglobal].
@@ -566,8 +566,9 @@ This awesome trick is used in MochiWeb library, see module https://github.com/mo
 Using http://erlang.org/doc/man/persistent_term.html[persistent_term] (since OTP 21.2) for storing static data is also a good idea.
 But it doesn't seem to be a better way for the following reason with respect to dynamic modules.
 When Binbo stops, it gets them **unloaded** as they are not necessary anymore.
-It should do the similar things for `persistent_term` data, say, delete all unused terms to free memory.
-In this case we run into the issue regarding scanning the heaps in all processes.
+It should do the similar things for `persistent_term` data, say, delete all _unused
+terms_ to free memory.
+In this case we run into the issue regarding scanning the _heaps_ in all processes.
 
 So, using `global` dynamic modules with large static data seems to be more reasonable in spite of that fact that it significantly slows down the application startup due to the run-time compilation of these modules.
 
