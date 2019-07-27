@@ -15,7 +15,7 @@
 -module(binbo_game).
 
 -export([new/1]).
--export([move/2]).
+-export([move/3]).
 -export([status/1, draw/2]).
 -export([pretty_board/2, get_fen/1]).
 
@@ -66,13 +66,21 @@ new(Fen) ->
 			Error
 	end.
 
-%% move/2
--spec move(sq_move(), game()) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
-move(Move, Game) ->
-	case erlang:is_map(Game) of
-		true  -> move(sq, Move, Game);
-		false -> {error, {bad_game, Game}}
-	end.
+%% move/3
+-spec move(sq | san, sq_move(), game()) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
+move(MoveNotation, Move, Game) when is_map(Game) ->
+	Result = case MoveNotation of
+		sq  -> binbo_move:validate_sq_move(Move, Game);
+		san -> binbo_move:validate_san_move(Move, Game)
+	end,
+	case Result of
+		{ok, MoveInfo, Game2} ->
+			{ok, finalize_move(MoveInfo, Game2)};
+		{error, _} = Error ->
+			Error
+	end;
+move(_MoveNotation, _Move, Game) ->
+	{error, {bad_game, Game}}.
 
 %% pretty_board/2
 -spec pretty_board(game(), binbo_position:pretty_board_opts()) -> {ok, {iolist(), binbo_position:game_status()}} | {error, pretty_board_error()}.
@@ -134,17 +142,6 @@ finalize_fen(Game0) ->
 	Game = binbo_position:with_status(Game0, HasValidMoves, IsCheck),
 	Status = binbo_position:get_status(Game),
 	{Game, Status}.
-
-
-%% move/3
--spec move(sq, sq_move(), bb_game()) -> {ok, {bb_game(), game_status()}} | {error, binbo_move:move_error()}.
-move(sq, Move, Game) ->
-	case binbo_move:validate_sq_move(Move, Game) of
-		{ok, MoveInfo, Game2} ->
-			{ok, finalize_move(MoveInfo, Game2)};
-		{error, _} = Error ->
-			Error
-	end.
 
 %% finalize_move/2
 -spec finalize_move(move_info(), bb_game()) -> {bb_game(), game_status()}.

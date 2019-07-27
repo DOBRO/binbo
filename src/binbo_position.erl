@@ -25,11 +25,13 @@
 	bishop_moves_bb/2,
 	rook_moves_bb/2,
 	queen_moves_bb/2,
-	king_moves_bb/3
+	king_moves_bb/3,
+	piece_moves_bb/4
 ]).
 -export([is_in_check/2]).
 -export([get_enpassant_bb/1]).
 -export([get_side_indexes/2]).
+-export([get_piece_indexes/2, get_piece_indexes_on_file/3, get_piece_indexes_on_rank/3]).
 
 %%%------------------------------------------------------------------------------
 %%%   Includes
@@ -47,6 +49,7 @@
 -type sq_bb() :: binbo_bb:sq_bb().
 -type color() :: binbo_board:color().
 -type piece() :: binbo_board:piece().
+-type piece_type() :: binbo_board:piece_type().
 -type parsed_fen() :: #parsed_fen{}.
 -type pchar() :: binbo_fen:piece_char().
 -type uchar() :: binbo_board:unicode_char().
@@ -164,114 +167,16 @@ set_sidetomove(Color, Game) ->
 get_status(Game) ->
 	maps:get(?GAME_KEY_STATUS, Game).
 
-%% is_rule50/1
-%% https://en.wikipedia.org/wiki/Fifty-move_rule
--spec is_rule50(bb_game()) -> boolean().
-is_rule50(Game) ->
-	case (get_halfmove(Game) < 50) of
-		true  ->
-			false;
-		false ->
-			case (get_fullmove(Game) < 75) of
-				true  -> false;
-				false -> true
-			end
-	end.
-
-%% is_k_vs_k/2
-%% Returns true when:
-%% King versus King.
--spec is_k_vs_k(bb(), bb()) -> boolean().
-is_k_vs_k(Kings, AllPieces) ->
-	(AllPieces bxor Kings) =:= ?EMPTY_BB.
-
-%% is_kb_vs_k/2
-%% Returns true when:
-%% King and Bishop versus King.
--spec is_kb_vs_k(bb(), bb(), bb_game()) -> boolean().
-is_kb_vs_k(Kings, AllPieces, Game) ->
-	AllBishops = white_bishops_bb(Game) bor black_bishops_bb(Game),
-	(((Kings bor AllBishops) bxor AllPieces) =:= ?EMPTY_BB)
-	andalso
-	uef_num:popcount(AllBishops) =:= 1.
-
-%% is_kn_vs_k/2
-%% Returns true when:
-%% King and Knight versus King
--spec is_kn_vs_k(bb(), bb(), bb_game()) -> boolean().
-is_kn_vs_k(Kings, AllPieces, Game) ->
-	AllKnights = white_knights_bb(Game) bor black_knights_bb(Game),
-	(((Kings bor AllKnights) bxor AllPieces) =:= ?EMPTY_BB)
-	andalso
-	uef_num:popcount(AllKnights) =:= 1.
-
-%% is_kb_vs_kb/2
-%% Returns true when:
-%% King and Bishop versus King and Bishop with the Bishops on the same color.
--spec is_kb_vs_kb(bb(), bb(), bb_game()) -> boolean().
-is_kb_vs_kb(Kings, AllPieces, Game) ->
-	WBishops = white_bishops_bb(Game),
-	BBishops = black_bishops_bb(Game),
-	AllBishops = WBishops bor BBishops,
-	(((Kings bor AllBishops) bxor AllPieces) =:= ?EMPTY_BB)
-	andalso
-	(
-		((AllBishops band ?DARK_SQUARES_BB)  =:= AllBishops)
-		orelse
-		((AllBishops band ?LIGHT_SQUARES_BB) =:= AllBishops)
-	)
-	andalso
-	(uef_num:popcount(WBishops) =:= 1)
-	andalso
-	(uef_num:popcount(BBishops) =:= 1).
+%% get_enpassant_bb/2
+-spec get_enpassant_bb(bb_game()) -> sq_bb() | empty_bb().
+get_enpassant_bb(Game) ->
+	maps:get(?GAME_KEY_ENPASSANT, Game).
 
 
-%% is_insufficient_material/1
--spec is_insufficient_material(bb_game()) -> boolean().
-is_insufficient_material(Game) ->
-	WKing = white_king_bb(Game),
-	BKing = black_king_bb(Game),
-	Kings = WKing bor BKing,
-	AllPieces = all_pieces_bb(Game),
-	% King versus King
-	is_k_vs_k(Kings, AllPieces)
-	orelse
-	% King and Bishop versus King
-	is_kb_vs_k(Kings, AllPieces, Game)
-	orelse
-	% King and Knight versus King
-	is_kn_vs_k(Kings, AllPieces, Game)
-	orelse
-	% King and Bishop versus King and Bishop with the Bishops on the same color
-	is_kb_vs_kb(Kings, AllPieces, Game).
-
-
-%% is_repetition/1
--spec is_repetition(bb_game()) -> boolean().
-is_repetition(Game) ->
-	PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
-	Keys = [?GAME_KEY_POSITION_HASHMAP, PosHash],
-	Repetitions = uef_maps:get_nested(Keys, Game),
-	(Repetitions > 2).
-
-
-%% maybe_draw/1
--spec maybe_draw(bb_game()) -> false | {true, game_draw_rule50() | game_draw_material() | game_draw_repetition()}.
-maybe_draw(Game) ->
-	case is_rule50(Game) of
-		true  ->
-			{true, ?GAME_STATUS_DRAW_RULE50};
-		false ->
-			case is_insufficient_material(Game) of
-				true  ->
-					{true, ?GAME_STATUS_DRAW_MATERIAL};
-				false ->
-					case is_repetition(Game) of
-						true  -> {true, ?GAME_STATUS_DRAW_REPETITION};
-						false -> false
-					end
-			end
-	end.
+%% get_side_indexes/2
+get_side_indexes(Color, Game) ->
+	SideBB = own_side_bb(Color, Game),
+	binbo_bb:to_index_list(SideBB).
 
 %% with_status/3
 -spec with_status(bb_game(), boolean(), boolean()) -> bb_game().
@@ -302,6 +207,29 @@ is_status_inprogress(Status) ->
 manual_draw(Reason, Game) ->
 	set_status_draw({manual, Reason}, Game).
 
+
+%% get_piece_indexes/2
+-spec get_piece_indexes(piece(), bb_game()) -> [sq_idx()].
+get_piece_indexes(Piece, Game) ->
+	PiecesBB = pieces_bb(Piece, Game),
+	binbo_bb:to_index_list(PiecesBB).
+
+%% get_piece_indexes_on_file/2
+-spec get_piece_indexes_on_file(piece(), binbo_board:file(), bb_game()) -> [sq_idx()].
+get_piece_indexes_on_file(Piece, File, Game) ->
+	IdxList = get_piece_indexes(Piece, Game),
+	lists:filter(fun(Idx) ->
+		binbo_board:file_of_index(Idx) =:= File
+	end, IdxList).
+
+%% get_piece_indexes_on_rank/2
+-spec get_piece_indexes_on_rank(piece(), binbo_board:rank(), bb_game()) -> [sq_idx()].
+get_piece_indexes_on_rank(Piece, Rank, Game) ->
+	IdxList = get_piece_indexes(Piece, Game),
+	lists:filter(fun(Idx) ->
+		binbo_board:rank_of_index(Idx) =:= Rank
+	end, IdxList).
+
 %% pawn_moves_bb/3
 -spec pawn_moves_bb(sq_idx(), color(), bb_game()) -> bb().
 pawn_moves_bb(FromIdx, Color, Game) ->
@@ -313,7 +241,6 @@ pawn_moves_bb(FromIdx, Color, Game) ->
 	PushesBB = binbo_bb:pawn_pushes_bb(Color, PawnBB, EmptySquaresBB),
 	EnpaMoveBB = enpassant_moves_bb(Color, AttacksBB, Game) band get_enpassant_bb(Game),
 	ValidAttacksBB bor PushesBB bor EnpaMoveBB.
-
 
 %% knight_moves_bb/1
 -spec knight_moves_bb(sq_idx(), color(), bb_game()) -> bb().
@@ -352,16 +279,18 @@ is_in_check(Color, Game) ->
 	KingIdx = king_index(Color, Game),
 	is_in_check(KingIdx, Color, Game).
 
-%% get_enpassant_bb/2
--spec get_enpassant_bb(bb_game()) -> sq_bb() | empty_bb().
-get_enpassant_bb(Game) ->
-	maps:get(?GAME_KEY_ENPASSANT, Game).
+%% piece_moves_bb/3
+-spec piece_moves_bb(sq_idx(), piece_type(), color(), bb_game()) -> bb().
+piece_moves_bb(FromIdx, Ptype, Pcolor, Game) ->
+	case Ptype of
+		?PAWN   -> binbo_position:pawn_moves_bb(FromIdx, Pcolor, Game);
+		?KNIGHT -> binbo_position:knight_moves_bb(FromIdx, Pcolor, Game);
+		?BISHOP -> binbo_position:bishop_moves_bb(FromIdx, Game);
+		?ROOK   -> binbo_position:rook_moves_bb(FromIdx, Game);
+		?QUEEN  -> binbo_position:queen_moves_bb(FromIdx, Game);
+		?KING   -> binbo_position:king_moves_bb(FromIdx, Pcolor, Game)
+	end.
 
-
-%% get_side_indexes/2
-get_side_indexes(Color, Game) ->
-	SideBB = own_side_bb(Color, Game),
-	binbo_bb:to_index_list(SideBB).
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
@@ -387,7 +316,6 @@ empty_bb_game() -> #{
 	?GAME_KEY_POSITION_HASHMAP => #{},
 	?GAME_KEY_STATUS => ?GAME_STATUS_INPROGRESS
 	}.
-
 
 %% set_piece/3
 -spec set_piece(sq_idx(), piece(), bb_game()) -> bb_game().
@@ -547,7 +475,6 @@ white_rooks_bb(Game) ->
 white_queens_bb(Game) ->
 	maps:get(?GAME_KEY_WQ, Game).
 
-
 %% black_pawns_bb/1
 -spec black_pawns_bb(bb_game()) -> bb().
 black_pawns_bb(Game) ->
@@ -572,6 +499,24 @@ black_rooks_bb(Game) ->
 -spec black_queens_bb(bb_game()) -> bb().
 black_queens_bb(Game) ->
 	maps:get(?GAME_KEY_BQ, Game).
+
+%% pieces_bb/2
+-spec pieces_bb(piece(), bb_game()) -> bb().
+pieces_bb(Piece, Game) ->
+	case Piece of
+		?WHITE_PAWN   -> white_pawns_bb(Game);
+		?BLACK_PAWN   -> black_pawns_bb(Game);
+		?WHITE_KNIGHT -> white_knights_bb(Game);
+		?BLACK_KNIGHT -> black_knights_bb(Game);
+		?WHITE_BISHOP -> white_bishops_bb(Game);
+		?BLACK_BISHOP -> black_bishops_bb(Game);
+		?WHITE_ROOK   -> white_rooks_bb(Game);
+		?BLACK_ROOK   -> black_rooks_bb(Game);
+		?WHITE_QUEEN  -> white_queens_bb(Game);
+		?BLACK_QUEEN  -> black_queens_bb(Game);
+		?WHITE_KING   -> white_king_bb(Game);
+		?BLACK_KING   -> black_king_bb(Game)
+	end.
 
 %% enpassant_moves_bb/2
 -spec enpassant_moves_bb(color(), bb(), bb_game()) -> bb().
@@ -649,7 +594,6 @@ ooo_move_bb(?BLACK, #{?GAME_KEY_CASTLING := Castling} = Game) when ?IS_AND(Castl
 	end;
 ooo_move_bb(_, _) ->
 	?EMPTY_BB.
-
 
 %% is_attacked_by/3
 -spec is_attacked_by(color(), sq_idx(), bb_game()) -> boolean().
@@ -754,6 +698,115 @@ update_hashmap(Game) ->
 	Keys = [?GAME_KEY_POSITION_HASHMAP, PosHash],
 	Repetitions = uef_maps:get_nested(Keys, Game, 0),
 	uef_maps:put_nested(Keys, Repetitions + 1, Game).
+
+%% is_rule50/1
+%% https://en.wikipedia.org/wiki/Fifty-move_rule
+-spec is_rule50(bb_game()) -> boolean().
+is_rule50(Game) ->
+	case (get_halfmove(Game) < 50) of
+		true  ->
+			false;
+		false ->
+			case (get_fullmove(Game) < 75) of
+				true  -> false;
+				false -> true
+			end
+	end.
+
+%% is_k_vs_k/2
+%% Returns true when:
+%% King versus King.
+-spec is_k_vs_k(bb(), bb()) -> boolean().
+is_k_vs_k(Kings, AllPieces) ->
+	(AllPieces bxor Kings) =:= ?EMPTY_BB.
+
+%% is_kb_vs_k/2
+%% Returns true when:
+%% King and Bishop versus King.
+-spec is_kb_vs_k(bb(), bb(), bb_game()) -> boolean().
+is_kb_vs_k(Kings, AllPieces, Game) ->
+	AllBishops = white_bishops_bb(Game) bor black_bishops_bb(Game),
+	(((Kings bor AllBishops) bxor AllPieces) =:= ?EMPTY_BB)
+	andalso
+	uef_num:popcount(AllBishops) =:= 1.
+
+%% is_kn_vs_k/2
+%% Returns true when:
+%% King and Knight versus King
+-spec is_kn_vs_k(bb(), bb(), bb_game()) -> boolean().
+is_kn_vs_k(Kings, AllPieces, Game) ->
+	AllKnights = white_knights_bb(Game) bor black_knights_bb(Game),
+	(((Kings bor AllKnights) bxor AllPieces) =:= ?EMPTY_BB)
+	andalso
+	uef_num:popcount(AllKnights) =:= 1.
+
+%% is_kb_vs_kb/2
+%% Returns true when:
+%% King and Bishop versus King and Bishop with the Bishops on the same color.
+-spec is_kb_vs_kb(bb(), bb(), bb_game()) -> boolean().
+is_kb_vs_kb(Kings, AllPieces, Game) ->
+	WBishops = white_bishops_bb(Game),
+	BBishops = black_bishops_bb(Game),
+	AllBishops = WBishops bor BBishops,
+	(((Kings bor AllBishops) bxor AllPieces) =:= ?EMPTY_BB)
+	andalso
+	(
+		((AllBishops band ?DARK_SQUARES_BB)  =:= AllBishops)
+		orelse
+		((AllBishops band ?LIGHT_SQUARES_BB) =:= AllBishops)
+	)
+	andalso
+	(uef_num:popcount(WBishops) =:= 1)
+	andalso
+	(uef_num:popcount(BBishops) =:= 1).
+
+
+%% is_insufficient_material/1
+-spec is_insufficient_material(bb_game()) -> boolean().
+is_insufficient_material(Game) ->
+	WKing = white_king_bb(Game),
+	BKing = black_king_bb(Game),
+	Kings = WKing bor BKing,
+	AllPieces = all_pieces_bb(Game),
+	% King versus King
+	is_k_vs_k(Kings, AllPieces)
+	orelse
+	% King and Bishop versus King
+	is_kb_vs_k(Kings, AllPieces, Game)
+	orelse
+	% King and Knight versus King
+	is_kn_vs_k(Kings, AllPieces, Game)
+	orelse
+	% King and Bishop versus King and Bishop with the Bishops on the same color
+	is_kb_vs_kb(Kings, AllPieces, Game).
+
+
+%% is_repetition/1
+-spec is_repetition(bb_game()) -> boolean().
+is_repetition(Game) ->
+	PosHash = maps:get(?GAME_KEY_POS_HASH, Game),
+	Keys = [?GAME_KEY_POSITION_HASHMAP, PosHash],
+	Repetitions = uef_maps:get_nested(Keys, Game),
+	(Repetitions > 2).
+
+
+%% maybe_draw/1
+-spec maybe_draw(bb_game()) -> false | {true, game_draw_rule50() | game_draw_material() | game_draw_repetition()}.
+maybe_draw(Game) ->
+	case is_rule50(Game) of
+		true  ->
+			{true, ?GAME_STATUS_DRAW_RULE50};
+		false ->
+			case is_insufficient_material(Game) of
+				true  ->
+					{true, ?GAME_STATUS_DRAW_MATERIAL};
+				false ->
+					case is_repetition(Game) of
+						true  -> {true, ?GAME_STATUS_DRAW_REPETITION};
+						false -> false
+					end
+			end
+	end.
 
 %%%------------------------------------------------------------------------------
 %%%   Load parsed FEN and validate position according to the Chess rules

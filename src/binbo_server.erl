@@ -17,7 +17,7 @@
 
 -export([start_link/1]).
 -export([stop/1]).
--export([new_game/2, game_move/2, get_fen/1]).
+-export([new_game/2, game_move/2, game_san_move/2, get_fen/1]).
 -export([game_state/1, game_status/1, game_draw/2]).
 
 %%% gen_server export.
@@ -84,7 +84,7 @@ init(_Args) ->
 
 %% handle_call/3
 -spec handle_call({new_game, fen()}, from(), state()) -> {reply, new_game_ret(), state()}
-				; ({game_move, sq_move()}, from(), state()) -> {reply, game_move_ret(), state()}
+				; ({game_move, sq | san, sq_move()}, from(), state()) -> {reply, game_move_ret(), state()}
 				; (game_state, from(), state()) -> {reply, game_state_ret(), state()}
 				; (game_status, from(), state()) -> {reply, game_status_ret(), state()}
 				; (get_fen, from(), state()) -> {reply, get_fen_ret(), state()}
@@ -97,8 +97,8 @@ handle_call({new_game, Fen}, _From, State) ->
 			{Error, State}
 	end,
 	{reply, Reply, State2};
-handle_call({game_move, Move}, _From, #state{game = Game0} = State0) ->
-	{Reply, State} = case binbo_game:move(Move, Game0) of
+handle_call({game_move, MoveNotation, Move}, _From, #state{game = Game0} = State0) ->
+	{Reply, State} = case binbo_game:move(MoveNotation, Move, Game0) of
 		{ok, {Game, GameStatus}} ->
 			{{ok, GameStatus}, State0#state{game = Game}};
 		{error, _} = Error ->
@@ -153,7 +153,12 @@ new_game(Pid, Fen) ->
 %% game_move/2
 -spec game_move(pid(), sq_move()) -> game_move_ret().
 game_move(Pid, Move) ->
-	call(Pid, {game_move, Move}).
+	call(Pid, {game_move, sq, Move}).
+
+%% game_san_move/2
+-spec game_san_move(pid(), sq_move()) -> game_move_ret().
+game_san_move(Pid, Move) ->
+	call(Pid, {game_move, san, Move}).
 
 %% game_state/1
 -spec game_state(pid()) -> game_state_ret().

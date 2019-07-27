@@ -15,9 +15,9 @@
 -module(binbo_move).
 
 -export([validate_sq_move/2]).
+-export([validate_san_move/2]).
 -export([validate_move/5]).
 -export([enemy_color/1]).
-
 
 
 %%%------------------------------------------------------------------------------
@@ -28,12 +28,22 @@
 -include("binbo_move.hrl").
 
 %%%------------------------------------------------------------------------------
+%%%   Macros
+%%%------------------------------------------------------------------------------
+
+-define(IS_VALID_FILE(F), ((F >= $a) andalso (F =< $h))).
+-define(IS_VALID_RANK(R), ((R >= $1) andalso (R =< $8))).
+-define(IS_VALID_FILE_RANK(F,R), (?IS_VALID_FILE(F) andalso ?IS_VALID_RANK(R))).
+
+
+%%%------------------------------------------------------------------------------
 %%%   Types
 %%%------------------------------------------------------------------------------
 
 -type move_info() :: #move_info{}.
 -type bb() :: binbo_bb:bb().
 -type piece() :: binbo_board:piece().
+-type piece_type() :: binbo_board:piece_type().
 -type color() :: binbo_board:color().
 -type sq_move() :: binary() | string().
 -type bb_game() :: binbo_position:bb_game().
@@ -44,6 +54,12 @@
 -type promo_type() :: ?KNIGHT | ?BISHOP | ?ROOK | ?QUEEN.
 -type pname() :: pawn | knight | bishop | rook | queen | king.
 -type castling_flag() :: ?CASTLING_NONE | binbo_board:side_castling().
+-type pre_from() :: sq_notation() | undefined | {file, binbo_board:file()} | {rank, binbo_board:rank()}.
+-type pre_parsed_san2() :: {ok, piece_type(), pre_from(), sq_notation(), promo_type()}.
+-type pre_parsed_san() :: {ok, ?KING, 'O-O' | 'O-O-O'} | pre_parsed_san2().
+-type san_from_error() :: starting_square_not_found.
+-type pre_parse_san_error() :: san_not_parsed | empty_san | bad_san_value | invalid_san_string | bad_data_type.
+-type parse_san_error() :: pre_parse_san_error() | san_from_error().
 -type game_status_error() :: {game_over, binbo_position:game_over_status()}.
 -type sq_error() :: invalid_square_notation.
 -type parse_error() :: empty_move | bad_move_value | invalid_move_string | bad_data_type | sq_error().
@@ -52,7 +68,7 @@
 					| {invalid_move, pname()}
 					| binbo_position:make_move_error().
 -type move_overall_error() :: game_status_error() | piece_error() | chess_error().
--type move_error() :: {parse, parse_error()} | move_overall_error().
+-type move_error() :: {parse, parse_error() | parse_san_error()} | move_overall_error().
 
 -export_type([move_info/0, promo_type/0, sq_move/0, castling_flag/0, move_error/0]).
 
@@ -70,6 +86,16 @@ validate_sq_move(SqMove, Game) ->
 			{error, {parse, Reason}}
 	end.
 
+%% validate_san_move/2
+-spec validate_san_move(sq_move(), bb_game()) -> {ok, move_info(), bb_game()} | {error, move_error()}.
+validate_san_move(San, Game) ->
+	case parse_san(San, Game) of
+		{ok, FromIdx, ToIdx, PromoType} ->
+			validate_move_overall(Game, FromIdx, ToIdx, PromoType);
+		{error, Reason} ->
+			{error, {parse, Reason}}
+	end.
+
 %% validate_move/5
 %% The only right way to call this function OUTSIDE is from 'binbo_movegen' module.
 -spec validate_move(bb_game(), piece(), sq_idx(), sq_idx(), promo_type()) -> {ok, move_info(), bb_game()} | {error, chess_error()}.
@@ -81,6 +107,7 @@ validate_move(Game, Piece, FromIdx, ToIdx, PromoType) ->
 -spec enemy_color(move_info()) -> color().
 enemy_color(#move_info{pcolor = Pcolor}) ->
 	binbo_board:enemy_color(Pcolor).
+
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
@@ -331,3 +358,125 @@ enpassant_captured_index(ToIdx, ToBB) when ?IS_AND(ToBB, ?RANK_6_BB) ->
 	ToIdx - 8;
 enpassant_captured_index(ToIdx, ToBB) when ?IS_AND(ToBB, ?RANK_3_BB) ->
 	ToIdx + 8.
+
+
+%% parse_san/2
+-spec parse_san(sq_move(), bb_game()) -> {ok, sq_idx(), sq_idx(), promo_type()} | {error, parse_san_error()}.
+parse_san(San, Game) ->
+	Pcolor = binbo_position:get_sidetomove(Game),
+	case pre_parse_san(San) of
+		{ok, ?KING, 'O-O'} ->
+			case Pcolor of
+				?WHITE -> {ok, binbo_board:notation_to_index(<<"e1">>), binbo_board:notation_to_index(<<"g1">>), ?QUEEN};
+				?BLACK -> {ok, binbo_board:notation_to_index(<<"e8">>), binbo_board:notation_to_index(<<"g8">>), ?QUEEN}
+			end;
+		{ok, ?KING, 'O-O-O'} ->
+			case Pcolor of
+				?WHITE -> {ok, binbo_board:notation_to_index(<<"e1">>), binbo_board:notation_to_index(<<"c1">>), ?QUEEN};
+				?BLACK -> {ok, binbo_board:notation_to_index(<<"e8">>), binbo_board:notation_to_index(<<"c8">>), ?QUEEN}
+			end;
+		{ok, Ptype, From0, To, PromoType} ->
+			ToIdx = binbo_board:notation_to_index(To),
+			case san_starting_square(Ptype, Pcolor, From0, ToIdx, Game) of
+				{ok, FromIdx} -> {ok, FromIdx, ToIdx, PromoType};
+				{error, _} = Error -> Error
+			end;
+		{error, _} = Error ->
+			Error
+	end.
+
+%% pre_parse_san/1
+-spec pre_parse_san(sq_move()) -> pre_parsed_san() | {error, pre_parse_san_error()}.
+pre_parse_san(<<>>) -> % empty binary
+	{error, empty_san};
+pre_parse_san(<<"O-O", _/binary>>) -> % castling kingside
+	{ok, ?KING, 'O-O'};
+pre_parse_san(<<"O-O-O", _/binary>>) -> % castling queenside
+	{ok, ?KING, 'O-O-O'};
+pre_parse_san(<<Pchar:8, Rest/binary>> = San) when erlang:byte_size(Rest) > 0 ->
+	case lists:member(Pchar, "NBRQK") of
+		true  ->
+			Piece = ?CHAR_TO_PIECE(Pchar),
+			pre_parse_san(?PIECE_TYPE(Piece), Rest);
+		false ->
+			pre_parse_san(?PAWN, San)
+	end;
+pre_parse_san(San) when is_binary(San) ->
+	{error, bad_san_value};
+pre_parse_san(San) when is_list(San) -> % string value
+	try erlang:list_to_binary(San) of
+		Bin -> pre_parse_san(Bin)
+	catch
+		_:_ -> {error, invalid_san_string}
+	end;
+pre_parse_san(_) -> % other
+	{error, bad_data_type}.
+
+%% pre_parse_san/2
+-spec pre_parse_san(piece_type(), binary()) -> pre_parsed_san2() | {error, san_not_parsed}.
+pre_parse_san(Ptype, San) ->
+	Parsed = case San of
+		% example: a1-b2, a1xb2
+		<<F1,R1, C, F2,R2, Rest/binary>> when ?IS_VALID_FILE_RANK(F1,R1) andalso ?IS_VALID_FILE_RANK(F2,R2) andalso (C =:= $x orelse C =:= $-) ->
+			{<<F1,R1>>, <<F2,R2>>, Rest};
+		% example: a1b2, a1b2+
+		<<F1,R1, F2,R2, Rest/binary>> when ?IS_VALID_FILE_RANK(F1,R1) andalso ?IS_VALID_FILE_RANK(F2,R2) ->
+			{<<F1,R1>>, <<F2,R2>>, Rest};
+		% example: Ngxe2, Ngxe2+
+		<<F1, C, F2,R2, Rest/binary>> when ?IS_VALID_FILE(F1) andalso ?IS_VALID_FILE_RANK(F2,R2) andalso (C =:= $x orelse C =:= $-) ->
+			{{file, F1 - $a}, <<F2,R2>>, Rest};
+		% example: Nge2, Nge2+
+		<<F1, F2,R2, Rest/binary>> when ?IS_VALID_FILE(F1) andalso ?IS_VALID_FILE_RANK(F2,R2) ->
+			{{file, F1 - $a}, <<F2,R2>>, Rest};
+		% example: R1xa3, R1xa3+
+		<<R1, C, F2,R2, Rest/binary>> when ?IS_VALID_RANK(R1) andalso ?IS_VALID_FILE_RANK(F2,R2) andalso (C =:= $x orelse C =:= $-) ->
+			{{rank, R1 - $1}, <<F2,R2>>, Rest};
+		% example: R1a3, R1a3+
+		<<R1, F2,R2, Rest/binary>> when ?IS_VALID_RANK(R1) andalso ?IS_VALID_FILE_RANK(F2,R2) ->
+			{{rank, R1 - $1}, <<F2,R2>>, Rest};
+		% example: e4, e4+
+		<<F,R, Rest/binary>> when ?IS_VALID_FILE_RANK(F,R) ->
+			{undefined, <<F,R>>, Rest};
+		% example: Qxd5, Qxd5+
+		<<C, F,R, Rest/binary>> when ?IS_VALID_FILE_RANK(F,R) andalso (C =:= $x orelse C =:= $-) ->
+			{undefined, <<F,R>>, Rest};
+		% error
+		_ -> error
+	end,
+	case Parsed of
+		{From, To, <<$=, Char, _/binary>>} when Ptype =:= ?PAWN ->
+			{ok, Ptype, From, To, char_to_promo_type(Char)};
+		{From, To, <<Char, _/binary>>} when Ptype =:= ?PAWN ->
+			{ok, Ptype, From, To, char_to_promo_type(Char)};
+		{From, To, _} ->
+			{ok, Ptype, From, To, ?QUEEN};
+		error ->
+			{error, san_not_parsed}
+	end.
+
+
+%% san_starting_square/5
+-spec san_starting_square(piece_type(), color(), pre_from(), sq_idx(), bb_game()) -> {ok, sq_idx()} | {error, san_from_error()}.
+san_starting_square(_Ptype, _Pcolor, From0, _ToIdx, _Game) when is_binary(From0) ->
+	{ok, binbo_board:notation_to_index(From0)};
+san_starting_square(Ptype, Pcolor, From0, ToIdx, Game) ->
+	Piece = ?TYPE_TO_PIECE(Ptype, Pcolor),
+	IdxList = case From0 of
+		undefined ->
+			binbo_position:get_piece_indexes(Piece, Game);
+		{file, File} ->
+			binbo_position:get_piece_indexes_on_file(Piece, File, Game);
+		{rank, Rank} ->
+			binbo_position:get_piece_indexes_on_rank(Piece, Rank, Game)
+	end,
+	ToBB = ?SQUARE_BB(ToIdx),
+	Search = lists:search(fun(FromIdx) ->
+		MovesBB = binbo_position:piece_moves_bb(FromIdx, Ptype, Pcolor, Game),
+		?IS_AND(ToBB, MovesBB)
+	end, IdxList),
+	case Search of
+		{value, FromIdx} ->
+			{ok, FromIdx};
+		false ->
+			{error, illegal_san}
+	end.

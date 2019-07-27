@@ -119,11 +119,6 @@ valid_piece_moves_from_to(FromIdx, [ToIdx | Tail], Piece, Game, Many, MovesBB) -
 %% position_piece_moves_bb/3
 -spec position_piece_moves_bb(sq_idx(), piece(), bb_game()) -> bb().
 position_piece_moves_bb(FromIdx, Piece, Game) ->
-	case ?PIECE_TYPE(Piece) of
-		?PAWN   -> binbo_position:pawn_moves_bb(FromIdx, ?COLOR(Piece), Game);
-		?KNIGHT -> binbo_position:knight_moves_bb(FromIdx, ?COLOR(Piece), Game);
-		?BISHOP -> binbo_position:bishop_moves_bb(FromIdx, Game);
-		?ROOK   -> binbo_position:rook_moves_bb(FromIdx, Game);
-		?QUEEN  -> binbo_position:queen_moves_bb(FromIdx, Game);
-		?KING   -> binbo_position:king_moves_bb(FromIdx, ?COLOR(Piece), Game)
-	end.
+	Ptype = ?PIECE_TYPE(Piece),
+	Pcolor = ?COLOR(Piece),
+	binbo_position:piece_moves_bb(FromIdx, Ptype, Pcolor, Game).
