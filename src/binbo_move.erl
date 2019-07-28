@@ -389,10 +389,10 @@ parse_san(San, Game) ->
 -spec pre_parse_san(sq_move()) -> pre_parsed_san() | {error, pre_parse_san_error()}.
 pre_parse_san(<<>>) -> % empty binary
 	{error, empty_san};
-pre_parse_san(<<"O-O", _/binary>>) -> % castling kingside
-	{ok, ?KING, 'O-O'};
 pre_parse_san(<<"O-O-O", _/binary>>) -> % castling queenside
 	{ok, ?KING, 'O-O-O'};
+pre_parse_san(<<"O-O", _/binary>>) -> % castling kingside
+	{ok, ?KING, 'O-O'};
 pre_parse_san(<<Pchar:8, Rest/binary>> = San) when erlang:byte_size(Rest) > 0 ->
 	case lists:member(Pchar, "NBRQK") of
 		true  ->
