@@ -470,7 +470,7 @@ san_starting_square(Ptype, Pcolor, From0, ToIdx, Game) ->
 			binbo_position:get_piece_indexes_on_rank(Piece, Rank, Game)
 	end,
 	ToBB = ?SQUARE_BB(ToIdx),
-	Search = lists:search(fun(FromIdx) ->
+	Search = uef_lists:search(fun(FromIdx) ->
 		MovesBB = binbo_position:piece_moves_bb(FromIdx, Ptype, Pcolor, Game),
 		?IS_AND(ToBB, MovesBB)
 	end, IdxList),
