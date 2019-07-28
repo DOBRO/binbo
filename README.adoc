@@ -162,6 +162,8 @@ binbo:new_game(Pid, Fen3).
 [source,erlang]
 ----
 binbo:move(Pid, Move) -> {ok, GameStatus} | {error, Reason}.
+
+binbo:san_move(Pid, Move) -> {ok, GameStatus} | {error, Reason}.
 ----
 
 where:
@@ -170,13 +172,18 @@ where:
 * `Move` is of `binary()` or `string()` type;
 * `GameStatus` is the link:#game-status[game status].
 
+Function `binbo:move/2` supports only _strict square notation_ with respect to argument `Move`, for example: `<<"e2e4">>`, `<<"e7e5">>`, etc.
 
-.Examples:
+Function `binbo:san_move/2` is intended to handle various formats of argument `Move` including https://en.wikipedia.org/wiki/Algebraic_notation_(chess)[_standard algebraic notation_] (*SAN*), for example: `<<"e4">>`, `<<"Nf3">>`, `<<"Qxd5">>`, `<<"a8=Q">>`, `<<"Rdf8">>`, `<<"R1a3">>`, `<<"O-O">>`, `<<"O-O-O">>`, `<<"e1e8">>`, etc.
+
+.Examples for `binbo:move/2`:
 [source,erlang]
 ----
 %% In Erlang shell.
 
 % New game from the starting position:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.190.0>}
 > binbo:new_game(Pid).
 {ok,continue}
 
@@ -204,6 +211,41 @@ where:
 {ok,checkmate}
 ----
 
+.Examples for `binbo:san_move/2`:
+[source,erlang]
+----
+%% In Erlang shell.
+
+% New game from the starting position:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.190.0>}
+> binbo:new_game(Pid).
+{ok,continue}
+
+% Start making moves
+> binbo:san_move(Pid, <<"e4">>).
+{ok,continue}
+
+> binbo:san_move(Pid, <<"e5">>).
+{ok,continue}
+
+> binbo:san_move(Pid, <<"Bc4">>).
+{ok,continue}
+
+> binbo:san_move(Pid, <<"d6">>).
+{ok,continue}
+
+> binbo:san_move(Pid, <<"Qf3">>).
+{ok,continue}
+
+> binbo:san_move(Pid, <<"Nc6">>).
+{ok,continue}
+
+% Checkmate!
+> binbo:san_move(Pid, <<"Qf7#">>).
+{ok,checkmate}
+----
+
 ==== Castling
 
 Binbo recognizes https://en.wikipedia.org/wiki/Castling[castling] when:
@@ -220,15 +262,19 @@ Binbo also checks whether castling allowed or not acording to the chess rules.
 ----
 % White castling kingside
 binbo:move(Pid, <<"e1g1">>).
+binbo:san_move(Pid, <<"O-O">>).
 
 % White castling queenside
 binbo:move(Pid, <<"e1c1">>).
+binbo:san_move(Pid, <<"O-O-O">>).
 
 % Black castling kingside
 binbo:move(Pid, <<"e8g8">>).
+binbo:san_move(Pid, <<"O-O">>).
 
 % Black castling queenside
 binbo:move(Pid, <<"e8c8">>).
+binbo:san_move(Pid, <<"O-O-O">>).
 ----
 
 ==== Promotion
@@ -243,19 +289,25 @@ Binbo recognizes https://en.wikipedia.org/wiki/Promotion_(chess)[promotion] when
 ----
 % White pawn promoted to Queen:
 binbo:move(Pid, <<"a7a8q">>).
+binbo:san_move(Pid, <<"a8=Q">>).
 % or just:
 binbo:move(Pid, <<"a7a8">>).
+binbo:san_move(Pid, <<"a8">>).
 
 % White pawn promoted to Knight:
 binbo:move(Pid, <<"a7a8n">>).
+binbo:san_move(Pid, <<"a8=N">>).
 
 % Black pawn promoted to Queen:
 binbo:move(Pid, <<"a2a1q">>).
+binbo:san_move(Pid, <<"a1=Q">>).
 % or just:
 binbo:move(Pid, <<"a2a1">>).
+binbo:san_move(Pid, <<"a1">>).
 
 % Black pawn promoted to Knight:
 binbo:move(Pid, <<"a2a1n">>).
+binbo:san_move(Pid, <<"a1=N">>).
 ----
 
 ==== En passant
