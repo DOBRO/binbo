@@ -394,7 +394,7 @@ pre_parse_san(<<"O-O-O", _/binary>>) -> % castling queenside
 pre_parse_san(<<"O-O", _/binary>>) -> % castling kingside
 	{ok, ?KING, 'O-O'};
 pre_parse_san(<<Pchar:8, Rest/binary>> = San) when erlang:byte_size(Rest) > 0 ->
-	case lists:member(Pchar, "NBRQK") of
+	case lists:member(Pchar, "PNBRQK") of
 		true  ->
 			Piece = ?CHAR_TO_PIECE(Pchar),
 			pre_parse_san(?PIECE_TYPE(Piece), Rest);
