@@ -57,7 +57,7 @@
 -type pre_from() :: sq_notation() | undefined | {file, binbo_board:file()} | {rank, binbo_board:rank()}.
 -type pre_parsed_san2() :: {ok, piece_type(), pre_from(), sq_notation(), promo_type()}.
 -type pre_parsed_san() :: {ok, ?KING, 'O-O' | 'O-O-O'} | pre_parsed_san2().
--type san_from_error() :: starting_square_not_found.
+-type san_from_error() :: illegal_san.
 -type pre_parse_san_error() :: san_not_parsed | empty_san | bad_san_value | invalid_san_string | bad_data_type.
 -type parse_san_error() :: pre_parse_san_error() | san_from_error().
 -type game_status_error() :: {game_over, binbo_position:game_over_status()}.
