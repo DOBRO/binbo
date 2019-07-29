@@ -14,7 +14,7 @@
 
 -module(binbo_pgn).
 
--export([parse/1]).
+-export([get_moves/1]).
 
 %%%------------------------------------------------------------------------------
 %%%   Types
@@ -26,13 +26,13 @@
 %%%   API
 %%%------------------------------------------------------------------------------
 
-%% parse/1
-parse(<<>>) ->
+%% get_moves/1
+get_moves(<<>>) ->
 	{error, empty_pgn};
-parse(Pgn) when is_binary(Pgn) ->
+get_moves(Pgn) when is_binary(Pgn) ->
 	Steps = [delete_headers, replace_newlines, delete_comments, delete_ravs, delete_movenums, delete_nags],
-	parse(Steps, Pgn);
-parse(_) ->
+	get_moves(Steps, Pgn);
+get_moves(_) ->
 	{error, invalid_data_type}.
 
 
@@ -40,19 +40,19 @@ parse(_) ->
 %%%   Internal functions
 %%%------------------------------------------------------------------------------
 
-%% parse/2
-parse([], Pgn) ->
-	Pgn;
-parse([Step | Tail], Pgn) ->
+%% get_moves/2
+get_moves([], Pgn) ->
+	uef_bin:split(Pgn, <<$\s>>, 'trim_all');
+get_moves([Step | Tail], Pgn) ->
 	Pgn2 = case Step of
-		delete_headers -> delete_headers(Pgn);
+		delete_headers   -> delete_headers(Pgn);
 		replace_newlines -> replace_newlines(Pgn);
-		delete_comments -> delete_comments(Pgn);
-		delete_ravs -> delete_ravs(Pgn);
-		delete_movenums -> delete_movenums(Pgn);
-		delete_nags -> delete_nags(Pgn)
+		delete_comments  -> delete_comments(Pgn);
+		delete_ravs      -> delete_ravs(Pgn);
+		delete_movenums  -> delete_movenums(Pgn);
+		delete_nags      -> delete_nags(Pgn)
 	end,
-	parse(Tail, Pgn2).
+	get_moves(Tail, Pgn2).
 
 
 %% delete_headers/1
