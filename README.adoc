@@ -625,6 +625,10 @@ In this case we run into the issue regarding scanning the _heaps_ in all process
 
 So, using `global` dynamic modules with large static data seems to be more reasonable in spite of that fact that it significantly slows down the application startup due to the run-time compilation of these modules.
 
+== Changelog
+
+See link:CHANGELOG.md[CHANGELOG] for details.
+
 == Contributing
 
 Want to contribute? Really? Awesome!
