@@ -629,7 +629,7 @@ So, using `global` dynamic modules with large static data seems to be more reaso
 
 Want to contribute? Really? Awesome!
 
-Please refer to the link:CONTRIBUTING.adoc[CONTRIBUTING] file for details.
+Please refer to the link:CONTRIBUTING.md[CONTRIBUTING] file for details.
 
 == License
 
