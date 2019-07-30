@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-- New function `binbo:san_move/2`
+- Support for PGN loading.
+- New function `binbo:load_pgn/1`.
+- New function `binbo:san_move/2`.
 
 ## [0.1.0] - 2019-07-22
 
