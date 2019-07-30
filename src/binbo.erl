@@ -17,7 +17,7 @@
 -export([start/0, stop/0]).
 -export([new_server/0, new_server/1]).
 -export([new_game/1, new_game/2, game_state/1, game_status/1]).
--export([move/2, san_move/2, get_fen/1]).
+-export([move/2, san_move/2, get_fen/1, load_pgn/2]).
 -export([game_draw/1, game_draw/2]).
 -export([print_board/1, print_board/2]).
 -export([stop_server/1]).
@@ -92,6 +92,11 @@ move(Pid, Move) ->
 -spec san_move(pid(), binbo_move:sq_move()) -> binbo_server:game_move_ret().
 san_move(Pid, SanMove) ->
 	binbo_server:game_san_move(Pid, SanMove).
+
+%% load_pgn/2
+-spec load_pgn(pid(), binbo_pgn:pgn()) -> binbo_server:load_pgn_ret().
+load_pgn(Pid, Pgn) ->
+	binbo_server:load_pgn(Pid, Pgn).
 
 %% game_state/1
 -spec game_state(pid()) -> binbo_server:game_state_ret().

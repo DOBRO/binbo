@@ -15,7 +15,7 @@
 -module(binbo_game).
 
 -export([new/1]).
--export([move/3]).
+-export([move/3, load_pgn/1]).
 -export([status/1, draw/2]).
 -export([pretty_board/2, get_fen/1]).
 
@@ -41,6 +41,7 @@
 -type init_error() :: binbo_fen:fen_error() | bb_game_error().
 -type move_error() :: bad_game_term() | binbo_move:move_error().
 -type draw_error() :: {already_has_status, binbo_position:game_over_status()} | bad_game_term().
+-type load_pgn_error() :: move_error() | binbo_pgn:pgn_error().
 -type pretty_board_error() :: bad_game_term() | {bad_options, term()}.
 -type status_ret() :: {ok, game_status()} | {error, bad_game_term()}.
 -type get_fen_ret() :: {ok, binary()} | {error, bad_game_term()}.
@@ -48,7 +49,7 @@
 -export_type([game/0, game_fen/0]).
 -export_type([game_status/0, status_ret/0, get_fen_ret/0]).
 -export_type([init_error/0, move_error/0, draw_error/0]).
--export_type([pretty_board_error/0]).
+-export_type([load_pgn_error/0, pretty_board_error/0]).
 
 %%%------------------------------------------------------------------------------
 %%%   API
@@ -81,6 +82,17 @@ move(MoveNotation, Move, Game) when is_map(Game) ->
 	end;
 move(_MoveNotation, _Move, Game) ->
 	{error, {bad_game, Game}}.
+
+
+%% load_pgn/1
+-spec load_pgn(binbo_pgn:pgn()) -> {ok, {bb_game(), game_status()}} | {error, load_pgn_error()}.
+load_pgn(Pgn) ->
+	case binbo_pgn:get_moves(Pgn) of
+		{ok, Movelist} ->
+			load_san_moves(Movelist);
+		{error, _} = Error ->
+			Error
+	end.
 
 %% pretty_board/2
 -spec pretty_board(game(), binbo_position:pretty_board_opts()) -> {ok, {iolist(), binbo_position:game_status()}} | {error, pretty_board_error()}.
@@ -156,3 +168,27 @@ finalize_move(MoveInfo, Game0) ->
 	Game = binbo_position:finalize_move(MoveInfo2, Game0),
 	Status = binbo_position:get_status(Game),
 	{Game, Status}.
+
+
+%% load_san_moves
+-spec load_san_moves([sq_move()]) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
+load_san_moves(Movelist) ->
+	load_moves(Movelist, san).
+
+%% load_moves/2
+-spec load_moves([sq_move()], san | sq) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
+load_moves(Movelist, MoveNotation) ->
+	{ok, {Game, Status}} = new(initial),
+	load_moves(Movelist, MoveNotation, Game, Status).
+
+%% load_moves/4
+-spec load_moves([sq_move()], san | sq, bb_game(), game_status()) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
+load_moves([], _MoveNotation, Game, Status) ->
+	{ok, {Game, Status}};
+load_moves([Move|Tail], MoveNotation, Game0, _Status0) ->
+	case move(MoveNotation, Move, Game0) of
+		{ok, {Game, Status}} ->
+			load_moves(Tail, MoveNotation, Game, Status);
+		{error, _} = Error ->
+			Error
+	end.

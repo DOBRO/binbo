@@ -24,7 +24,7 @@
 -type movelist() :: [binary()].
 -type pgn_error() :: empty_pgn | invalid_pgn_datatype.
 
--export_type([pgn_error/0]).
+-export_type([pgn/0, pgn_error/0]).
 
 %%%------------------------------------------------------------------------------
 %%%   API
