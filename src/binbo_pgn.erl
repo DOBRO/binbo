@@ -42,7 +42,8 @@ get_moves(_) ->
 
 %% get_moves/2
 get_moves([], Pgn) ->
-	uef_bin:split(Pgn, <<$\s>>, 'trim_all');
+	Movelist = uef_bin:split(Pgn, <<$\s>>, 'trim_all'),
+	{ok, maybe_drop_result(Movelist)};
 get_moves([Step | Tail], Pgn) ->
 	Pgn2 = case Step of
 		delete_headers   -> delete_headers(Pgn);
@@ -85,3 +86,14 @@ delete_movenums(Pgn) ->
 %% https://en.wikipedia.org/wiki/Numeric_Annotation_Glyphs
 delete_nags(Pgn) ->
 	re:replace(Pgn, <<"\\$\\d+">>, <<>>, [{return, binary}, global, never_utf]).
+
+
+%% maybe_drop_result/1
+%% Drops game result, the last element in move list.
+maybe_drop_result([]) -> [];
+maybe_drop_result(Movelist) ->
+	[Result|Tail] = lists:reverse(Movelist),
+	case lists:member(Result, [<<"*">>, <<"1-0">>, <<"0-1">>, <<"1/2-1/2">>]) of
+		true  -> lists:reverse(Tail);
+		false -> Movelist
+	end.
