@@ -67,24 +67,14 @@ replace_newlines(Pgn) ->
 delete_comments(Pgn) ->
 	re:replace(Pgn, <<"(\\{[^}]+\\})+?">>, <<>>, [{return, binary}, global, never_utf]).
 
-
 %% delete_ravs/1
 %% Deletes Recursive Annotation Variations (RAVs)
 %% https://chess.stackexchange.com/questions/18214/valid-pgn-variations
 delete_ravs(Pgn) ->
-	{ok, MP} = re:compile(<<"(\\([^\\(\\)]+\\))+?">>, [never_utf]),
-	delete_ravs(Pgn, MP).
-
-%% delete_ravs/2
-delete_ravs(Pgn, MP) ->
-	case re:run(Pgn, MP, [{capture, none}]) of
-		match ->
-			Pgn2 = re:replace(Pgn, MP, <<>>, [{return, binary}, global]),
-			delete_ravs(Pgn2, MP);
-		_ ->
-			Pgn
-	end.
-
+	% This PCRE pattern solves the nested parentheses problem.
+	% As a reference see 'Recursive Patterns' section in OTP docs for 're' module:
+	% http://erlang.org/doc/man/re.html#recursive-patterns
+	re:replace(Pgn, <<"\\(([^()]++|(?R))*\\)">>, <<>>, [{return, binary}, global, never_utf]).
 
 %% delete_movenums/1
 delete_movenums(Pgn) ->
