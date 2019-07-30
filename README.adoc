@@ -28,6 +28,7 @@ toc::[]
 * Blazing fast move generation and validation.
 * No bottlenecks. Every game is an Erlang process (`gen_server`) with its own game state.
 * Ability to create as many concurrent games as many Erlang processes allowed in VM.
+* Support for PGN loading.
 * All the chess rules are completely covered including:
 ** https://en.wikipedia.org/wiki/En_passant[En-passant move];
 ** https://en.wikipedia.org/wiki/Castling[Castling];
@@ -328,6 +329,30 @@ binbo:get_fen(Pid) -> {ok, Fen}.
 {ok, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>}.
 ----
 
+=== PGN loading
+
+[source,erlang]
+----
+binbo:load_pgn(Pid, PGN) -> {ok, GameStatus} | {error, Reason}.
+----
+
+.where:
+* `Pid` is the pid of the game process;
+* `PGN` is a https://en.wikipedia.org/wiki/Portable_Game_Notation[Portable Game Notation], its type is `binary()`;
+* `GameStatus` is the link:#game-status[game status].
+
+To extract move list, Binbo takes into account various cases specific to PGN such as _comments in braces_,
+https://chess.stackexchange.com/questions/18214/valid-pgn-variations[_recursive annotation variations_] (RAVs) and
+https://en.wikipedia.org/wiki/Numeric_Annotation_Glyphs[_numeric annotation glyphs_] (NAGs).
+
+.Example:
+[source,erlang]
+----
+load_pgn_from_file(File) ->
+  {ok, PGN} = file:read_file(File),
+  {ok, Pid} = binbo:new_server(),
+  binbo:load_pgn(Pid, PGN).
+----
 
 === Board visualization
 
