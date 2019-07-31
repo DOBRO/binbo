@@ -15,7 +15,7 @@
 -module(binbo_game).
 
 -export([new/1]).
--export([move/3, load_pgn/1]).
+-export([move/3, load_pgn/1, load_pgn_file/1]).
 -export([status/1, draw/2]).
 -export([pretty_board/2, get_fen/1]).
 
@@ -37,6 +37,7 @@
 -type game_status() :: binbo_position:game_status().
 -type sq_move() :: binbo_move:sq_move().
 -type move_info() :: binbo_move:move_info().
+-type filename() :: binary() | string().
 -type bad_game_term() :: {bad_game, term()}.
 -type init_error() :: binbo_fen:fen_error() | bb_game_error().
 -type move_error() :: bad_game_term() | binbo_move:move_error().
@@ -46,7 +47,7 @@
 -type status_ret() :: {ok, game_status()} | {error, bad_game_term()}.
 -type get_fen_ret() :: {ok, binary()} | {error, bad_game_term()}.
 
--export_type([game/0, game_fen/0]).
+-export_type([game/0, game_fen/0, filename/0]).
 -export_type([game_status/0, status_ret/0, get_fen_ret/0]).
 -export_type([init_error/0, move_error/0, draw_error/0]).
 -export_type([load_pgn_error/0, pretty_board_error/0]).
@@ -90,6 +91,16 @@ load_pgn(Pgn) ->
 	case binbo_pgn:get_moves(Pgn) of
 		{ok, Movelist} ->
 			load_san_moves(Movelist);
+		{error, _} = Error ->
+			Error
+	end.
+
+%% load_pgn_file/1
+-spec load_pgn_file(filename()) -> {ok, {bb_game(), game_status()}} | {error, any()}.
+load_pgn_file(Filename) ->
+	case uef_file:read_file_fast(Filename) of
+		{ok, Pgn} ->
+			load_pgn(Pgn);
 		{error, _} = Error ->
 			Error
 	end.

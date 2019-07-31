@@ -17,7 +17,8 @@
 
 -export([start_link/1]).
 -export([stop/1]).
--export([new_game/2, game_move/2, game_san_move/2, get_fen/1, load_pgn/2]).
+-export([new_game/2, game_move/2, game_san_move/2, get_fen/1]).
+-export([load_pgn/2, load_pgn_file/2]).
 -export([game_state/1, game_status/1, game_draw/2]).
 
 %%% gen_server export.
@@ -45,12 +46,14 @@
 -type game_draw_ret() :: ok | {error, binbo_game:draw_error()}.
 -type get_fen_ret() :: binbo_game:get_fen_ret().
 -type load_pgn_ret() :: {ok, game_status()} | {error, binbo_game:load_pgn_error()}.
+-type load_pgn_file_ret() :: {ok, game_status()} | {error, any()}.
 -record(state, {
 	game = undefined :: undefined | bb_game()
 }).
 -type state() :: #state{}.
 
--export_type([new_game_ret/0, game_move_ret/0, get_fen_ret/0, load_pgn_ret/0]).
+-export_type([new_game_ret/0, game_move_ret/0, get_fen_ret/0]).
+-export_type([load_pgn_ret/0, load_pgn_file_ret/0]).
 -export_type([game_state_ret/0, game_status_ret/0, game_draw_ret/0]).
 -export_type([stop_ret/0]).
 
@@ -88,7 +91,8 @@ init(_Args) ->
 				; ({game_move, sq | san, sq_move()}, from(), state()) -> {reply, game_move_ret(), state()}
 				; (game_state, from(), state()) -> {reply, game_state_ret(), state()}
 				; (game_status, from(), state()) -> {reply, game_status_ret(), state()}
-				; ({load_pgn, binbo_pgn:pgn()}, from(), state()) -> {reply, load_pgn_ret(), state()}
+				; ({load_pgn, binary, binbo_pgn:pgn()}, from(), state()) -> {reply, load_pgn_ret(), state()}
+				; ({load_pgn, file, binbo_game:filename()}, from(), state()) -> {reply, load_pgn_file_ret(), state()}
 				; (get_fen, from(), state()) -> {reply, get_fen_ret(), state()}
 				; ({game_draw, term()}, from(), state()) -> {reply, game_draw_ret(), state()}.
 handle_call({new_game, Fen}, _From, State) ->
@@ -107,8 +111,12 @@ handle_call({game_move, MoveNotation, Move}, _From, #state{game = Game0} = State
 			{Error, State0}
 	end,
 	{reply, Reply, State};
-handle_call({load_pgn, Pgn}, _From, State0) ->
-	{Reply, State} = case binbo_game:load_pgn(Pgn) of
+handle_call({load_pgn, Type, Data}, _From, State0) ->
+	Result = case Type of
+		binary -> binbo_game:load_pgn(Data);
+		file   -> binbo_game:load_pgn_file(Data)
+	end,
+	{Reply, State} = case Result of
 		{ok, {Game, GameStatus}} ->
 			{{ok, GameStatus}, State0#state{game = Game}};
 		{error, _} = Error ->
@@ -173,7 +181,12 @@ game_san_move(Pid, Move) ->
 %% load_pgn/2
 -spec load_pgn(pid(), binbo_pgn:pgn()) -> load_pgn_ret().
 load_pgn(Pid, Pgn) ->
-	call(Pid, {load_pgn, Pgn}).
+	call(Pid, {load_pgn, binary, Pgn}).
+
+%% load_pgn_file/2
+-spec load_pgn_file(pid(), binbo_game:filename()) -> load_pgn_file_ret().
+load_pgn_file(Pid, Filename) ->
+	call(Pid, {load_pgn, file, Filename}).
 
 %% game_state/1
 -spec game_state(pid()) -> game_state_ret().
