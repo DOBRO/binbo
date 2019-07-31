@@ -77,8 +77,8 @@ move(MoveNotation, Move, Game) when is_map(Game) ->
 	case Result of
 		{ok, MoveInfo, Game2} ->
 			{ok, finalize_move(MoveInfo, Game2)};
-		{error, _} = Error ->
-			Error
+		{error, Reason} ->
+			{error, {Reason, Move}}
 	end;
 move(_MoveNotation, _Move, Game) ->
 	{error, {bad_game, Game}}.
