@@ -523,7 +523,7 @@ of sliding pieces in a preinitialized move database.
 The formula for the _index_ is:
 
 ._in C/C++:_
-[source]
+[source,c]
 ----
 magic_index = ((occupied & mask) * magic_number) >> shift;
 ----
@@ -547,13 +547,13 @@ It means that all moves are stored in a table of its own (individual) size for e
 In _C/C++_ such tables are actually two-dimensional arrays and any move can be accessed by
 a simple lookup:
 
-[source]
+[source,c]
 ----
 move = global_move_table[square][magic_index]
 ----
 
 ._If detailed:_
-[source]
+[source,c]
 ----
 moves_from = global_move_table[square];
 move = moves_from[magic_index];
