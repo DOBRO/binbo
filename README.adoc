@@ -334,24 +334,38 @@ binbo:get_fen(Pid) -> {ok, Fen}.
 [source,erlang]
 ----
 binbo:load_pgn(Pid, PGN) -> {ok, GameStatus} | {error, Reason}.
+
+binbo:load_pgn_file(Pid, Filename) -> {ok, GameStatus} | {error, Reason}.
 ----
 
 .where:
 * `Pid` is the pid of the game process;
 * `PGN` is a https://en.wikipedia.org/wiki/Portable_Game_Notation[Portable Game Notation], its type is `binary()`;
+* `Filename` is a path to the file from which PGN is to be loaded. Its type is `binary()` or `string()`.
 * `GameStatus` is the link:#game-status[game status].
+
+Function `binbo:load_pgn/2` loads PGN itself.
+
+If `PGN` is pretty large and you are able to load it from *local* file, to avoid sending large data between processes, use `binbo:load_pgn_file/2` since it's highly optimized for reading local files.
 
 To extract move list, Binbo takes into account various cases specific to PGN such as _comments in braces_,
 https://chess.stackexchange.com/questions/18214/valid-pgn-variations[_recursive annotation variations_] (RAVs) and
 https://en.wikipedia.org/wiki/Numeric_Annotation_Glyphs[_numeric annotation glyphs_] (NAGs).
 
-.Example:
+.Examples:
 [source,erlang]
 ----
-load_pgn_from_file(File) ->
-  {ok, PGN} = file:read_file(File),
+%% Binary PGN:
+load_pgn() ->
+  PGN = <<"1. e4 e5 2. Nf3 Nc6 3. Bb5 a6">>,
   {ok, Pid} = binbo:new_server(),
   binbo:load_pgn(Pid, PGN).
+
+%% From file:
+load_pgn_from_file() ->
+  Filename = "/path/to/game.pgn",
+  {ok, Pid} = binbo:new_server(),
+  binbo:load_pgn_file(Pid, Filename).
 ----
 
 === Board visualization
