@@ -14,7 +14,7 @@
 
 -module(binbo_movegen).
 
--export([all_valid_moves/2, has_valid_moves/2]).
+-export([all_valid_moves/1, all_valid_moves/2, has_valid_moves/2]).
 
 
 %%%------------------------------------------------------------------------------
@@ -34,17 +34,23 @@
 -type bb_game() :: binbo_position:bb_game().
 -type sq_idx() :: binbo_board:square_index().
 -type many() :: all | any.
+-type bb_map() :: #{sq_idx() => bb()}.
 
 %%%------------------------------------------------------------------------------
 %%%   API
 %%%------------------------------------------------------------------------------
 
+%% all_valid_moves/1
+-spec all_valid_moves(bb_game()) -> [{sq_idx(), sq_idx()}].
+all_valid_moves(Game) ->
+	Color = binbo_position:get_sidetomove(Game),
+	all_valid_moves(Color, Game).
+
 %% all_valid_moves/2
-%% Note: function 'all_valid_moves/2' returns just a bitboard of all *target* squares.
-%% If it should be used for a chess engine, it should be reworked to return a desired value.
--spec all_valid_moves(color(), bb_game()) -> bb().
+-spec all_valid_moves(color(), bb_game()) -> [{sq_idx(), sq_idx()}].
 all_valid_moves(Color, Game) ->
-	valid_moves(Color, Game, all).
+	Map = valid_moves(Color, Game, all, map),
+	bbmap_to_movelist(Map).
 
 %% has_valid_moves/2
 -spec has_valid_moves(color(), bb_game()) -> boolean().
@@ -59,34 +65,43 @@ has_valid_moves(Color, Game) ->
 %% any_valid_move/2
 -spec any_valid_move(color(), bb_game()) -> bb().
 any_valid_move(Color, Game) ->
-	valid_moves(Color, Game, any).
+	valid_moves(Color, Game, any, bb).
 
-%% valid_moves/3
--spec valid_moves(color(), bb_game(), many()) -> bb().
-valid_moves(Color, Game, Many) ->
+%% valid_moves/4
+-spec valid_moves(color(), bb_game(), many(), bb) -> bb()
+				; (color(), bb_game(), many(), map) -> bb_map().
+valid_moves(Color, Game, Many, DataType) ->
 	FromSquares = binbo_position:get_side_indexes(Color, Game),
-	valid_moves_from(FromSquares, Game, Many).
-
-%% valid_moves_from/3
--spec valid_moves_from([sq_idx()], bb_game(), many()) -> bb().
-valid_moves_from(FromSquares, Game, Many) ->
-	valid_moves_from(FromSquares, Game, Many, ?EMPTY_BB).
+	valid_moves_from(FromSquares, Game, Many, DataType).
 
 %% valid_moves_from/4
--spec valid_moves_from([sq_idx()], bb_game(), many(), bb()) -> bb().
-valid_moves_from([], _Game, _Many, MovesBB) ->
-	MovesBB;
-valid_moves_from([FromIdx | Tail], Game, Many, MovesBB) ->
+-spec valid_moves_from([sq_idx()], bb_game(), many(), bb) -> bb()
+					; ([sq_idx()], bb_game(), many(), map) -> bb_map().
+valid_moves_from(FromSquares, Game, Many, DataType) ->
+	case DataType of
+		bb  -> valid_moves_from_1(FromSquares, Game, Many, ?EMPTY_BB);
+		map -> valid_moves_from_1(FromSquares, Game, Many, #{})
+	end.
+
+
+%% valid_moves_from_1/4
+-spec valid_moves_from_1([sq_idx()], bb_game(), many(), bb()) -> bb()
+					; ([sq_idx()], bb_game(), many(), map()) -> bb_map().
+valid_moves_from_1([], _Game, _Many, MovesAcc) ->
+	MovesAcc;
+valid_moves_from_1([FromIdx | Tail], Game, Many, MovesAcc) ->
 	Piece = binbo_position:get_piece(FromIdx, Game),
 	true = ?IS_PIECE(Piece), % ensure piece
 	PieceMovesBB = valid_piece_moves(FromIdx, Piece, Game, Many),
 	case PieceMovesBB > ?EMPTY_BB of
 		true when (Many =:= any) ->
 			PieceMovesBB;
-		true ->
-			valid_moves_from(Tail, Game, Many, MovesBB bor PieceMovesBB);
+		true when is_integer(MovesAcc) ->
+			valid_moves_from_1(Tail, Game, Many, MovesAcc bor PieceMovesBB);
+		true when is_map(MovesAcc) ->
+			valid_moves_from_1(Tail, Game, Many, MovesAcc#{FromIdx => PieceMovesBB});
 		false ->
-			valid_moves_from(Tail, Game, Many, MovesBB)
+			valid_moves_from_1(Tail, Game, Many, MovesAcc)
 	end.
 
 %% valid_piece_moves/4
@@ -122,3 +137,23 @@ position_piece_moves_bb(FromIdx, Piece, Game) ->
 	Ptype = ?PIECE_TYPE(Piece),
 	Pcolor = ?COLOR(Piece),
 	binbo_position:piece_moves_bb(FromIdx, Ptype, Pcolor, Game).
+
+%% bbmap_to_movelist
+-spec bbmap_to_movelist(bb_map()) -> [{sq_idx(), sq_idx()}].
+bbmap_to_movelist(Map) ->
+	Iterator = maps:iterator(Map),
+	bbmap_to_movelist(Iterator, []).
+
+%% bbmap_to_movelist/2
+-spec bbmap_to_movelist(maps:iterator(), [{sq_idx(), sq_idx()}]) -> [{sq_idx(), sq_idx()}].
+bbmap_to_movelist(Iterator, Movelist) ->
+	case maps:next(Iterator) of
+		{FromIdx, MovesBB, Iterator2} ->
+			IdxList = binbo_bb:to_index_list(MovesBB),
+			Movelist2 = lists:foldl(fun(ToIdx, Acc) ->
+				[{FromIdx, ToIdx} | Acc]
+			end, Movelist, IdxList),
+			bbmap_to_movelist(Iterator2, Movelist2);
+		none ->
+			Movelist
+	end.
