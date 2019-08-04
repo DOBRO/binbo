@@ -138,22 +138,19 @@ position_piece_moves_bb(FromIdx, Piece, Game) ->
 	Pcolor = ?COLOR(Piece),
 	binbo_position:piece_moves_bb(FromIdx, Ptype, Pcolor, Game).
 
-%% bbmap_to_movelist
+%% bbmap_to_movelist/1
 -spec bbmap_to_movelist(bb_map()) -> [{sq_idx(), sq_idx()}].
 bbmap_to_movelist(Map) ->
-	Iterator = maps:iterator(Map),
-	bbmap_to_movelist(Iterator, []).
+	List = maps:to_list(Map),
+	bblist_to_movelist(List, []).
 
-%% bbmap_to_movelist/2
--spec bbmap_to_movelist(maps:iterator(), [{sq_idx(), sq_idx()}]) -> [{sq_idx(), sq_idx()}].
-bbmap_to_movelist(Iterator, Movelist) ->
-	case maps:next(Iterator) of
-		{FromIdx, MovesBB, Iterator2} ->
-			IdxList = binbo_bb:to_index_list(MovesBB),
-			Movelist2 = lists:foldl(fun(ToIdx, Acc) ->
-				[{FromIdx, ToIdx} | Acc]
-			end, Movelist, IdxList),
-			bbmap_to_movelist(Iterator2, Movelist2);
-		none ->
-			Movelist
-	end.
+%% bblist_to_movelist/2
+-spec bblist_to_movelist([{sq_idx(), bb()}], [{sq_idx(), sq_idx()}]) -> [{sq_idx(), sq_idx()}].
+bblist_to_movelist([], Movelist) ->
+	Movelist;
+bblist_to_movelist([{FromIdx, MovesBB} | Tail], Movelist) ->
+	IdxList = binbo_bb:to_index_list(MovesBB),
+	Movelist2 = lists:foldl(fun(ToIdx, Acc) ->
+		[{FromIdx, ToIdx} | Acc]
+	end, Movelist, IdxList),
+	bblist_to_movelist(Tail, Movelist2).
