@@ -21,6 +21,7 @@
 -export([load_pgn/2, load_pgn_file/2]).
 -export([game_draw/1, game_draw/2]).
 -export([print_board/1, print_board/2]).
+-export([all_legal_moves/1, all_legal_moves/2]).
 -export([stop_server/1]).
 
 -define(APPLICATION, ?MODULE).
@@ -124,7 +125,6 @@ game_draw(Pid) ->
 game_draw(Pid, Reason) ->
 	binbo_server:game_draw(Pid, Reason).
 
-
 %% print_board/1
 -spec print_board(pid()) -> ok | {error, binbo_game:pretty_board_error()}.
 print_board(Pid) ->
@@ -135,7 +135,7 @@ print_board(Pid) ->
 print_board(Pid, Opts) ->
 	Game = game_state(Pid),
 	% Here we call 'binbo_game:pretty_board/2' directly
-	% avoiding sending large PrettyBoard between processes
+	% avoiding sending large 'PrettyBoard' between processes
 	case binbo_game:pretty_board(Game, Opts) of
 		{ok, {PrettyBoard, GameStatus}} ->
 			io:format("~n~ts~n  Status: ~w~n~n", [PrettyBoard, GameStatus]);
@@ -147,3 +147,13 @@ print_board(Pid, Opts) ->
 -spec get_fen(pid()) -> binbo_server:get_fen_ret().
 get_fen(Pid) ->
 	binbo_server:get_fen(Pid).
+
+%% all_legal_moves/1
+-spec all_legal_moves(pid()) -> binbo_server:all_legal_moves_ret().
+all_legal_moves(Pid) ->
+	all_legal_moves(Pid, int).
+
+%% all_legal_moves/2
+-spec all_legal_moves(pid(), int | bin | str) -> binbo_server:all_legal_moves_ret().
+all_legal_moves(Pid, MoveType) ->
+	binbo_server:all_legal_moves(Pid, MoveType).

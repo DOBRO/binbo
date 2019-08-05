@@ -18,6 +18,7 @@
 -export([move/3, load_pgn/1, load_pgn_file/1]).
 -export([status/1, draw/2]).
 -export([pretty_board/2, get_fen/1]).
+-export([all_legal_moves/2]).
 
 %%%------------------------------------------------------------------------------
 %%%   Includes
@@ -38,6 +39,7 @@
 -type sq_move() :: binbo_move:sq_move().
 -type move_info() :: binbo_move:move_info().
 -type filename() :: binary() | string().
+-type legal_moves() :: [binbo_movegen:int_move()] | [binbo_movegen:bin_move()] | [binbo_movegen:str_move()].
 -type bad_game_term() :: {bad_game, term()}.
 -type init_error() :: binbo_fen:fen_error() | bb_game_error().
 -type move_error() :: bad_game_term() | binbo_move:move_error().
@@ -46,9 +48,11 @@
 -type pretty_board_error() :: bad_game_term() | {bad_options, term()}.
 -type status_ret() :: {ok, game_status()} | {error, bad_game_term()}.
 -type get_fen_ret() :: {ok, binary()} | {error, bad_game_term()}.
+-type all_legal_moves_ret() :: {ok, legal_moves()} | {error, bad_game_term()}.
 
 -export_type([game/0, game_fen/0, filename/0]).
 -export_type([game_status/0, status_ret/0, get_fen_ret/0]).
+-export_type([all_legal_moves_ret/0]).
 -export_type([init_error/0, move_error/0, draw_error/0]).
 -export_type([load_pgn_error/0, pretty_board_error/0]).
 
@@ -140,6 +144,15 @@ get_fen(Game) ->
 		true  -> {ok, binbo_position:get_fen(Game)};
 		false -> {error, {bad_game, Game}}
 	end.
+
+%% all_legal_moves/2
+-spec all_legal_moves(game(), int | bin | str) -> all_legal_moves_ret().
+all_legal_moves(Game, MoveType) ->
+	case erlang:is_map(Game) of
+		true  -> {ok, binbo_movegen:all_valid_moves(Game, MoveType)};
+		false -> {error, {bad_game, Game}}
+	end.
+
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions

@@ -20,6 +20,7 @@
 -export([new_game/2, game_move/2, game_san_move/2, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
 -export([game_state/1, game_status/1, game_draw/2]).
+-export([all_legal_moves/2]).
 
 %%% gen_server export.
 -export([init/1]).
@@ -47,6 +48,8 @@
 -type get_fen_ret() :: binbo_game:get_fen_ret().
 -type load_pgn_ret() :: {ok, game_status()} | {error, binbo_game:load_pgn_error()}.
 -type load_pgn_file_ret() :: {ok, game_status()} | {error, any()}.
+-type all_legal_moves_ret() :: binbo_game:all_legal_moves_ret().
+
 -record(state, {
 	game = undefined :: undefined | bb_game()
 }).
@@ -55,6 +58,7 @@
 -export_type([new_game_ret/0, game_move_ret/0, get_fen_ret/0]).
 -export_type([load_pgn_ret/0, load_pgn_file_ret/0]).
 -export_type([game_state_ret/0, game_status_ret/0, game_draw_ret/0]).
+-export_type([all_legal_moves_ret/0]).
 -export_type([stop_ret/0]).
 
 %%%------------------------------------------------------------------------------
@@ -94,6 +98,7 @@ init(_Args) ->
 				; ({load_pgn, binary, binbo_pgn:pgn()}, from(), state()) -> {reply, load_pgn_ret(), state()}
 				; ({load_pgn, file, binbo_game:filename()}, from(), state()) -> {reply, load_pgn_file_ret(), state()}
 				; (get_fen, from(), state()) -> {reply, get_fen_ret(), state()}
+				; ({all_legal_moves, int | bin | str}, from(), state()) -> {reply, all_legal_moves_ret(), state()}
 				; ({game_draw, term()}, from(), state()) -> {reply, game_draw_ret(), state()}.
 handle_call({new_game, Fen}, _From, State) ->
 	{Reply, State2} = case binbo_game:new(Fen) of
@@ -130,6 +135,9 @@ handle_call(game_status, _From, #state{game = Game} = State) ->
 	{reply, Reply, State};
 handle_call(get_fen, _From, #state{game = Game} = State) ->
 	Reply = binbo_game:get_fen(Game),
+	{reply, Reply, State};
+handle_call({all_legal_moves, MoveType}, _From, #state{game = Game} = State) ->
+	Reply = binbo_game:all_legal_moves(Game, MoveType),
 	{reply, Reply, State};
 handle_call({game_draw, Reason}, _From, #state{game = Game0} = State0) ->
 	{Reply, State} = case binbo_game:draw(Reason, Game0) of
@@ -207,6 +215,11 @@ game_draw(Pid, Reason) ->
 -spec get_fen(pid()) -> get_fen_ret().
 get_fen(Pid) ->
 	call(Pid, get_fen).
+
+%% all_legal_moves/2
+-spec all_legal_moves(pid(), int | bin | str) -> all_legal_moves_ret().
+all_legal_moves(Pid, MoveType) ->
+	call(Pid, {all_legal_moves, MoveType}).
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
