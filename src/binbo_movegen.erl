@@ -39,6 +39,7 @@
 -type bb_map() :: #{sq_idx() => bb()}.
 -type int_move() :: {sq_idx(), sq_idx()}.
 -type bin_move() :: {sq_notation(), sq_notation()}.
+-type str_move() :: {string(), string()}.
 
 %%%------------------------------------------------------------------------------
 %%%   API
@@ -46,7 +47,8 @@
 
 %% all_valid_moves/2
 -spec all_valid_moves(bb_game(), int) -> [int_move()]
-				;    (bb_game(), bin) -> [bin_move()].
+				;    (bb_game(), bin) -> [bin_move()]
+				;    (bb_game(), str) -> [str_move()].
 all_valid_moves(Game, MoveType) ->
 	Color = binbo_position:get_sidetomove(Game),
 	all_valid_moves(Color, Game, MoveType).
@@ -54,7 +56,8 @@ all_valid_moves(Game, MoveType) ->
 
 %% all_valid_moves/3
 -spec all_valid_moves(color(), bb_game(), int) -> [int_move()]
-				;    (color(), bb_game(), bin) -> [bin_move()].
+				;    (color(), bb_game(), bin) -> [bin_move()]
+				;    (color(), bb_game(), str) -> [str_move()].
 all_valid_moves(Color, Game, MoveType) ->
 	Map = valid_moves(Color, Game, all, map),
 	bbmap_to_movelist(Map, MoveType).
@@ -147,14 +150,16 @@ position_piece_moves_bb(FromIdx, Piece, Game) ->
 
 %% bbmap_to_movelist/1
 -spec bbmap_to_movelist(bb_map(), int) -> [int_move()]
-					; (bb_map(), bin) -> [bin_move()].
+					;  (bb_map(), bin) -> [bin_move()]
+					;  (bb_map(), str) -> [str_move()].
 bbmap_to_movelist(Map, Movetype) ->
 	List = maps:to_list(Map),
 	bblist_to_movelist(List, Movetype, []).
 
 %% bblist_to_movelist/2
 -spec bblist_to_movelist([{sq_idx(), bb()}], int, [int_move()]) -> [int_move()]
-					;   ([{sq_idx(), bb()}], bin, [bin_move()]) -> [bin_move()].
+					;   ([{sq_idx(), bb()}], bin, [bin_move()]) -> [bin_move()]
+					;   ([{sq_idx(), bb()}], str, [str_move()]) -> [str_move()].
 bblist_to_movelist([], _Movetype, Movelist) ->
 	Movelist;
 bblist_to_movelist([{FromIdx, MovesBB} | Tail], Movetype, Movelist) ->
@@ -164,7 +169,9 @@ bblist_to_movelist([{FromIdx, MovesBB} | Tail], Movetype, Movelist) ->
 			int ->
 				[{FromIdx, ToIdx} | Acc];
 			bin ->
-				[{binbo_board:index_to_notation(FromIdx), binbo_board:index_to_notation(ToIdx)} | Acc]
+				[{binbo_board:index_to_notation(FromIdx), binbo_board:index_to_notation(ToIdx)} | Acc];
+			str ->
+				[{erlang:binary_to_list(binbo_board:index_to_notation(FromIdx)), erlang:binary_to_list(binbo_board:index_to_notation(ToIdx))} | Acc]
 		end
 	end, Movelist, IdxList),
 	bblist_to_movelist(Tail, Movetype, Movelist2).
