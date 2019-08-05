@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- API of `binbo_movegen` module has been changed regarding function `all_valid_moves/*`. It now returns a list of legal moves where each element is a tuple `{From, To}`.
+- New function `binbo:all_legal_moves/1`.
+- New function `binbo:all_legal_moves/2`.
+
 ## [0.3.0] - 2019-08-01
 
 - Support for loading PGN from file.
