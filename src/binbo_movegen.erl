@@ -31,15 +31,17 @@
 
 -type bb() :: binbo_bb:bb().
 -type piece() :: binbo_board:piece().
+-type piece_type() :: binbo_board:piece_type().
 -type color() :: binbo_board:color().
 -type bb_game() :: binbo_position:bb_game().
 -type sq_idx() :: binbo_board:square_index().
 -type sq_notation() :: binbo_board:square_notation().
 -type many() :: all | any.
--type bb_map() :: #{sq_idx() => bb()}.
--type int_move() :: {sq_idx(), sq_idx()}.
--type bin_move() :: {sq_notation(), sq_notation()}.
--type str_move() :: {string(), string()}.
+-type bb_map() :: #{sq_idx() => {piece(), bb()}}.
+-type promo_to() :: 'q' | 'r' | 'b' | 'n'.
+-type int_move() :: {sq_idx(), sq_idx()} | {sq_idx(), sq_idx(), promo_to()}.
+-type bin_move() :: {sq_notation(), sq_notation()} | {sq_notation(), sq_notation(), promo_to()}.
+-type str_move() :: {string(), string()} | {string(), string(), promo_to()}.
 
 -export_type([int_move/0, bin_move/0, str_move/0]).
 
@@ -91,17 +93,17 @@ valid_moves(Color, Game, Many, DataType) ->
 					; ([sq_idx()], bb_game(), many(), map) -> bb_map().
 valid_moves_from(FromSquares, Game, Many, DataType) ->
 	case DataType of
-		bb  -> valid_moves_from_1(FromSquares, Game, Many, ?EMPTY_BB);
-		map -> valid_moves_from_1(FromSquares, Game, Many, #{})
+		bb  -> acc_valid_moves_from(FromSquares, Game, Many, ?EMPTY_BB);
+		map -> acc_valid_moves_from(FromSquares, Game, Many, #{})
 	end.
 
 
-%% valid_moves_from_1/4
--spec valid_moves_from_1([sq_idx()], bb_game(), many(), bb()) -> bb()
+%% acc_valid_moves_from/4
+-spec acc_valid_moves_from([sq_idx()], bb_game(), many(), bb()) -> bb()
 					; ([sq_idx()], bb_game(), many(), map()) -> bb_map().
-valid_moves_from_1([], _Game, _Many, MovesAcc) ->
+acc_valid_moves_from([], _Game, _Many, MovesAcc) ->
 	MovesAcc;
-valid_moves_from_1([FromIdx | Tail], Game, Many, MovesAcc) ->
+acc_valid_moves_from([FromIdx | Tail], Game, Many, MovesAcc) ->
 	Piece = binbo_position:get_piece(FromIdx, Game),
 	true = ?IS_PIECE(Piece), % ensure piece
 	PieceMovesBB = valid_piece_moves(FromIdx, Piece, Game, Many),
@@ -109,11 +111,11 @@ valid_moves_from_1([FromIdx | Tail], Game, Many, MovesAcc) ->
 		true when (Many =:= any) ->
 			PieceMovesBB;
 		true when is_integer(MovesAcc) ->
-			valid_moves_from_1(Tail, Game, Many, MovesAcc bor PieceMovesBB);
+			acc_valid_moves_from(Tail, Game, Many, MovesAcc bor PieceMovesBB);
 		true when is_map(MovesAcc) ->
-			valid_moves_from_1(Tail, Game, Many, MovesAcc#{FromIdx => PieceMovesBB});
+			acc_valid_moves_from(Tail, Game, Many, MovesAcc#{FromIdx => {Piece, PieceMovesBB}});
 		false ->
-			valid_moves_from_1(Tail, Game, Many, MovesAcc)
+			acc_valid_moves_from(Tail, Game, Many, MovesAcc)
 	end.
 
 %% valid_piece_moves/4
@@ -159,21 +161,42 @@ bbmap_to_movelist(Map, Movetype) ->
 	bblist_to_movelist(List, Movetype, []).
 
 %% bblist_to_movelist/2
--spec bblist_to_movelist([{sq_idx(), bb()}], int, [int_move()]) -> [int_move()]
-					;   ([{sq_idx(), bb()}], bin, [bin_move()]) -> [bin_move()]
-					;   ([{sq_idx(), bb()}], str, [str_move()]) -> [str_move()].
+-spec bblist_to_movelist([{sq_idx(), {piece(), bb()}}], int, [int_move()]) -> [int_move()]
+					;   ([{sq_idx(), {piece(), bb()}}], bin, [bin_move()]) -> [bin_move()]
+					;   ([{sq_idx(), {piece(), bb()}}], str, [str_move()]) -> [str_move()].
 bblist_to_movelist([], _Movetype, Movelist) ->
 	Movelist;
-bblist_to_movelist([{FromIdx, MovesBB} | Tail], Movetype, Movelist) ->
+bblist_to_movelist([{FromIdx, {Piece, MovesBB}} | Tail], Movetype, Movelist) ->
 	IdxList = binbo_bb:to_index_list(MovesBB),
+	Ptype = ?PIECE_TYPE(Piece),
 	Movelist2 = lists:foldl(fun(ToIdx, Acc) ->
-		case Movetype of
-			int ->
-				[{FromIdx, ToIdx} | Acc];
-			bin ->
-				[{binbo_board:index_to_notation(FromIdx), binbo_board:index_to_notation(ToIdx)} | Acc];
-			str ->
-				[{erlang:binary_to_list(binbo_board:index_to_notation(FromIdx)), erlang:binary_to_list(binbo_board:index_to_notation(ToIdx))} | Acc]
-		end
+		maybe_movelist_with_promotion(Ptype, FromIdx, ToIdx, Movetype, Acc)
 	end, Movelist, IdxList),
 	bblist_to_movelist(Tail, Movetype, Movelist2).
+
+%% maybe_movelist_with_promotion/5
+-spec maybe_movelist_with_promotion(piece_type(), sq_idx(), sq_idx(), int, [int_move()]) -> [int_move()]
+								;  (piece_type(), sq_idx(), sq_idx(), bin, [bin_move()]) -> [bin_move()]
+								;  (piece_type(), sq_idx(), sq_idx(), str, [str_move()]) -> [str_move()].
+maybe_movelist_with_promotion(Ptype, FromIdx, ToIdx, Movetype, Movelist) ->
+	IsPromotion = case (Ptype =:= ?PAWN) of
+		true  ->
+			ToBB = ?SQUARE_BB(ToIdx),
+			_ = ?IS_AND(ToBB, ?RANK_8_BB) orelse ?IS_AND(ToBB, ?RANK_1_BB);
+		false ->
+			false
+	end,
+	{From, To} = case Movetype of
+		int ->
+			{FromIdx, ToIdx};
+		bin ->
+			{binbo_board:index_to_notation(FromIdx), binbo_board:index_to_notation(ToIdx)};
+		str ->
+			{erlang:binary_to_list(binbo_board:index_to_notation(FromIdx)), erlang:binary_to_list(binbo_board:index_to_notation(ToIdx))}
+	end,
+	case IsPromotion of
+		false ->
+			[{From, To} | Movelist];
+		true  ->
+			[{From, To, q}, {From, To, r}, {From, To, b}, {From, To, n} | Movelist]
+	end.

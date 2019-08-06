@@ -423,12 +423,14 @@ binbo:all_legal_moves(Pid, Movetype) -> {ok, Movelist} | {error, Reason}.
 
 .where:
 * `Pid` is the pid of the game process;
-* `Movelist` is a list of all legal moves for the current position. Each element of `Movelist` is a tuple `{From, To}`, where `From` and `To` are starting and target square respectively. The values of `From` and `To` depend on `Movetype`.
+* `Movelist` is a list of all legal moves for the current position. Each element of `Movelist` is a tuple `{From, To}` or `{From, To, Promo}`, where:
+** `From` and `To` are starting and target square respectively.
+** `Promo` is one of the _atoms_: `q`, `r`, `b`, `n` (i.e. _queen_, _rook_, _bishop_, and _knight_ respectively). Three-element tuple `{From, To, Promo}` occurs in case of *pawn promotion*.
 * `Movetype` can take on of the values: `int`, `bin`, or `str`.
 
 The call `binbo:all_legal_moves(Pid)` is the same as `binbo:all_legal_moves(Pid, int)`.
 
-The elements `{From, To}` of `Movelist` depend on `Movetype` as follows:
+The values of `From` and `To` depend on `Movetype` as follows:
 
 * `int`: the values of `From` and `To` are _integers_ in range `0..63`, namely, square indices. For example, the move from `A1` to `H8` corresponds to `{0, 63}`. Use `int` to get the *fastest* reply from the game process.
 * `bin`: the values of `From` and `To` are _binaries_. For example: `{<<"e2">>, <<"e4">>}`.
@@ -440,74 +442,101 @@ The elements `{From, To}` of `Movelist` depend on `Movetype` as follows:
 > {ok, Pid} = binbo:new_server().
 {ok,<0.212.0>}
 
-> binbo:new_game(Pid).
+%% Start new game from FEN that corresponds to Position 5
+%% from Perft Results: https://www.chessprogramming.org/Perft_Results
+> binbo:new_game(Pid, <<"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8">>).
 {ok,continue}
 
-> binbo:all_legal_moves(Pid).
-{ok,[{15,31},
+> {ok, Movelist} = binbo:all_legal_moves(Pid).
+{ok,[{51,58,q},
+     {51,58,r},
+     {51,58,b},
+     {51,58,n},
+     {26,53},
+     {26,44},
+     {26,40},
+     {26,35},
+     {26,33},
+     {26,19},
+     {26,17},
+     {15,31},
      {15,23},
      {14,30},
      {14,22},
-     {13,29},
-     {13,21},
-     {12,28},
-     {12,20},
-     {11,27},
-     {11,19},
-     {10,26},
+     {12,29},
+     {12,27},
+     {12,22},
+     {12,18},
+     {12,6},
      {10,18},
      {9,25},
      {9,17},
      {8,24},
      {8,16},
-     {6,23},
-     {6,21},
-     {1,18},
-     {1,16}]}
+     {7,...},
+     {...}|...]}
+
+%% Count moves:
+> erlang:length(Movelist).
+44
 
 > binbo:all_legal_moves(Pid, bin).
-{ok,[{<<"h2">>,<<"h4">>},
+{ok,[{<<"d7">>,<<"c8">>,q},
+     {<<"d7">>,<<"c8">>,r},
+     {<<"d7">>,<<"c8">>,b},
+     {<<"d7">>,<<"c8">>,n},
+     {<<"c4">>,<<"f7">>},
+     {<<"c4">>,<<"e6">>},
+     {<<"c4">>,<<"a6">>},
+     {<<"c4">>,<<"d5">>},
+     {<<"c4">>,<<"b5">>},
+     {<<"c4">>,<<"d3">>},
+     {<<"c4">>,<<"b3">>},
+     {<<"h2">>,<<"h4">>},
      {<<"h2">>,<<"h3">>},
      {<<"g2">>,<<"g4">>},
      {<<"g2">>,<<"g3">>},
-     {<<"f2">>,<<"f4">>},
-     {<<"f2">>,<<"f3">>},
-     {<<"e2">>,<<"e4">>},
-     {<<"e2">>,<<"e3">>},
-     {<<"d2">>,<<"d4">>},
-     {<<"d2">>,<<"d3">>},
-     {<<"c2">>,<<"c4">>},
+     {<<"e2">>,<<"f4">>},
+     {<<"e2">>,<<"d4">>},
+     {<<"e2">>,<<"g3">>},
+     {<<"e2">>,<<"c3">>},
+     {<<"e2">>,<<"g1">>},
      {<<"c2">>,<<"c3">>},
      {<<"b2">>,<<"b4">>},
      {<<"b2">>,<<"b3">>},
      {<<"a2">>,<<"a4">>},
-     {<<"a2">>,<<"a3">>},
-     {<<"g1">>,<<"h3">>},
-     {<<"g1">>,<<"f3">>},
-     {<<"b1">>,<<"c3">>},
-     {<<"b1">>,<<"a3">>}]}
+     {<<"a2">>,<<...>>},
+     {<<...>>,...},
+     {...}|...]}
 
 > binbo:all_legal_moves(Pid, str).
-{ok,[{"h2","h4"},
+{ok,[{"d7","c8",q},
+     {"d7","c8",r},
+     {"d7","c8",b},
+     {"d7","c8",n},
+     {"c4","f7"},
+     {"c4","e6"},
+     {"c4","a6"},
+     {"c4","d5"},
+     {"c4","b5"},
+     {"c4","d3"},
+     {"c4","b3"},
+     {"h2","h4"},
      {"h2","h3"},
      {"g2","g4"},
      {"g2","g3"},
-     {"f2","f4"},
-     {"f2","f3"},
-     {"e2","e4"},
-     {"e2","e3"},
-     {"d2","d4"},
-     {"d2","d3"},
-     {"c2","c4"},
+     {"e2","f4"},
+     {"e2","d4"},
+     {"e2","g3"},
+     {"e2","c3"},
+     {"e2","g1"},
      {"c2","c3"},
      {"b2","b4"},
      {"b2","b3"},
      {"a2","a4"},
-     {"a2","a3"},
-     {"g1","h3"},
-     {"g1","f3"},
-     {"b1","c3"},
-     {"b1","a3"}]}
+     {"a2",[...]},
+     {[...],...},
+     {...}|...]}
 
 ----
 
