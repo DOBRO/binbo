@@ -175,8 +175,7 @@ position5(Config) ->
 	Game = perft_init_game(Config, Fen),
 	44 = perft(1, Game),
 	1486 = perft(2, Game),
-	% WARNING! Not passes here at Depth 3, returns 62416. Should be fixed!
-	% 62379 = perft(3, Game),
+	62379 = perft(3, Game),
 	ok.
 
 %% position6/1
