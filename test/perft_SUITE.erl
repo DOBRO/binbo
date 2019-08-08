@@ -15,6 +15,8 @@
 %%%------------------------------------------------------------------------------
 %%%   perft_SUITE virifies numbers from Perft Results:
 %%%   https://www.chessprogramming.org/Perft_Results
+%%%
+%%%    and from some other resources
 %%%------------------------------------------------------------------------------
 
 -module(perft_SUITE).
@@ -28,7 +30,9 @@
 -export([init_per_testcase/2, end_per_testcase/2]).
 -export([all_legal_moves_via_api/1]).
 -export([position1/1, position2/1, position3/1, position4/1, position5/1, position6/1]).
--export([promotion_bugs_test/1]).
+-export([promotion_bugs_position/1]).
+-export([wide_open_position/1]).
+-export([king_and_pawns_position/1]).
 
 %% all/0
 all() -> [{group, perft_tests}].
@@ -38,7 +42,9 @@ groups() ->
 	[{perft_tests, [parallel], [
 		all_legal_moves_via_api,
 		position1, position2, position3, position4, position5, position6,
-		promotion_bugs_test
+		promotion_bugs_position,
+		wide_open_position,
+		king_and_pawns_position
 	]}].
 
 %% init_per_suite/1
@@ -135,6 +141,7 @@ position1(Config) ->
 	20 = perft(1, Game),
 	400 = perft(2, Game),
 	8902 = perft(3, Game),
+	197281 = perft(4, Game),
 	ok.
 
 %% position2/1
@@ -156,6 +163,7 @@ position3(Config) ->
 	191 = perft(2, Game),
 	2812 = perft(3, Game),
 	43238 = perft(4, Game),
+	674624 = perft(5, Game),
 	ok.
 
 %% position4/1
@@ -166,6 +174,7 @@ position4(Config) ->
 	6 = perft(1, Game),
 	264 = perft(2, Game),
 	9467 = perft(3, Game),
+	422333 = perft(4, Game),
 	ok.
 
 %% position5/1
@@ -188,14 +197,35 @@ position6(Config) ->
 	89890 = perft(3, Game),
 	ok.
 
-
-%% promotion_bugs_test/1
+%% promotion_bugs_position/1
 %% Discover promotion bugs.
 %% Test from http://www.rocechess.ch/perft.html
-promotion_bugs_test(Config) ->
+promotion_bugs_position(Config) ->
 	Fen = <<"n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1">>,
 	Game = perft_init_game(Config, Fen),
 	24 = perft(1, Game),
 	496 = perft(2, Game),
 	9483 = perft(3, Game),
+	ok.
+
+%% wide_open_position/1
+%% From http://www.talkchess.com/forum3/viewtopic.php?t=49000
+wide_open_position(Config) ->
+	Fen = <<"rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1">>,
+	Game = perft_init_game(Config, Fen),
+	50 = perft(1, Game),
+	2125 = perft(2, Game),
+	96062 = perft(3, Game),
+	ok.
+
+
+%% king_and_pawns_position/1
+%% From http://www.talkchess.com/forum3/viewtopic.php?t=49000
+king_and_pawns_position(Config) ->
+	Fen = <<"4k3/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1">>,
+	Game = perft_init_game(Config, Fen),
+	18 = perft(1, Game),
+	324 = perft(2, Game),
+	5658 = perft(3, Game),
+	98766 = perft(4, Game),
 	ok.
