@@ -126,7 +126,7 @@
 -type pretty_board_opts() :: [flip|unicode].
 -type move_info() :: binbo_move:move_info().
 -type unset_castling_flag() :: ?CASTLING_W_ANY | ?CASTLING_B_ANY | binbo_board:side_castling().
--type make_move_step() :: remove_piece | set_piece | is_in_check | enpassant.
+-type make_move_step() :: remove_piece | set_piece | is_in_check | enpassant | is_to_corner.
 -type finalize_move_step() :: lastmove | sidetomove | halfmove | fullmove | hashmap | status.
 -type make_move_error() :: own_king_in_check.
 
@@ -992,7 +992,7 @@ validate_fen_enpassant(#{?GAME_KEY_ENPASSANT := EnpaBB} = Game) ->
 %% make_move/2
 -spec make_move(move_info(), bb_game()) -> {ok, bb_game()} | {error, make_move_error()}.
 make_move(MoveInfo, Game) ->
-	Steps = [remove_piece, set_piece, is_in_check, enpassant],
+	Steps = [remove_piece, set_piece, is_in_check, enpassant, is_to_corner],
 	make_move(Steps, MoveInfo, Game).
 
 %% make_move/3
@@ -1037,6 +1037,11 @@ make_move([enpassant | Tail], MoveInfo, Game) ->
 		false ->
 			Game#{?GAME_KEY_ENPASSANT := EnpaBB}
 	end,
+	make_move(Tail, MoveInfo, Game2);
+make_move([is_to_corner | Tail], #move_info{to_bb = ToBB} = MoveInfo, Game) ->
+	% It's necessary to check whether the piece moved to corner (A1, A8, H1, H8) or not.
+	% If yes, we should unset appropriate castling flag since the rook is possibly captured.
+	Game2 = maybe_move_to_corner(ToBB, Game),
 	make_move(Tail, MoveInfo, Game2).
 
 
@@ -1125,6 +1130,18 @@ make_rook_move(#move_info{piece = Rook} = MoveInfo, #{?GAME_KEY_CASTLING := Cast
 make_rook_move(MoveInfo, Game) ->
 	#move_info{to_idx = ToIdx, piece = Rook} = MoveInfo,
 	set_piece(ToIdx, Rook, Game).
+
+%% maybe_move_to_corner/2
+maybe_move_to_corner(ToBB, Game) when ?IS_AND(ToBB, ?A1A8H1H8_BB) ->
+	UnsetFlag = case ToBB of
+		?A1_BB -> ?CASTLING_W_OOO;
+		?A8_BB -> ?CASTLING_B_OOO;
+		?H1_BB -> ?CASTLING_W_OO;
+		?H8_BB -> ?CASTLING_B_OO
+	end,
+	unset_castling_flag(UnsetFlag, Game);
+maybe_move_to_corner(_, Game) ->
+	Game.
 
 
 %% finalize_move/2
