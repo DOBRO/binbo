@@ -941,11 +941,10 @@ validate_fen_castling([Color|Tail], #{?GAME_KEY_CASTLING := Castling} = Game) ->
 			?E8_BB, ?A8_BB, ?H8_BB
 		}
 	end,
-	IsKingOnPlace = ?IS_AND(KingSqBB, KingBB),
+	IsKingOnPlace = (KingSqBB =:= KingBB),
 	case Castling of
-		_ when ?IS_AND(CastlingAny, Castling) ->
-			TwoRooks = SqABB bor SqHBB,
-			case IsKingOnPlace andalso ?IS_AND(TwoRooks, RooksBB) of
+		_ when (Castling band CastlingAny) =:= CastlingAny  ->
+			case IsKingOnPlace andalso (RooksBB =:= (SqABB bor SqHBB)) of
 				true  -> validate_fen_castling(Tail, Game);
 				false -> {error, {Color, both_sides}}
 			end;
