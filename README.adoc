@@ -41,6 +41,7 @@ toc::[]
 *** King and Bishop versus King and Bishop with the bishops on the same color;
 * Unicode chess symbols support for the board visualization right in Erlang shell: +
 &#9817;{nbsp}&#9816;{nbsp}&#9815;{nbsp}&#9814;{nbsp}&#9813;{nbsp}&#9812;{nbsp}{nbsp}{nbsp}{nbsp}&#9823;{nbsp}&#9822;{nbsp}&#9821;{nbsp}&#9820;{nbsp}&#9819;{nbsp}&#9818;
+* Passes all https://www.chessprogramming.org/Perft_Results[perft] tests.
 * Ready for use on game servers.
 
 == Requirements
