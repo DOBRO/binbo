@@ -549,6 +549,7 @@ oo_move_bb(?WHITE, #{?GAME_KEY_CASTLING := Castling} = Game) when ?IS_AND(Castli
 		?IS_AND(F1G1, all_pieces_bb(Game))
 		orelse is_attacked_by(?BLACK, ?F1_IDX, Game)
 		orelse is_attacked_by(?BLACK, ?G1_IDX, Game)
+		orelse (get_piece(?H1_IDX, Game) =/= ?WHITE_ROOK)
 	),
 	case IsWrong of
 		true  -> ?EMPTY_BB;
@@ -560,6 +561,7 @@ oo_move_bb(?BLACK, #{?GAME_KEY_CASTLING := Castling} = Game) when ?IS_AND(Castli
 		?IS_AND(F8G8, all_pieces_bb(Game))
 		orelse is_attacked_by(?WHITE, ?F8_IDX, Game)
 		orelse is_attacked_by(?WHITE, ?G8_IDX, Game)
+		orelse (get_piece(?H8_IDX, Game) =/= ?BLACK_ROOK)
 	),
 	case IsWrong of
 		true  -> ?EMPTY_BB;
@@ -576,6 +578,7 @@ ooo_move_bb(?WHITE, #{?GAME_KEY_CASTLING := Castling} = Game) when ?IS_AND(Castl
 		?IS_AND(B1C1D1, all_pieces_bb(Game))
 		orelse is_attacked_by(?BLACK, ?C1_IDX, Game)
 		orelse is_attacked_by(?BLACK, ?D1_IDX, Game)
+		orelse (get_piece(?A1_IDX, Game) =/= ?WHITE_ROOK)
 	),
 	case IsWrong of
 		true  -> ?EMPTY_BB;
@@ -587,6 +590,7 @@ ooo_move_bb(?BLACK, #{?GAME_KEY_CASTLING := Castling} = Game) when ?IS_AND(Castl
 		?IS_AND(B8C8D8, all_pieces_bb(Game))
 		orelse is_attacked_by(?WHITE, ?C8_IDX, Game)
 		orelse is_attacked_by(?WHITE, ?D8_IDX, Game)
+		orelse (get_piece(?A8_IDX, Game) =/= ?BLACK_ROOK)
 	),
 	case IsWrong of
 		true  -> ?EMPTY_BB;
