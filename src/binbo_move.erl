@@ -16,6 +16,7 @@
 
 -export([validate_sq_move/2]).
 -export([validate_san_move/2]).
+-export([validate_idx_move/2]).
 -export([validate_move/5]).
 -export([enemy_color/1]).
 
@@ -46,6 +47,7 @@
 -type piece_type() :: binbo_board:piece_type().
 -type color() :: binbo_board:color().
 -type sq_move() :: binary() | string().
+-type idx_move() :: {sq_idx(), sq_idx()} | {sq_idx(), sq_idx(), q | r | b | n}.
 -type bb_game() :: binbo_position:bb_game().
 -type sq_idx() :: binbo_board:square_index().
 -type sq_bb() :: binbo_bb:sq_bb().
@@ -95,6 +97,20 @@ validate_san_move(San, Game) ->
 		{error, Reason} ->
 			{error, {parse, Reason}}
 	end.
+
+%% validate_idx_move/1
+-spec validate_idx_move(idx_move(), bb_game()) -> {ok, move_info(), bb_game()} | {error, move_overall_error()}.
+validate_idx_move({FromIdx, ToIdx}, Game) ->
+	validate_move_overall(Game, FromIdx, ToIdx, ?QUEEN);
+validate_idx_move({FromIdx, ToIdx, Promo}, Game) ->
+	PromoType = case Promo of
+		q -> ?QUEEN;
+		r -> ?ROOK;
+		b -> ?BISHOP;
+		n -> ?KNIGHT
+	end,
+	validate_move_overall(Game, FromIdx, ToIdx, PromoType).
+
 
 %% validate_move/5
 %% The only right way to call this function OUTSIDE is from 'binbo_movegen' module.

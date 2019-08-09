@@ -991,7 +991,7 @@ validate_fen_enpassant(#{?GAME_KEY_ENPASSANT := EnpaBB} = Game) ->
 %% make_move/2
 -spec make_move(move_info(), bb_game()) -> {ok, bb_game()} | {error, make_move_error()}.
 make_move(MoveInfo, Game) ->
-	Steps = [remove_piece, set_piece, is_in_check, enpassant, is_to_corner],
+	Steps = [is_to_corner, remove_piece, set_piece, is_in_check, enpassant],
 	make_move(Steps, MoveInfo, Game).
 
 %% make_move/3
@@ -999,6 +999,11 @@ make_move(MoveInfo, Game) ->
 	Step :: make_move_step().
 make_move([], _MoveInfo, Game) ->
 	{ok, Game};
+make_move([is_to_corner | Tail], #move_info{to_bb = ToBB} = MoveInfo, Game) ->
+	% It's necessary to check whether the piece moved to corner (A1, A8, H1, H8) or not.
+	% If yes, we should unset appropriate castling flag since the rook is possibly captured.
+	Game2 = maybe_move_to_corner(ToBB, Game),
+	make_move(Tail, MoveInfo, Game2);
 make_move([remove_piece | Tail], MoveInfo, Game) ->
 	% Remove moving piece from starting square and handle capture
 	Game2 = make_move_remove_piece(MoveInfo, Game),
@@ -1036,11 +1041,6 @@ make_move([enpassant | Tail], MoveInfo, Game) ->
 		false ->
 			Game#{?GAME_KEY_ENPASSANT := EnpaBB}
 	end,
-	make_move(Tail, MoveInfo, Game2);
-make_move([is_to_corner | Tail], #move_info{to_bb = ToBB} = MoveInfo, Game) ->
-	% It's necessary to check whether the piece moved to corner (A1, A8, H1, H8) or not.
-	% If yes, we should unset appropriate castling flag since the rook is possibly captured.
-	Game2 = maybe_move_to_corner(ToBB, Game),
 	make_move(Tail, MoveInfo, Game2).
 
 

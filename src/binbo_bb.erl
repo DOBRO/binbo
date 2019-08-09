@@ -293,7 +293,10 @@ bb_or([BB|Tail], AccBB) ->
 %% to_index_list/3
 -spec to_index_list(bb(), sq_idx(), [sq_idx()]) -> [sq_idx()].
 to_index_list(0, _, List) ->
-	lists:reverse(List);
+	% We don't care about the order of indices.
+	% So, it's not necessary to reverse the list.
+	% lists:reverse(List);
+	List;
 to_index_list(BB, Idx, List) ->
 	Idx2 = Idx + 1,
 	case (BB band 1) of
