@@ -37,7 +37,7 @@
 -type sq_idx() :: binbo_board:square_index().
 -type sq_notation() :: binbo_board:square_notation().
 -type many() :: all | any.
--type move_tuple() :: {sq_idx(), piece_type(), bb()}.
+-type move_tuple() :: {sq_idx(), piece_type(), [sq_idx()]}.
 -type promo_to() :: 'q' | 'r' | 'b' | 'n'.
 -type int_move() :: {sq_idx(), sq_idx()} | {sq_idx(), sq_idx(), promo_to()}.
 -type bin_move() :: {sq_notation(), sq_notation()} | {sq_notation(), sq_notation(), promo_to()}.
@@ -106,43 +106,44 @@ acc_valid_moves_from([], _Game, _Many, MovesAcc) ->
 acc_valid_moves_from([FromIdx | Tail], Game, Many, MovesAcc) ->
 	Piece = binbo_position:get_piece(FromIdx, Game),
 	true = ?IS_PIECE(Piece), % ensure piece
-	PieceMovesBB = valid_piece_moves(FromIdx, Piece, Game, Many),
+	{PieceMovesBB, PieceMovesList} = valid_piece_moves(FromIdx, Piece, Game, Many),
 	case PieceMovesBB > ?EMPTY_BB of
 		true when (Many =:= any) ->
 			PieceMovesBB;
 		true when is_integer(MovesAcc) ->
 			acc_valid_moves_from(Tail, Game, Many, MovesAcc bor PieceMovesBB);
 		true when is_list(MovesAcc) ->
-			acc_valid_moves_from(Tail, Game, Many, [{FromIdx, ?PIECE_TYPE(Piece), PieceMovesBB} | MovesAcc]);
+			acc_valid_moves_from(Tail, Game, Many, [{FromIdx, ?PIECE_TYPE(Piece), PieceMovesList} | MovesAcc]);
 		false ->
 			acc_valid_moves_from(Tail, Game, Many, MovesAcc)
 	end.
 
 %% valid_piece_moves/4
--spec valid_piece_moves(sq_idx(), piece(), bb_game(), many()) -> bb().
+-spec valid_piece_moves(sq_idx(), piece(), bb_game(), many()) -> {bb(), [sq_idx()]}.
 valid_piece_moves(FromIdx, Piece, Game, Many) ->
 	PieceMovesBB = position_piece_moves_bb(FromIdx, Piece, Game),
 	ToSquares = binbo_bb:to_index_list(PieceMovesBB),
-	valid_piece_moves_from_to(FromIdx, ToSquares, Piece, Game, Many, ?EMPTY_BB).
+	valid_piece_moves_from_to(FromIdx, ToSquares, Piece, Game, Many, {?EMPTY_BB, []}).
 
 
 %% valid_piece_moves_from_to/6
--spec valid_piece_moves_from_to(sq_idx(), [sq_idx()], piece(), bb_game(), many(), bb()) -> bb().
-valid_piece_moves_from_to(_FromIdx, [], _Piece, _Game, _Many, MovesBB) ->
-	MovesBB;
-valid_piece_moves_from_to(FromIdx, [ToIdx | Tail], Piece, Game, Many, MovesBB) ->
+-spec valid_piece_moves_from_to(sq_idx(), [sq_idx()], piece(), bb_game(), many(), {bb(), [sq_idx()]}) -> {bb(), [sq_idx()]}.
+valid_piece_moves_from_to(_FromIdx, [], _Piece, _Game, _Many, Acc) ->
+	Acc;
+valid_piece_moves_from_to(FromIdx, [ToIdx | Tail], Piece, Game, Many, {MovesBB, Movelist} = Acc) ->
+	ToBB = ?SQUARE_BB(ToIdx),
 	Validate = binbo_move:validate_move(Game, Piece, FromIdx, ToIdx, ?QUEEN),
 	case Validate of
 		{ok, _, _} ->
 			case Many of
 				any ->
-					?SQUARE_BB(ToIdx);
+					{ToBB, [ToIdx]};
 				all ->
-					MovesBB2 = MovesBB bor ?SQUARE_BB(ToIdx),
-					valid_piece_moves_from_to(FromIdx, Tail, Piece, Game, Many, MovesBB2)
+					MovesBB2 = MovesBB bor ToBB,
+					valid_piece_moves_from_to(FromIdx, Tail, Piece, Game, Many, {MovesBB2, [ToIdx | Movelist]})
 			end;
 		{error, _} ->
-			valid_piece_moves_from_to(FromIdx, Tail, Piece, Game, Many, MovesBB)
+			valid_piece_moves_from_to(FromIdx, Tail, Piece, Game, Many, Acc)
 	end.
 
 %% position_piece_moves_bb/3
@@ -165,8 +166,8 @@ bblist_to_movelist(List, Movetype) ->
 					;   ([move_tuple()], str, [str_move()]) -> [str_move()].
 bblist_to_movelist([], _Movetype, Movelist) ->
 	Movelist;
-bblist_to_movelist([{FromIdx, Ptype, MovesBB} | Tail], Movetype, Movelist) ->
-	IdxList = binbo_bb:to_index_list(MovesBB),
+bblist_to_movelist([{FromIdx, Ptype, IdxList} | Tail], Movetype, Movelist) ->
+	% IdxList = binbo_bb:to_index_list(MovesBB),
 	Movelist2 = lists:foldl(fun(ToIdx, Acc) ->
 		maybe_movelist_with_promotion(Ptype, FromIdx, ToIdx, Movetype, Acc)
 	end, Movelist, IdxList),
