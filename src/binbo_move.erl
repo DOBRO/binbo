@@ -17,6 +17,7 @@
 -export([validate_sq_move/2]).
 -export([validate_san_move/2]).
 -export([validate_idx_move/2]).
+-export([validate_int_move/2]).
 -export([validate_move/5]).
 -export([enemy_color/1]).
 
@@ -111,6 +112,13 @@ validate_idx_move({FromIdx, ToIdx, Promo}, Game) ->
 	end,
 	validate_move_overall(Game, FromIdx, ToIdx, PromoType).
 
+%% validate_int_move/2
+-spec validate_int_move(non_neg_integer(), bb_game()) -> {ok, move_info(), bb_game()} | {error, move_overall_error()}.
+validate_int_move(Move, Game) ->
+	FromIdx = binbo_board:int_move_from(Move),
+	ToIdx = binbo_board:int_move_to(Move),
+	PromoType = ((Move bsr 12) band 3) + ?KNIGHT,
+	validate_move_overall(Game, FromIdx, ToIdx, PromoType).
 
 %% validate_move/5
 %% The only right way to call this function OUTSIDE is from 'binbo_movegen' module.

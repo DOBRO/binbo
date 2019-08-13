@@ -23,6 +23,7 @@
 -export([castling_list/0, castling_rook_squares/1]).
 -export([enemy_color/1]).
 -export([pieces/0]).
+-export([int_move/2, int_move/3, int_move_from/1, int_move_to/1]).
 
 %%%------------------------------------------------------------------------------
 %%%   Includes
@@ -149,6 +150,27 @@ castling_rook_squares(CastlingFlag) ->
 pieces() ->
 	[?WHITE_PAWN, ?WHITE_KNIGHT, ?WHITE_BISHOP, ?WHITE_ROOK, ?WHITE_QUEEN, ?WHITE_KING,
 	 ?BLACK_PAWN, ?BLACK_KNIGHT, ?BLACK_BISHOP, ?BLACK_ROOK, ?BLACK_QUEEN, ?BLACK_KING].
+
+%% int_move/2
+-spec int_move(square_index(), square_index()) -> non_neg_integer().
+int_move(FromIdx, ToIdx) ->
+	(FromIdx bsl 6) + ToIdx.
+
+%% int_move/3
+-spec int_move(square_index(), square_index(), ?KNIGHT | ?BISHOP | ?ROOK | ?QUEEN) -> non_neg_integer().
+int_move(FromIdx, ToIdx, PromoType) ->
+	16384 + ((PromoType - ?KNIGHT) bsl 12) + (FromIdx bsl 6) + ToIdx.
+
+%% int_move_from/1
+-spec int_move_from(non_neg_integer()) -> square_index().
+int_move_from(Move) ->
+	(Move bsr 6) band 16#3F.
+
+%% int_move_to/1
+-spec int_move_to(non_neg_integer()) -> square_index().
+int_move_to(Move) ->
+	Move band 16#3F.
+
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions

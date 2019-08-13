@@ -73,9 +73,10 @@ new(Fen) ->
 	end.
 
 %% move/3
--spec move(sq | san | idx, sq_move(), game()) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
+-spec move(sq | san | idx | int, sq_move(), game()) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
 move(MoveNotation, Move, Game) when is_map(Game) ->
 	Result = case MoveNotation of
+		int -> binbo_move:validate_int_move(Move, Game);
 		idx -> binbo_move:validate_idx_move(Move, Game);
 		sq  -> binbo_move:validate_sq_move(Move, Game);
 		san -> binbo_move:validate_san_move(Move, Game)
