@@ -114,12 +114,16 @@ all_legal_moves_via_api(Config) ->
 	Pid = get_pid(Config),
 	Nodes = 20,
 	{ok, continue} = binbo:new_game(Pid),
+	{ok, BitIntMovelist} = binbo:all_legal_moves(Pid, bitint),
 	{ok, IntMovelist} = binbo:all_legal_moves(Pid, int),
 	{ok, BinMovelist} = binbo:all_legal_moves(Pid, bin),
 	{ok, StrMovelist} = binbo:all_legal_moves(Pid, str),
+	{ok, Count} = binbo:all_legal_moves(Pid, count),
+	Nodes = erlang:length(BitIntMovelist),
 	Nodes = erlang:length(IntMovelist),
 	Nodes = erlang:length(BinMovelist),
 	Nodes = erlang:length(StrMovelist),
+	Nodes = Count,
 	ok.
 
 %% position1/1
