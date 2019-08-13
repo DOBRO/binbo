@@ -94,13 +94,13 @@ perft(Depth, Game) ->
 %% Here we call 'binbo_game:all_legal_moves/2' and 'binbo_game:move/3' directly
 %% avoiding flooding the game process with messages.
 perft(Depth, Game, Nodes) when Depth > 0 ->
-	{ok, Movelist} = binbo_game:all_legal_moves(Game, int),
+	{ok, Movelist} = binbo_game:all_legal_moves(Game, bitint),
 	case Depth =:= 1 of
 		true ->
 			Nodes + erlang:length(Movelist);
 		false ->
-			lists:foldl(fun(MoveTuple, Acc) ->
-				{ok, {Game2, _Status2}} = binbo_game:move(idx, MoveTuple, Game),
+			lists:foldl(fun(Move, Acc) ->
+				{ok, {Game2, _Status2}} = binbo_game:move(int, Move, Game),
 				perft(Depth - 1, Game2, Acc)
 			end, Nodes, Movelist)
 	end.
