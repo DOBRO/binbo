@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Improved performance of all legal moves generation.
+- All perft tests are passed much faster.
+- New function `binbo_board:int_move/2`.
+- New function `binbo_board:int_move/3`.
+- New function `binbo_board:int_move_from/1`.
+- New function `binbo_board:int_move_to/1`.
+- New function `binbo_move:validate_int_move/2`.
+- Count all legal moves with `binbo:all_legal_moves(Pid, count)`.
+
 ## [1.0.2] - 2019-08-08
 
 - Fixed: Castling was allowed with enemy piece after capturing a friendly rook. The bug was found during testing Position 5 at depth 3 from [Perft Results](https://www.chessprogramming.org/Perft_Results).
