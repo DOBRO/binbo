@@ -93,9 +93,9 @@ perft(Depth, Game) ->
 %% perft/3
 %% Here we call 'binbo_game:all_legal_moves/2' and 'binbo_game:move/3' directly
 %% avoiding flooding the game process with messages.
-perft(Depth, Game, Nodes) when Depth > 0 ->
+perft(Depth, Game, Nodes) ->
 	{ok, Movelist} = binbo_game:all_legal_moves(Game, bitint),
-	case Depth =:= 1 of
+	case Depth < 2 of
 		true ->
 			Nodes + erlang:length(Movelist);
 		false ->
@@ -103,6 +103,40 @@ perft(Depth, Game, Nodes) when Depth > 0 ->
 				{ok, {Game2, _Status2}} = binbo_game:move(int, Move, Game),
 				perft(Depth - 1, Game2, Acc)
 			end, Nodes, Movelist)
+	end.
+
+
+%% fast_perft/2
+fast_perft(Depth, Game) ->
+	case Depth < 2 of
+		true  -> perft(Depth, Game);
+		false -> spawn_perft(Depth, Game)
+	end.
+
+%% spawn_perft/2
+spawn_perft(Depth, Game) ->
+	Parent = self(),
+	{ok, Movelist} = binbo_game:all_legal_moves(Game, bitint),
+	Pids = lists:foldl(fun(Move, PidAcc) ->
+		Pid = spawn_link(fun() ->
+			{ok, {Game2, _Status2}} = binbo_game:move(int, Move, Game),
+			MoveNodes = perft(Depth - 1, Game2),
+			Parent ! {self(), nodecount, MoveNodes}
+		end),
+		[Pid | PidAcc]
+	end, [], Movelist),
+	receive_node_count(Pids, 0).
+
+%% receive_node_count/2
+receive_node_count([], Acc) ->
+	Acc;
+receive_node_count(Pids, Acc) ->
+	receive
+		{From, nodecount, NodeCount} ->
+			Pids2 = lists:delete(From, Pids),
+			receive_node_count(Pids2, Acc + NodeCount);
+		_ ->
+			receive_node_count(Pids, Acc)
 	end.
 
 %%%------------------------------------------------------------------------------
@@ -131,10 +165,10 @@ all_legal_moves_via_api(Config) ->
 position1(Config) ->
 	Fen = <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>,
 	Game = perft_init_game(Config, Fen),
-	20 = perft(1, Game),
-	400 = perft(2, Game),
-	8902 = perft(3, Game),
-	197281 = perft(4, Game),
+	20 = fast_perft(1, Game),
+	400 = fast_perft(2, Game),
+	8902 = fast_perft(3, Game),
+	197281 = fast_perft(4, Game),
 	ok.
 
 %% position2/1
@@ -142,9 +176,9 @@ position1(Config) ->
 position2(Config) ->
 	Fen = <<"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -">>,
 	Game = perft_init_game(Config, Fen),
-	48 = perft(1, Game),
-	2039 = perft(2, Game),
-	97862 = perft(3, Game),
+	48 = fast_perft(1, Game),
+	2039 = fast_perft(2, Game),
+	97862 = fast_perft(3, Game),
 	ok.
 
 %% position3/1
@@ -152,11 +186,11 @@ position2(Config) ->
 position3(Config) ->
 	Fen = <<"8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -">>,
 	Game = perft_init_game(Config, Fen),
-	14 = perft(1, Game),
-	191 = perft(2, Game),
-	2812 = perft(3, Game),
-	43238 = perft(4, Game),
-	674624 = perft(5, Game),
+	14 = fast_perft(1, Game),
+	191 = fast_perft(2, Game),
+	2812 = fast_perft(3, Game),
+	43238 = fast_perft(4, Game),
+	674624 = fast_perft(5, Game),
 	ok.
 
 %% position4/1
@@ -164,10 +198,10 @@ position3(Config) ->
 position4(Config) ->
 	Fen = <<"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1">>,
 	Game = perft_init_game(Config, Fen),
-	6 = perft(1, Game),
-	264 = perft(2, Game),
-	9467 = perft(3, Game),
-	422333 = perft(4, Game),
+	6 = fast_perft(1, Game),
+	264 = fast_perft(2, Game),
+	9467 = fast_perft(3, Game),
+	422333 = fast_perft(4, Game),
 	ok.
 
 %% position5/1
@@ -175,9 +209,9 @@ position4(Config) ->
 position5(Config) ->
 	Fen = <<"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8">>,
 	Game = perft_init_game(Config, Fen),
-	44 = perft(1, Game),
-	1486 = perft(2, Game),
-	62379 = perft(3, Game),
+	44 = fast_perft(1, Game),
+	1486 = fast_perft(2, Game),
+	62379 = fast_perft(3, Game),
 	ok.
 
 %% position6/1
@@ -185,9 +219,9 @@ position5(Config) ->
 position6(Config) ->
 	Fen = <<"r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10">>,
 	Game = perft_init_game(Config, Fen),
-	46 = perft(1, Game),
-	2079 = perft(2, Game),
-	89890 = perft(3, Game),
+	46 = fast_perft(1, Game),
+	2079 = fast_perft(2, Game),
+	89890 = fast_perft(3, Game),
 	ok.
 
 %% promotion_bugs_position/1
@@ -196,9 +230,9 @@ position6(Config) ->
 promotion_bugs_position(Config) ->
 	Fen = <<"n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1">>,
 	Game = perft_init_game(Config, Fen),
-	24 = perft(1, Game),
-	496 = perft(2, Game),
-	9483 = perft(3, Game),
+	24 = fast_perft(1, Game),
+	496 = fast_perft(2, Game),
+	9483 = fast_perft(3, Game),
 	ok.
 
 %% wide_open_position/1
@@ -206,9 +240,9 @@ promotion_bugs_position(Config) ->
 wide_open_position(Config) ->
 	Fen = <<"rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1">>,
 	Game = perft_init_game(Config, Fen),
-	50 = perft(1, Game),
-	2125 = perft(2, Game),
-	96062 = perft(3, Game),
+	50 = fast_perft(1, Game),
+	2125 = fast_perft(2, Game),
+	96062 = fast_perft(3, Game),
 	ok.
 
 
@@ -217,8 +251,8 @@ wide_open_position(Config) ->
 king_and_pawns_position(Config) ->
 	Fen = <<"4k3/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1">>,
 	Game = perft_init_game(Config, Fen),
-	18 = perft(1, Game),
-	324 = perft(2, Game),
-	5658 = perft(3, Game),
-	98766 = perft(4, Game),
+	18 = fast_perft(1, Game),
+	324 = fast_perft(2, Game),
+	5658 = fast_perft(3, Game),
+	98766 = fast_perft(4, Game),
 	ok.
