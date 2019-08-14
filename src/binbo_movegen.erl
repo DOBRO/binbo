@@ -130,16 +130,18 @@ acc_valid_moves_from([FromIdx | Tail], Game, Many, MoveType, MovesAcc) ->
 %% add_valid_piece_moves/6
 -spec add_valid_piece_moves(sq_idx(), piece(), bb_game(), many(), move_type(), all_valid_moves()) -> all_valid_moves().
 add_valid_piece_moves(FromIdx, Piece, Game, Many, MoveType, MovesAcc) ->
-	PieceMovesBB = position_piece_moves_bb(FromIdx, Piece, Game),
-	ToSquares = binbo_bb:to_index_list(PieceMovesBB),
-	add_valid_piece_moves_from_to(FromIdx, ToSquares, Piece, Game, Many, MoveType, MovesAcc).
+	ToSquaresBB = position_piece_moves_bb(FromIdx, Piece, Game),
+	add_valid_piece_moves_from_to(FromIdx, ToSquaresBB, Piece, Game, Many, MoveType, MovesAcc).
 
 
 %% add_valid_piece_moves_from_to/7
--spec add_valid_piece_moves_from_to(sq_idx(), [sq_idx()], piece(), bb_game(), many(), move_type(), all_valid_moves()) -> all_valid_moves().
-add_valid_piece_moves_from_to(_FromIdx, [], _Piece, _Game, _Many, _MoveType, MovesAcc) ->
+-spec add_valid_piece_moves_from_to(sq_idx(), bb(), piece(), bb_game(), many(), move_type(), all_valid_moves()) -> all_valid_moves().
+add_valid_piece_moves_from_to(_FromIdx, 0, _Piece, _Game, _Many, _MoveType, MovesAcc) ->
 	MovesAcc;
-add_valid_piece_moves_from_to(FromIdx, [ToIdx | Tail], Piece, Game, Many, MoveType, MovesAcc) ->
+add_valid_piece_moves_from_to(FromIdx, ToSquaresBB, Piece, Game, Many, MoveType, MovesAcc) ->
+	ToBB = ToSquaresBB band (-ToSquaresBB), % clear all bits but the least significant one bit
+	ToIdx = binbo_bb:to_index(ToBB),
+	RestBB = ToSquaresBB bxor ToBB,
 	Validate = binbo_move:validate_move(Game, Piece, FromIdx, ToIdx, ?QUEEN),
 	case Validate of
 		{ok, _, _} ->
@@ -147,17 +149,17 @@ add_valid_piece_moves_from_to(FromIdx, [ToIdx | Tail], Piece, Game, Many, MoveTy
 				count when (Many =:= any) ->
 					1;
 				bb when (Many =:= any) ->
-					?SQUARE_BB(ToIdx);
+					ToBB;
 				bb ->
-					MovesAcc2 = MovesAcc bor ?SQUARE_BB(ToIdx),
-					add_valid_piece_moves_from_to(FromIdx, Tail, Piece, Game, Many, MoveType, MovesAcc2);
+					MovesAcc2 = MovesAcc bor ToBB,
+					add_valid_piece_moves_from_to(FromIdx, RestBB, Piece, Game, Many, MoveType, MovesAcc2);
 				_ ->
 					Ptype = ?PIECE_TYPE(Piece),
 					MovesAcc2 = maybe_movelist_with_promotion(Ptype, FromIdx, ToIdx, MoveType, MovesAcc),
-					add_valid_piece_moves_from_to(FromIdx, Tail, Piece, Game, Many, MoveType, MovesAcc2)
+					add_valid_piece_moves_from_to(FromIdx, RestBB, Piece, Game, Many, MoveType, MovesAcc2)
 			end;
 		{error, _} ->
-			add_valid_piece_moves_from_to(FromIdx, Tail, Piece, Game, Many, MoveType, MovesAcc)
+			add_valid_piece_moves_from_to(FromIdx, RestBB, Piece, Game, Many, MoveType, MovesAcc)
 	end.
 
 %% position_piece_moves_bb/3
