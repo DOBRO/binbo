@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [1.1.0] - 2019-08-14
 
 - Improved performance of all legal moves generation.
 - All perft tests are passed much faster.
