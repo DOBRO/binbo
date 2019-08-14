@@ -419,7 +419,7 @@ binbo:game_status(Pid) -> {ok, GameStatus} | {error, Reason}.
 ----
 binbo:all_legal_moves(Pid) -> {ok, Movelist} | {error, Reason}.
 
-binbo:all_legal_moves(Pid, Movetype) -> {ok, Movelist} | {error, Reason}.
+binbo:all_legal_moves(Pid, Movetype) -> {ok, Movelist} | {ok, Number} | {error, Reason}.
 ----
 
 .where:
@@ -427,9 +427,11 @@ binbo:all_legal_moves(Pid, Movetype) -> {ok, Movelist} | {error, Reason}.
 * `Movelist` is a list of all legal moves for the current position. Each element of `Movelist` is a tuple `{From, To}` or `{From, To, Promo}`, where:
 ** `From` and `To` are starting and target square respectively.
 ** `Promo` is one of the _atoms_: `q`, `r`, `b`, `n` (i.e. _queen_, _rook_, _bishop_, and _knight_ respectively). Three-element tuple `{From, To, Promo}` occurs in case of *pawn promotion*.
-* `Movetype` can take on of the values: `int`, `bin`, or `str`.
+* `Movetype` can take on of the values: `int`, `bin`, `str`, or `count`.
 
 The call `binbo:all_legal_moves(Pid)` is the same as `binbo:all_legal_moves(Pid, int)`.
+
+If `Movetype` is `count`, the function returns tuple `{ok, Number}` where `Number` is the number of legal moves.
 
 The values of `From` and `To` depend on `Movetype` as follows:
 
@@ -447,6 +449,10 @@ The values of `From` and `To` depend on `Movetype` as follows:
 %% from Perft Results: https://www.chessprogramming.org/Perft_Results
 > binbo:new_game(Pid, <<"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8">>).
 {ok,continue}
+
+%% Count legal moves
+> binbo:all_legal_moves(Pid, count).
+{ok,44}
 
 > {ok, Movelist} = binbo:all_legal_moves(Pid).
 {ok,[{51,58,q},
