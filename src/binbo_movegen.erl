@@ -146,8 +146,6 @@ add_valid_piece_moves_from_to(FromIdx, [ToIdx | Tail], Piece, Game, Many, MoveTy
 			case MoveType of
 				count when (Many =:= any) ->
 					1;
-				count ->
-					add_valid_piece_moves_from_to(FromIdx, Tail, Piece, Game, Many, MoveType, MovesAcc + 1);
 				bb when (Many =:= any) ->
 					?SQUARE_BB(ToIdx);
 				bb ->
@@ -174,8 +172,9 @@ position_piece_moves_bb(FromIdx, Piece, Game) ->
 -spec maybe_movelist_with_promotion(piece_type(), sq_idx(), sq_idx(), int, [int_move()]) -> [int_move()]
 								;  (piece_type(), sq_idx(), sq_idx(), bin, [bin_move()]) -> [bin_move()]
 								;  (piece_type(), sq_idx(), sq_idx(), str, [str_move()]) -> [str_move()]
+								;  (piece_type(), sq_idx(), sq_idx(), count, non_neg_integer()) -> pos_integer()
 								;  (piece_type(), sq_idx(), sq_idx(), bitint, [non_neg_integer()]) -> [non_neg_integer()].
-maybe_movelist_with_promotion(Ptype, FromIdx, ToIdx, MoveType, Movelist) ->
+maybe_movelist_with_promotion(Ptype, FromIdx, ToIdx, MoveType, MovesAcc) ->
 	IsPromotion = case (Ptype =:= ?PAWN) of
 		true  ->
 			ToBB = ?SQUARE_BB(ToIdx),
@@ -187,9 +186,16 @@ maybe_movelist_with_promotion(Ptype, FromIdx, ToIdx, MoveType, Movelist) ->
 		bitint ->
 			case IsPromotion of
 				false ->
-					[binbo_board:int_move(FromIdx, ToIdx) | Movelist];
+					[binbo_board:int_move(FromIdx, ToIdx) | MovesAcc];
 				true  ->
-					[binbo_board:int_move(FromIdx, ToIdx, ?QUEEN), binbo_board:int_move(FromIdx, ToIdx, ?ROOK), binbo_board:int_move(FromIdx, ToIdx, ?BISHOP), binbo_board:int_move(FromIdx, ToIdx, ?KNIGHT) | Movelist]
+					[binbo_board:int_move(FromIdx, ToIdx, ?QUEEN), binbo_board:int_move(FromIdx, ToIdx, ?ROOK), binbo_board:int_move(FromIdx, ToIdx, ?BISHOP), binbo_board:int_move(FromIdx, ToIdx, ?KNIGHT) | MovesAcc]
+			end;
+		count ->
+			case IsPromotion of
+				false ->
+					MovesAcc + 1;
+				true  ->
+					MovesAcc + 4
 			end;
 		_ ->
 			{From, To} = case MoveType of
@@ -202,8 +208,8 @@ maybe_movelist_with_promotion(Ptype, FromIdx, ToIdx, MoveType, Movelist) ->
 			end,
 			case IsPromotion of
 				false ->
-					[{From, To} | Movelist];
+					[{From, To} | MovesAcc];
 				true  ->
-					[{From, To, q}, {From, To, r}, {From, To, b}, {From, To, n} | Movelist]
+					[{From, To, q}, {From, To, r}, {From, To, b}, {From, To, n} | MovesAcc]
 			end
 	end.

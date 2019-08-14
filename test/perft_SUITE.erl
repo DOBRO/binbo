@@ -146,8 +146,9 @@ receive_node_count(Pids, Acc) ->
 %% all_legal_moves_via_api/1
 all_legal_moves_via_api(Config) ->
 	Pid = get_pid(Config),
-	Nodes = 20,
-	{ok, continue} = binbo:new_game(Pid),
+	Nodes = 44,
+	% Load FEN of Position 5.
+	{ok, continue} = binbo:new_game(Pid, <<"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8">>),
 	{ok, BitIntMovelist} = binbo:all_legal_moves(Pid, bitint),
 	{ok, IntMovelist} = binbo:all_legal_moves(Pid, int),
 	{ok, BinMovelist} = binbo:all_legal_moves(Pid, bin),
