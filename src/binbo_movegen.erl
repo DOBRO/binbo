@@ -95,36 +95,39 @@ any_valid_move(Color, Game) ->
 				; (color(), bb_game(), many(), count) -> non_neg_integer()
 				; (color(), bb_game(), many(), bitint) -> [non_neg_integer()].
 valid_moves(Color, Game, Many, DataType) ->
-	FromSquares = binbo_position:get_side_indexes(Color, Game),
-	valid_moves_from(FromSquares, Game, Many, DataType).
+	FromSquaresBB = binbo_position:own_side_bb(Color, Game),
+	valid_moves_from(FromSquaresBB, Game, Many, DataType).
 
 %% valid_moves_from/4
--spec valid_moves_from([sq_idx()], bb_game(), many(), int) -> [int_move()]
-					; ([sq_idx()], bb_game(), many(), bin) -> [bin_move()]
-					; ([sq_idx()], bb_game(), many(), str) -> [str_move()]
-					; ([sq_idx()], bb_game(), many(), bb) -> bb()
-					; ([sq_idx()], bb_game(), many(), count) -> non_neg_integer()
-					; ([sq_idx()], bb_game(), many(), bitint) -> [non_neg_integer()].
-valid_moves_from(FromSquares, Game, Many, MoveType) ->
+-spec valid_moves_from(bb(), bb_game(), many(), int) -> [int_move()]
+					; (bb(), bb_game(), many(), bin) -> [bin_move()]
+					; (bb(), bb_game(), many(), str) -> [str_move()]
+					; (bb(), bb_game(), many(), bb) -> bb()
+					; (bb(), bb_game(), many(), count) -> non_neg_integer()
+					; (bb(), bb_game(), many(), bitint) -> [non_neg_integer()].
+valid_moves_from(FromSquaresBB, Game, Many, MoveType) ->
 	case MoveType of
-		count -> acc_valid_moves_from(FromSquares, Game, Many, MoveType, 0);
-		bb    -> acc_valid_moves_from(FromSquares, Game, Many, MoveType, ?EMPTY_BB);
-		_     -> acc_valid_moves_from(FromSquares, Game, Many, MoveType, [])
+		count -> acc_valid_moves_from(FromSquaresBB, Game, Many, MoveType, 0);
+		bb    -> acc_valid_moves_from(FromSquaresBB, Game, Many, MoveType, ?EMPTY_BB);
+		_     -> acc_valid_moves_from(FromSquaresBB, Game, Many, MoveType, [])
 	end.
 
 
 %% acc_valid_moves_from/5
--spec acc_valid_moves_from([sq_idx()], bb_game(), many(), move_type(), all_valid_moves()) -> all_valid_moves().
-acc_valid_moves_from([], _Game, _Many, _MoveType, MovesAcc) ->
+-spec acc_valid_moves_from(bb(), bb_game(), many(), move_type(), all_valid_moves()) -> all_valid_moves().
+acc_valid_moves_from(0, _Game, _Many, _MoveType, MovesAcc) ->
 	MovesAcc;
-acc_valid_moves_from([FromIdx | Tail], Game, Many, MoveType, MovesAcc) ->
+acc_valid_moves_from(FromSquaresBB, Game, Many, MoveType, MovesAcc) ->
+	FromBB = FromSquaresBB band (-FromSquaresBB), % clear all bits but the least significant one bit
+	FromIdx = binbo_bb:to_index(FromBB),
+	RestBB = FromSquaresBB bxor FromBB,
 	Piece = binbo_position:get_piece(FromIdx, Game),
 	MovesAcc2 = add_valid_piece_moves(FromIdx, Piece, Game, Many, MoveType, MovesAcc),
 	case (Many =:= any) andalso (MovesAcc2 =/= ?EMPTY_BB) andalso (MovesAcc2 =/= []) of
 		true ->
 			MovesAcc2;
 		false ->
-			acc_valid_moves_from(Tail, Game, Many, MoveType, MovesAcc2)
+			acc_valid_moves_from(RestBB, Game, Many, MoveType, MovesAcc2)
 	end.
 
 %% add_valid_piece_moves/6
