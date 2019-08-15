@@ -88,26 +88,29 @@ init(MaxRandom) ->
 -spec piece_hash(piece(), sq_idx()) -> hash().
 piece_hash(Piece, SqIdx) ->
 	Map = binbo_global:get(?GLOBAL_HASH_PIECE_MOD),
-	Tuple = maps:get(Piece, Map),
+	#{Piece := Tuple} = Map,
 	erlang:element(SqIdx + 1, Tuple).
 
 %% enpa_hash/1
 -spec enpa_hash(file()) -> hash().
 enpa_hash(File) ->
 	Map = binbo_global:get(?GLOBAL_HASH_ENPASSANT_MOD),
-	maps:get(File, Map).
+	#{File := Hash} = Map,
+	Hash.
 
 %% side_hash/1
 -spec side_hash(color()) -> hash().
 side_hash(Side) ->
 	Map = binbo_global:get(?GLOBAL_HASH_SIDE_MOD),
-	maps:get(Side, Map).
+	#{Side := Hash} = Map,
+	Hash.
 
 %% castling_hash/1
 -spec castling_hash(castling()) -> hash().
 castling_hash(Castling) ->
 	Map = binbo_global:get(?GLOBAL_HASH_CASTLING_MOD),
-	maps:get(Castling, Map).
+	#{Castling := Hash} = Map,
+	Hash.
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions

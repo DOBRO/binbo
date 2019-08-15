@@ -172,7 +172,8 @@ bishop_attacks_bb(SqIdx, Occupied) ->
 	Mask = erlang:element(TupleIndex, binbo_global:get(?GLOBAL_MAGIC_BISHOP_MASK_MOD)),
 	MagicIndex = magic_bishop_index(SqIdx, Occupied, Mask),
 	Attacks = erlang:element(TupleIndex, binbo_global:get(?GLOBAL_MAGIC_BISHOP_ATTACKS_MOD)),
-	maps:get(MagicIndex, Attacks).
+	#{MagicIndex := BB} = Attacks,
+	BB.
 
 
 %% rook_attacks_bb/2
@@ -182,7 +183,8 @@ rook_attacks_bb(SqIdx, Occupied) ->
 	Mask = erlang:element(TupleIndex, binbo_global:get(?GLOBAL_MAGIC_ROOK_MASK_MOD)),
 	MagicIndex = magic_rook_index(SqIdx, Occupied, Mask),
 	Attacks = erlang:element(TupleIndex, binbo_global:get(?GLOBAL_MAGIC_ROOK_ATTACKS_MOD)),
-	maps:get(MagicIndex, Attacks).
+	#{MagicIndex := BB} = Attacks,
+	BB.
 
 
 %% queen_attacks_bb/2
