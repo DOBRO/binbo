@@ -94,9 +94,9 @@ any_valid_move(Color, Game) ->
 				; (color(), bb_game(), many(), bb) -> bb()
 				; (color(), bb_game(), many(), count) -> non_neg_integer()
 				; (color(), bb_game(), many(), bitint) -> [non_neg_integer()].
-valid_moves(Color, Game, Many, DataType) ->
+valid_moves(Color, Game, Many, MoveType) ->
 	FromSquaresBB = binbo_position:own_side_bb(Color, Game),
-	valid_moves_from(FromSquaresBB, Game, Many, DataType).
+	valid_moves_from(FromSquaresBB, Game, Many, MoveType).
 
 %% valid_moves_from/4
 -spec valid_moves_from(bb(), bb_game(), many(), int) -> [int_move()]
