@@ -116,27 +116,26 @@ fast_perft(Depth, Game) ->
 %% spawn_perft/2
 spawn_perft(Depth, Game) ->
 	Parent = self(),
+	Ref = make_ref(),
 	{ok, Movelist} = binbo_game:all_legal_moves(Game, bitint),
 	Pids = lists:foldl(fun(Move, PidAcc) ->
 		Pid = spawn_link(fun() ->
 			{ok, {Game2, _Status2}} = binbo_game:move(int, Move, Game),
 			MoveNodes = perft(Depth - 1, Game2),
-			Parent ! {self(), nodecount, MoveNodes}
+			Parent ! {self(), Ref, nodecount, MoveNodes}
 		end),
 		[Pid | PidAcc]
 	end, [], Movelist),
-	receive_node_count(Pids, 0).
+	receive_node_count(Pids, Ref, 0).
 
 %% receive_node_count/2
-receive_node_count([], Acc) ->
+receive_node_count([], _Ref, Acc) ->
 	Acc;
-receive_node_count(Pids, Acc) ->
+receive_node_count(Pids, Ref, Acc) ->
 	receive
-		{From, nodecount, NodeCount} ->
+		{From, Ref, nodecount, NodeCount} ->
 			Pids2 = lists:delete(From, Pids),
-			receive_node_count(Pids2, Acc + NodeCount);
-		_ ->
-			receive_node_count(Pids, Acc)
+			receive_node_count(Pids2, Ref, Acc + NodeCount)
 	end.
 
 %%%------------------------------------------------------------------------------
