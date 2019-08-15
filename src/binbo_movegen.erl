@@ -106,11 +106,12 @@ valid_moves(Color, Game, Many, MoveType) ->
 					; (bb(), bb_game(), many(), count) -> non_neg_integer()
 					; (bb(), bb_game(), many(), bitint) -> [non_neg_integer()].
 valid_moves_from(FromSquaresBB, Game, Many, MoveType) ->
-	case MoveType of
-		count -> acc_valid_moves_from(FromSquaresBB, Game, Many, MoveType, 0);
-		bb    -> acc_valid_moves_from(FromSquaresBB, Game, Many, MoveType, ?EMPTY_BB);
-		_     -> acc_valid_moves_from(FromSquaresBB, Game, Many, MoveType, [])
-	end.
+	MovesAcc0 = case MoveType of
+		count -> 0;
+		bb    -> ?EMPTY_BB;
+		_     -> []
+	end,
+	acc_valid_moves_from(FromSquaresBB, Game, Many, MoveType, MovesAcc0).
 
 
 %% acc_valid_moves_from/5
