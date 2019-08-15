@@ -353,9 +353,9 @@ remove_piece(Idx, Game) ->
 	Game2 = maps:remove(Idx, Game),
 	PosHash2 = PosHash bxor binbo_hash:piece_hash(Piece, Idx),
 	Game2#{
-		Pkey := binbo_bb:bb_not(PiecesBB, SquareBB),
-		SideKey := binbo_bb:bb_not(SideBB, SquareBB),
-		?GAME_KEY_OCCUPIED := binbo_bb:bb_not(AllPiecesBB, SquareBB),
+		Pkey := (PiecesBB band (bnot SquareBB)),
+		SideKey := (SideBB band (bnot SquareBB)),
+		?GAME_KEY_OCCUPIED := (AllPiecesBB band (bnot SquareBB)),
 		?GAME_KEY_POS_HASH := PosHash2
 	}.
 
