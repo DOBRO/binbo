@@ -56,11 +56,8 @@ await_games(Pids, Ref) ->
 	receive
 		{From, Ref, game_end} ->
 			Pids2 = lists:delete(From, Pids),
-			await_games(Pids2, Ref);
-		_ ->
-			await_games(Pids, Ref)
-	after
-		5000 ->
+			await_games(Pids2, Ref)
+	after 5000 ->
 			{error, timeout}
 	end.
 
