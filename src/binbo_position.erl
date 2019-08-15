@@ -29,6 +29,7 @@
 	piece_moves_bb/4
 ]).
 -export([is_in_check/2]).
+-export([own_side_bb/2]).
 -export([get_enpassant_bb/1]).
 -export([get_side_indexes/2]).
 -export([get_piece_indexes/2, get_piece_indexes_on_file/3, get_piece_indexes_on_rank/3]).
@@ -172,6 +173,12 @@ get_status(Game) ->
 get_enpassant_bb(Game) ->
 	maps:get(?GAME_KEY_ENPASSANT, Game).
 
+%% own_side_bb/2
+%% Returns bitboard of friendly pieces.
+-spec own_side_bb(color(), bb_game()) -> side_bb().
+own_side_bb(Color, Game) ->
+	OwnSideKey = ?OWN_SIDE_KEY(Color),
+	maps:get(OwnSideKey, Game).
 
 %% get_side_indexes/2
 get_side_indexes(Color, Game) ->
@@ -386,13 +393,6 @@ game_bulk_update(Game, [Operation | Tail]) ->
 	end,
 	game_bulk_update(Game2, Tail).
 
-
-%% own_side_bb/2
-%% Returns bitboard of friendly pieces.
--spec own_side_bb(color(), bb_game()) -> side_bb().
-own_side_bb(Color, Game) ->
-	OwnSideKey = ?OWN_SIDE_KEY(Color),
-	maps:get(OwnSideKey, Game).
 
 %% not_own_side/2
 -spec not_own_side(color(), bb_game()) -> neg_integer().
