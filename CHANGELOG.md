@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Optimized move generation using bitboards instead of lists of square indices.
+
 ## [1.1.0] - 2019-08-14
 
 - Improved performance of all legal moves generation.
