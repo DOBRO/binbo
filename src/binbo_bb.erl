@@ -50,7 +50,6 @@
 %%%------------------------------------------------------------------------------
 -type bb() :: ?EMPTY_BB .. ?ALL_SQUARES_BB. % any bitboard including empty
 -type piece() :: binbo_board:piece().
-% -type piece_type() :: binbo_board:piece_type().
 -type sq_idx() :: binbo_board:square_index().
 -type empty_bb() :: ?EMPTY_BB. % empty bitboard
 -type color() :: binbo_board:color().
@@ -63,6 +62,9 @@
 
 -export_type([bb/0, sq_bb/0, empty_bb/0, enpa_bb/0]).
 
+-compile({inline, [bb_not/2]}).
+-compile({inline, [to_index/1]}).
+-compile({inline, [shift/2]}).
 
 %%%------------------------------------------------------------------------------
 %%%   API
@@ -77,7 +79,6 @@ bb_not(BB1, BB2) ->
 -spec bb_or([bb()]) -> bb().
 bb_or(List) ->
 	bb_or(List, ?EMPTY_BB).
-
 
 %% rank_bb/1
 -spec rank_bb(sq_idx()) -> bb().
@@ -94,7 +95,7 @@ file_bb(Idx) ->
 %% to_index/1
 -spec to_index(sq_bb()) -> sq_idx().
 to_index(SqBB) ->
-	case SqBB of
+	(case SqBB of
 		1 -> 0;
 		2 -> 1;
 		4 -> 2;
@@ -159,7 +160,7 @@ to_index(SqBB) ->
 		2305843009213693952 -> 61;
 		4611686018427387904 -> 62;
 		9223372036854775808 -> 63
-	end.
+	end).
 
 %% to_file/1
 -spec to_file(sq_bb()) -> binbo_board:file().
