@@ -664,7 +664,7 @@ get_halfmove(#{?GAME_KEY_HALFMOVE := Halfmove}) ->
 %% set_halfmove/1
 -spec set_halfmove(halfmove(), bb_game()) -> bb_game().
 set_halfmove(Halfmove, Game) ->
-	Game#{?GAME_KEY_HALFMOVE => Halfmove}.
+	Game#{?GAME_KEY_HALFMOVE := Halfmove}.
 
 %% increase_halfmove/1
 -spec increase_halfmove(bb_game()) -> bb_game().
@@ -680,7 +680,7 @@ get_fullmove(#{?GAME_KEY_FULLMOVE := Fullmove}) ->
 %% set_fullmove/1
 -spec set_fullmove(fullmove(), bb_game()) -> bb_game().
 set_fullmove(Fullmove, Game) ->
-	Game#{?GAME_KEY_FULLMOVE => Fullmove}.
+	Game#{?GAME_KEY_FULLMOVE := Fullmove}.
 
 %% increase_fullmove/1
 -spec increase_fullmove(bb_game()) -> bb_game().
