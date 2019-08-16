@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [1.1.1] - 2019-08-16
 
 - Optimized move generation using bitboards instead of lists of square indices.
 
