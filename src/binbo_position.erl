@@ -98,7 +98,7 @@
 	?GAME_KEY_POS_HASH := 0 | hash(),
 	?GAME_KEY_POSITION_HASHMAP := hashmap(),
 	?GAME_KEY_STATUS := game_status(),
-	sq_idx() => piece()
+	sq_idx() := piece() | ?EMPTY_SQUARE
 }.
 
 -type empty_bb_game() :: #{
@@ -117,7 +117,8 @@
 	?GAME_KEY_LASTMOVE_PIECE := empty_sq(),
 	?GAME_KEY_POS_HASH := 0,
 	?GAME_KEY_POSITION_HASHMAP := hashmap(),
-	?GAME_KEY_STATUS := game_status_inprogress()
+	?GAME_KEY_STATUS := game_status_inprogress(),
+	sq_idx() := ?EMPTY_SQUARE
 }.
 
 -type castling_error() :: {white|black, both_sides|king_side|queen_side}.
@@ -148,11 +149,8 @@ init_bb_game(ParsedFen) ->
 %% get_piece/2
 -spec get_piece(sq_idx(), bb_game()) -> piece() | empty_sq().
 get_piece(Idx, Game) ->
-	case Game of
-		#{Idx := Piece} -> Piece;
-		_ -> ?EMPTY_SQUARE
-	end.
-
+	#{Idx := Piece} = Game,
+	Piece.
 
 %% get_sidetomove/1
 -spec get_sidetomove(bb_game()) -> color().
@@ -308,24 +306,28 @@ piece_moves_bb(FromIdx, Ptype, Pcolor, Game) ->
 
 %% empty_bb_game/0
 -spec empty_bb_game() -> empty_bb_game().
-empty_bb_game() -> #{
-	?GAME_KEY_WP => ?EMPTY_BB, ?GAME_KEY_WN => ?EMPTY_BB, ?GAME_KEY_WB => ?EMPTY_BB,
-	?GAME_KEY_WR => ?EMPTY_BB, ?GAME_KEY_WQ => ?EMPTY_BB, ?GAME_KEY_WK => ?EMPTY_BB,
-	?GAME_KEY_BP => ?EMPTY_BB, ?GAME_KEY_BN => ?EMPTY_BB, ?GAME_KEY_BB => ?EMPTY_BB,
-	?GAME_KEY_BR => ?EMPTY_BB, ?GAME_KEY_BQ => ?EMPTY_BB, ?GAME_KEY_BK => ?EMPTY_BB,
-	?GAME_KEY_WHITE => ?EMPTY_BB, ?GAME_KEY_BLACK => ?EMPTY_BB,
-	?GAME_KEY_OCCUPIED => ?EMPTY_BB,
-	?GAME_KEY_SIDETOMOVE => undefined,
-	?GAME_KEY_CASTLING => ?CASTLING_NONE,
-	?GAME_KEY_ENPASSANT => ?EMPTY_BB,
-	?GAME_KEY_HALFMOVE => 0,
-	?GAME_KEY_FULLMOVE => 1,
-	?GAME_KEY_LASTMOVE => undefined,
-	?GAME_KEY_LASTMOVE_PIECE => ?EMPTY_SQUARE,
-	?GAME_KEY_POS_HASH => 0,
-	?GAME_KEY_POSITION_HASHMAP => #{},
-	?GAME_KEY_STATUS => ?GAME_STATUS_INPROGRESS
-	}.
+empty_bb_game() ->
+	Map0 = #{
+		?GAME_KEY_WP => ?EMPTY_BB, ?GAME_KEY_WN => ?EMPTY_BB, ?GAME_KEY_WB => ?EMPTY_BB,
+		?GAME_KEY_WR => ?EMPTY_BB, ?GAME_KEY_WQ => ?EMPTY_BB, ?GAME_KEY_WK => ?EMPTY_BB,
+		?GAME_KEY_BP => ?EMPTY_BB, ?GAME_KEY_BN => ?EMPTY_BB, ?GAME_KEY_BB => ?EMPTY_BB,
+		?GAME_KEY_BR => ?EMPTY_BB, ?GAME_KEY_BQ => ?EMPTY_BB, ?GAME_KEY_BK => ?EMPTY_BB,
+		?GAME_KEY_WHITE => ?EMPTY_BB, ?GAME_KEY_BLACK => ?EMPTY_BB,
+		?GAME_KEY_OCCUPIED => ?EMPTY_BB,
+		?GAME_KEY_SIDETOMOVE => undefined,
+		?GAME_KEY_CASTLING => ?CASTLING_NONE,
+		?GAME_KEY_ENPASSANT => ?EMPTY_BB,
+		?GAME_KEY_HALFMOVE => 0,
+		?GAME_KEY_FULLMOVE => 1,
+		?GAME_KEY_LASTMOVE => undefined,
+		?GAME_KEY_LASTMOVE_PIECE => ?EMPTY_SQUARE,
+		?GAME_KEY_POS_HASH => 0,
+		?GAME_KEY_POSITION_HASHMAP => #{},
+		?GAME_KEY_STATUS => ?GAME_STATUS_INPROGRESS
+	},
+	lists:foldl(fun(SqIdx, M) ->
+		M#{SqIdx => ?EMPTY_SQUARE}
+	end, Map0, binbo_board:index_list()).
 
 %% set_piece/3
 -spec set_piece(sq_idx(), piece(), bb_game()) -> bb_game().
@@ -337,7 +339,7 @@ set_piece(Idx, Piece, Game) ->
 	SquareBB = ?SQUARE_BB(Idx),
 	PosHash2 = PosHash bxor binbo_hash:piece_hash(Piece, Idx),
 	Game#{
-		Idx => Piece,
+		Idx := Piece,
 		Pkey := (PiecesBB bor SquareBB),
 		SideKey := (SideBB bor SquareBB),
 		?GAME_KEY_OCCUPIED := (AllPiecesBB bor SquareBB),
@@ -347,15 +349,15 @@ set_piece(Idx, Piece, Game) ->
 %% remove_piece/2
 -spec remove_piece(sq_idx(), bb_game()) -> bb_game().
 remove_piece(Idx, Game) ->
-	#{Idx := Piece} = Game, % just to be shure if the piece exists (instead of 'get_piece/2')
+	#{Idx := Piece} = Game,
 	Pkey = ?PIECE_GAME_KEY(Piece),
 	Pcolor = ?COLOR(Piece),
 	SideKey = ?OWN_SIDE_KEY(Pcolor),
 	#{Pkey := PiecesBB, SideKey := SideBB, ?GAME_KEY_OCCUPIED := AllPiecesBB, ?GAME_KEY_POS_HASH := PosHash} = Game,
 	SquareBB = ?SQUARE_BB(Idx),
-	Game2 = maps:remove(Idx, Game),
 	PosHash2 = PosHash bxor binbo_hash:piece_hash(Piece, Idx),
-	Game2#{
+	Game#{
+		Idx := ?EMPTY_SQUARE,
 		Pkey := (PiecesBB band (bnot SquareBB)),
 		SideKey := (SideBB band (bnot SquareBB)),
 		?GAME_KEY_OCCUPIED := (AllPiecesBB band (bnot SquareBB)),
