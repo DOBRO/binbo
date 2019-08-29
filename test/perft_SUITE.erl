@@ -33,6 +33,8 @@
 -export([promotion_bugs_position/1]).
 -export([wide_open_position/1]).
 -export([king_and_pawns_position/1]).
+-export([you_gotta_love_perft_1/1]).
+-export([you_gotta_love_perft_2/1]).
 
 %% all/0
 all() -> [{group, perft_tests}].
@@ -44,7 +46,9 @@ groups() ->
 		position1, position2, position3, position4, position5, position6,
 		promotion_bugs_position,
 		wide_open_position,
-		king_and_pawns_position
+		king_and_pawns_position,
+		you_gotta_love_perft_1,
+		you_gotta_love_perft_2
 	]}].
 
 %% init_per_suite/1
@@ -255,4 +259,28 @@ king_and_pawns_position(Config) ->
 	324 = fast_perft(2, Game),
 	5658 = fast_perft(3, Game),
 	98766 = fast_perft(4, Game),
+	ok.
+
+
+%% you_gotta_love_perft_1/1
+%% From http://talkchess.com/forum3/viewtopic.php?f=7&t=71379#p806506
+you_gotta_love_perft_1(Config) ->
+	Fen = <<"8/ppp3p1/8/8/3p4/5Q2/1ppp2K1/brk4n w - - 11 7">>,
+	Game = perft_init_game(Config, Fen),
+	27 = fast_perft(1, Game),
+	390 = fast_perft(2, Game),
+	9354 = fast_perft(3, Game),
+	134167 = fast_perft(4, Game),
+	ok.
+
+
+%% you_gotta_love_perft_2/1
+%% From http://talkchess.com/forum3/viewtopic.php?f=7&t=71379#p806506
+you_gotta_love_perft_2(Config) ->
+	Fen = <<"8/6kR/8/8/8/bq6/1rqqqqqq/K1nqnbrq b - - 0 1">>,
+	Game = perft_init_game(Config, Fen),
+	7 = fast_perft(1, Game),
+	52 = fast_perft(2, Game),
+	4593 = fast_perft(3, Game),
+	50268 = fast_perft(4, Game),
 	ok.
