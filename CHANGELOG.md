@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2019-09-26
+
+- Performance optimization in game state update.
+- Some binary optimizations for FEN/SAN parsing.
+- Dependency `uef-lib` updated to 2.5.1.
+- More perft tests added.
+
 ## [1.1.1] - 2019-08-16
 
 - Optimized move generation using bitboards instead of lists of square indices.
