@@ -218,7 +218,7 @@ parse_pos_rank(<<>>, Idx1, Position, Totals, CurIdx) ->
 		false ->
 			{error, {last_index_mismatch, CurIdx, {rank, binbo_board:rank_number(Idx1)}}}
 	end;
-parse_pos_rank(_, Idx1, _, _, CurIdx) when CurIdx > (Idx1 + 7) ->
+parse_pos_rank(<<_/bits>>, Idx1, _, _, CurIdx) when CurIdx > (Idx1 + 7) ->
 	{error, {index_out_of_range, CurIdx, {rank, binbo_board:rank_number(Idx1)}}};
 parse_pos_rank(<<Char:8, Rest/bits>>, Idx1, Position, Totals, CurIdx) ->
 	case maps:find(Char, Totals) of
@@ -303,11 +303,8 @@ parse_castling_1(<<Char:8, Rest/bits>>, #parsed_fen{castling = Castling} = Parse
 -spec parse_enpassant(binary()) -> {ok, none | binbo_board:square_index()} | error.
 parse_enpassant(<<"-">>) ->
 	{ok, none};
-parse_enpassant(<<_:8, R:8>> = Sq) when (R =:= $3 orelse R =:= $6) ->
-	case binbo_board:is_valid_square_notation(Sq) of
-		true -> {ok, binbo_board:notation_to_index(Sq)};
-		false -> error
-	end;
+parse_enpassant(<<F:8, R:8>>) when (F >= $a andalso F =< $h) andalso (R =:= $3 orelse R =:= $6) ->
+	{ok, binbo_board:notation_to_index(F, R)};
 parse_enpassant(_) ->
 	error.
 

@@ -16,7 +16,7 @@
 
 -export([rank_number/1, sq_distance/2]).
 -export([rank_of_index/1, file_of_index/1]).
--export([notation_to_index/1]).
+-export([notation_to_index/1, notation_to_index/2]).
 -export([index_to_notation/1]).
 -export([is_valid_square_notation/1]).
 -export([index_list/0, file_list/0, side_list/0, board_tuple/1]).
@@ -93,9 +93,15 @@ is_valid_square_notation(Sq) ->
 %% notation_to_index/1
 -spec notation_to_index(square_notation()) -> square_index().
 notation_to_index(<<F:8, R:8>>) ->
+	notation_to_index(F, R).
+
+%% notation_to_index/2
+-spec notation_to_index($a..$h, $1..$8) -> square_index().
+notation_to_index(F, R) ->
 	Rank = R - $1, % 0..7
 	File = F - $a, % 0..7
 	(Rank bsl 3) + File.
+
 
 %% index_to_notation/1
 -spec index_to_notation(square_index()) -> square_notation().

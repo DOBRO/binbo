@@ -57,8 +57,8 @@
 -type promo_type() :: ?KNIGHT | ?BISHOP | ?ROOK | ?QUEEN.
 -type pname() :: pawn | knight | bishop | rook | queen | king.
 -type castling_flag() :: ?CASTLING_NONE | binbo_board:side_castling().
--type pre_from() :: sq_notation() | undefined | {file, binbo_board:file()} | {rank, binbo_board:rank()}.
--type pre_parsed_san2() :: {ok, piece_type(), pre_from(), sq_notation(), promo_type()}.
+-type pre_from() :: {sq, $a..$h, $1..$8} | undefined | {file, binbo_board:file()} | {rank, binbo_board:rank()}.
+-type pre_parsed_san2() :: {ok, piece_type(), pre_from(), {$a..$h, $1..$8}, promo_type()}.
 -type pre_parsed_san() :: {ok, ?KING, 'O-O' | 'O-O-O'} | pre_parsed_san2().
 -type san_from_error() :: illegal_san.
 -type pre_parse_san_error() :: san_not_parsed | empty_san | bad_san_value | invalid_san_string | bad_data_type.
@@ -160,9 +160,9 @@ parse_sq_move(<<Sq1:16/bits, Sq2:16/bits>>) -> % example: <<"e2e4">>
 	parse_sq_move(Sq1, Sq2, undefined);
 parse_sq_move(<<Sq1:16/bits, Sq2:16/bits, Char:8>>) -> % example: <<"e2e4">>
 	parse_sq_move(Sq1, Sq2, Char);
-parse_sq_move(Move) when is_binary(Move) -> % any other binary
+parse_sq_move(<<_/bits>>) -> % any other binary
 	{error, bad_move_value};
-parse_sq_move(Move) when is_list(Move) -> % string value
+parse_sq_move([_|_] = Move) -> % string value
 	try erlang:list_to_binary(Move) of
 		Bin -> parse_sq_move(Bin)
 	catch
@@ -399,8 +399,8 @@ parse_san(San, Game) ->
 				?WHITE -> {ok, binbo_board:notation_to_index(<<"e1">>), binbo_board:notation_to_index(<<"c1">>), ?QUEEN};
 				?BLACK -> {ok, binbo_board:notation_to_index(<<"e8">>), binbo_board:notation_to_index(<<"c8">>), ?QUEEN}
 			end;
-		{ok, Ptype, From0, To, PromoType} ->
-			ToIdx = binbo_board:notation_to_index(To),
+		{ok, Ptype, From0, {ToFile, ToRank}, PromoType} ->
+			ToIdx = binbo_board:notation_to_index(ToFile, ToRank),
 			case san_starting_square(Ptype, Pcolor, From0, ToIdx, Game) of
 				{ok, FromIdx} -> {ok, FromIdx, ToIdx, PromoType};
 				{error, _} = Error -> Error
@@ -417,17 +417,17 @@ pre_parse_san(<<"O-O-O", _/binary>>) -> % castling queenside
 	{ok, ?KING, 'O-O-O'};
 pre_parse_san(<<"O-O", _/binary>>) -> % castling kingside
 	{ok, ?KING, 'O-O'};
-pre_parse_san(<<Pchar:8, Rest/binary>> = San) when erlang:byte_size(Rest) > 0 ->
+pre_parse_san(<<Pchar:8, Rest/binary>> = San) ->
 	case lists:member(Pchar, "PNBRQK") of
 		true  ->
 			Piece = ?CHAR_TO_PIECE(Pchar),
-			pre_parse_san(?PIECE_TYPE(Piece), Rest);
+			pre_parse_san(Rest, ?PIECE_TYPE(Piece));
 		false ->
-			pre_parse_san(?PAWN, San)
+			pre_parse_san(San, ?PAWN)
 	end;
-pre_parse_san(San) when is_binary(San) ->
+pre_parse_san(<<_/bits>>) ->
 	{error, bad_san_value};
-pre_parse_san(San) when is_list(San) -> % string value
+pre_parse_san([_|_] = San) -> % string value
 	try erlang:list_to_binary(San) of
 		Bin -> pre_parse_san(Bin)
 	catch
@@ -437,35 +437,36 @@ pre_parse_san(_) -> % other
 	{error, bad_data_type}.
 
 %% pre_parse_san/2
--spec pre_parse_san(piece_type(), binary()) -> pre_parsed_san2() | {error, san_not_parsed}.
-pre_parse_san(Ptype, San) ->
+-spec pre_parse_san(binary(), piece_type()) -> pre_parsed_san2() | {error, san_not_parsed}.
+pre_parse_san(San, Ptype) ->
 	Parsed = case San of
 		% example: a1-b2, a1xb2
 		<<F1,R1, C, F2,R2, Rest/binary>> when ?IS_VALID_FILE_RANK(F1,R1) andalso ?IS_VALID_FILE_RANK(F2,R2) andalso (C =:= $x orelse C =:= $-) ->
-			{<<F1,R1>>, <<F2,R2>>, Rest};
+			{{sq, F1,R1}, {F2,R2}, Rest};
 		% example: a1b2, a1b2+
 		<<F1,R1, F2,R2, Rest/binary>> when ?IS_VALID_FILE_RANK(F1,R1) andalso ?IS_VALID_FILE_RANK(F2,R2) ->
-			{<<F1,R1>>, <<F2,R2>>, Rest};
+			{{sq, F1,R1}, {F2,R2}, Rest};
 		% example: Ngxe2, Ngxe2+
 		<<F1, C, F2,R2, Rest/binary>> when ?IS_VALID_FILE(F1) andalso ?IS_VALID_FILE_RANK(F2,R2) andalso (C =:= $x orelse C =:= $-) ->
-			{{file, F1 - $a}, <<F2,R2>>, Rest};
+			{{file, F1 - $a}, {F2,R2}, Rest};
 		% example: Nge2, Nge2+
 		<<F1, F2,R2, Rest/binary>> when ?IS_VALID_FILE(F1) andalso ?IS_VALID_FILE_RANK(F2,R2) ->
-			{{file, F1 - $a}, <<F2,R2>>, Rest};
+			{{file, F1 - $a}, {F2,R2}, Rest};
 		% example: R1xa3, R1xa3+
 		<<R1, C, F2,R2, Rest/binary>> when ?IS_VALID_RANK(R1) andalso ?IS_VALID_FILE_RANK(F2,R2) andalso (C =:= $x orelse C =:= $-) ->
-			{{rank, R1 - $1}, <<F2,R2>>, Rest};
+			{{rank, R1 - $1}, {F2,R2}, Rest};
 		% example: R1a3, R1a3+
 		<<R1, F2,R2, Rest/binary>> when ?IS_VALID_RANK(R1) andalso ?IS_VALID_FILE_RANK(F2,R2) ->
-			{{rank, R1 - $1}, <<F2,R2>>, Rest};
+			{{rank, R1 - $1}, {F2,R2}, Rest};
 		% example: e4, e4+
 		<<F,R, Rest/binary>> when ?IS_VALID_FILE_RANK(F,R) ->
-			{undefined, <<F,R>>, Rest};
+			{undefined, {F,R}, Rest};
 		% example: Qxd5, Qxd5+
 		<<C, F,R, Rest/binary>> when ?IS_VALID_FILE_RANK(F,R) andalso (C =:= $x orelse C =:= $-) ->
-			{undefined, <<F,R>>, Rest};
+			{undefined, {F,R}, Rest};
 		% error
-		_ -> error
+		_ ->
+			error
 	end,
 	case Parsed of
 		{From, To, <<$=, Char, _/binary>>} when Ptype =:= ?PAWN ->
@@ -481,8 +482,8 @@ pre_parse_san(Ptype, San) ->
 
 %% san_starting_square/5
 -spec san_starting_square(piece_type(), color(), pre_from(), sq_idx(), bb_game()) -> {ok, sq_idx()} | {error, san_from_error()}.
-san_starting_square(_Ptype, _Pcolor, From0, _ToIdx, _Game) when is_binary(From0) ->
-	{ok, binbo_board:notation_to_index(From0)};
+san_starting_square(_Ptype, _Pcolor, {sq, File,Rank}, _ToIdx, _Game) ->
+	{ok, binbo_board:notation_to_index(File, Rank)};
 san_starting_square(Ptype, Pcolor, From0, ToIdx, Game) ->
 	Piece = ?TYPE_TO_PIECE(Ptype, Pcolor),
 	IdxList = case From0 of
