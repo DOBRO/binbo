@@ -130,7 +130,7 @@ binbo:new_game(Pid, Fen) -> {ok, GameStatus} | {error, Reason}.
 * `Fen` (`string()` or `binary()`) is the https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation[Forsyth–Edwards Notation] (FEN);
 * `GameStatus` is the link:#game-status[game status].
 
-It is possible to reinitilize game in the same process. For example:
+It is possible to reinitialize game in the same process. For example:
 
 [source,erlang]
 ----
