@@ -21,6 +21,8 @@
 -export([load_pgn/2, load_pgn_file/2]).
 -export([game_state/1, game_status/1, game_draw/2]).
 -export([all_legal_moves/2]).
+-export([new_uci_game/2]).
+-export([uci_mode/1]).
 
 %%% gen_server export.
 -export([init/1]).
@@ -41,6 +43,7 @@
 -type sq_move() :: binbo_move:sq_move().
 -type game_status() :: binbo_game:game_status().
 -type new_game_ret() :: {ok, game_status()} | {error, binbo_game:init_error()}.
+-type new_uci_game_ret() :: {ok, game_status()} | {error, init_uci_game_error()}.
 -type game_move_ret() :: {ok, game_status()} | {error, binbo_game:move_error()}.
 -type game_state_ret() :: undefined | bb_game().
 -type game_status_ret() :: binbo_game:status_ret().
@@ -49,9 +52,23 @@
 -type load_pgn_ret() :: {ok, game_status()} | {error, binbo_game:load_pgn_error()}.
 -type load_pgn_file_ret() :: {ok, game_status()} | {error, any()}.
 -type all_legal_moves_ret() :: binbo_game:all_legal_moves_ret().
+-type engine_path() :: binbo_uci:engine_path().
+-type uci_game_opts() :: #{
+	engine_path := engine_path(),
+	fen => fen()
+}.
+-type init_uci_game_error() :: {game_over_with_status, game_status()} | could_not_open_port.
 
+%% @todo Add comments for record fields
 -record(state, {
-	game = undefined :: undefined | bb_game()
+	game = undefined :: undefined | bb_game(),
+	uci_path = undefined :: undefined | engine_path(),
+	uci_port = undefined :: undefined | port(),
+	uci_ready = false :: boolean(),
+	uci_from = undefined :: undefined | from(),
+	uci_wait_prefix = undefined :: undefined | binary(),
+	uci_wait_prefix_size = undefined :: undefined | pos_integer(),
+	uci_wait_prefix_handler = undefined :: undefined | fun()
 }).
 -type state() :: #state{}.
 
@@ -60,6 +77,8 @@
 -export_type([game_state_ret/0, game_status_ret/0, game_draw_ret/0]).
 -export_type([all_legal_moves_ret/0]).
 -export_type([stop_ret/0]).
+-export_type([new_uci_game_ret/0]).
+-export_type([uci_game_opts/0]).
 
 %%%------------------------------------------------------------------------------
 %%% start/stop
@@ -92,6 +111,7 @@ init(_Args) ->
 
 %% handle_call/3
 -spec handle_call({new_game, fen()}, from(), state()) -> {reply, new_game_ret(), state()}
+				; ({new_uci_game, uci_game_opts()}, from(), state()) -> {reply, new_uci_game_ret(), state()}
 				; ({game_move, sq | san, sq_move()}, from(), state()) -> {reply, game_move_ret(), state()}
 				; (game_state, from(), state()) -> {reply, game_state_ret(), state()}
 				; (game_status, from(), state()) -> {reply, game_status_ret(), state()}
@@ -145,6 +165,30 @@ handle_call({game_draw, Reason}, _From, #state{game = Game0} = State0) ->
 		Error      -> {Error, State0}
 	end,
 	{reply, Reply, State};
+handle_call({new_uci_game, Opts}, _From, State0) ->
+	case init_uci_game(Opts, State0) of
+		{ok, #state{game = Game} = State} ->
+			{reply, binbo_game:status(Game), State};
+		{error, _} = Error ->
+			{reply, Error, State0}
+	end;
+handle_call({uci_command, Command, WaitPrefix, PrefixHandler}, From, #state{uci_port = Port} = State0) when is_port(Port) ->
+	_ = send_uci_command(Port, Command),
+	case erlang:is_binary(WaitPrefix) of
+		true ->
+			State = State0#state{
+				uci_from = From,
+				uci_ready = false,
+				uci_wait_prefix = WaitPrefix,
+				uci_wait_prefix_size = erlang:byte_size(WaitPrefix),
+				uci_wait_prefix_handler = PrefixHandler
+			},
+			{noreply, State};
+		false ->
+			{reply, ok, State0}
+	end;
+handle_call({uci_command, _}, _From, State0) ->
+	{reply, {error, uci_port_not_open}, State0};
 handle_call(_Msg, _From, State) ->
 	{reply, ignored, State}.
 
@@ -155,6 +199,28 @@ handle_cast(_Msg, State) ->
 	{noreply, State}.
 
 %% handle_info/2
+handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
+	io:format("From port: ~p~n~n", [Data]),
+	#state{uci_wait_prefix_size = PrefixSize, uci_wait_prefix_handler = PrefixHandler} = State0,
+	State = case PrefixHandler(Data, Prefix, PrefixSize) of
+		skip ->
+			State0;
+		reply ->
+			ReplyTo = State0#state.uci_from,
+			_ = gen_server:reply(ReplyTo, {ok, Prefix}), % reply here
+			State0#state{
+				uci_from = undefined,
+				uci_ready = true,
+				uci_wait_prefix = undefined,
+				uci_wait_prefix_size = undefined,
+				uci_wait_prefix_handler = undefined
+			}
+	end,
+	{noreply, State};
+handle_info({'EXIT', Port, _}, #state{uci_port = Port} = State0) ->
+	% @todo Handle port exit
+	State = State0#state{uci_port = undefined},
+	{noreply, State};
 handle_info(_Msg, State) ->
 	{noreply, State}.
 
@@ -221,9 +287,84 @@ get_fen(Pid) ->
 all_legal_moves(Pid, MoveType) ->
 	call(Pid, {all_legal_moves, MoveType}).
 
+%% new_uci_game/2
+-spec new_uci_game(pid(), uci_game_opts()) -> new_uci_game_ret().
+new_uci_game(Pid, Opts) ->
+	call(Pid, {new_uci_game, Opts}).
+
+%% uci_mode/2
+uci_mode(Pid) ->
+	call_uci(Pid, binbo_uci:command_spec_uci()).
+
+
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
 %%%------------------------------------------------------------------------------
 
+%% call/2
 call(Pid, Msg) ->
 	gen_server:call(Pid, Msg).
+
+%% call_uci/2
+call_uci(Pid, {Command, WaitPrefix, WaitPrefixHandler}) ->
+	call(Pid, {uci_command, Command, WaitPrefix, WaitPrefixHandler}).
+
+%% init_uci_game/2
+-spec init_uci_game(uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error()}.
+init_uci_game(Opts, State) ->
+	Steps = [fen, open_port],
+	init_uci_game(Steps, Opts, State).
+
+%% init_uci_game/3
+-spec init_uci_game([fen|open_port], uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error()}.
+init_uci_game([], _Opts, State) ->
+	{ok, State};
+init_uci_game([fen|Tail], Opts, State) ->
+	Fen = maps:get(fen, Opts, binbo_fen:initial()),
+	case binbo_game:new(Fen) of
+		{ok, {Game, GameStatus}} ->
+			case binbo_position:is_status_inprogress(GameStatus) of
+				true  ->
+					init_uci_game(Tail, Opts, State#state{game = Game});
+				false ->
+					{error, {game_over_with_status, GameStatus}}
+			end;
+		Error ->
+			Error
+	end;
+init_uci_game([open_port|Tail], Opts, State) ->
+	EnginePath = maps:get(engine_path, Opts, ""),
+	case maybe_open_uci_port(EnginePath, State) of
+		{ok, Port} ->
+			init_uci_game(Tail, Opts, State#state{uci_port = Port, uci_path = EnginePath});
+		{already_open, _} ->
+			init_uci_game(Tail, Opts, State);
+		{error, Reason} ->
+			{error, {could_not_open_port, Reason}}
+	end.
+
+%% maybe_open_uci_port/2
+-spec maybe_open_uci_port(engine_path(), state()) -> {ok, port()} | {already_open, port()} | {error, any()}.
+maybe_open_uci_port(EnginePath, #state{uci_port = OldPort} = State) ->
+	case erlang:port_info(OldPort, id) of
+		undefined ->
+			open_uci_port(EnginePath);
+		_ ->
+			#state{uci_path = OldPath} = State,
+			case (OldPath =/= undefined andalso EnginePath =:= OldPath) of
+				true  ->
+					{already_open, OldPort};
+				false ->
+					_ = erlang:port_close(OldPort),
+					open_uci_port(EnginePath)
+			end
+	end.
+
+%% open_uci_port/1
+-spec open_uci_port(engine_path()) -> {ok, port()} | {error, any()}.
+open_uci_port(EnginePath) ->
+	binbo_uci:open_port(EnginePath).
+
+%% send_uci_command/2
+send_uci_command(Port, Command) ->
+	binbo_uci:send_command(Port, Command).

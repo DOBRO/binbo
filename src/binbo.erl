@@ -16,13 +16,16 @@
 
 -export([start/0, stop/0]).
 -export([new_server/0, new_server/1]).
--export([new_game/1, new_game/2, game_state/1, game_status/1]).
+-export([new_game/1, new_game/2]).
+-export([game_state/1, game_status/1]).
 -export([move/2, san_move/2, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
 -export([game_draw/1, game_draw/2]).
 -export([print_board/1, print_board/2]).
 -export([all_legal_moves/1, all_legal_moves/2]).
 -export([stop_server/1]).
+-export([new_uci_game/2]).
+-export([uci_mode/1]).
 
 -define(APPLICATION, ?MODULE).
 
@@ -85,7 +88,7 @@ new_game(Pid) ->
 new_game(Pid, Fen) ->
 	binbo_server:new_game(Pid, Fen).
 
-%% new_game/2
+%% move/2
 -spec move(pid(), binbo_move:sq_move()) -> binbo_server:game_move_ret().
 move(Pid, Move) ->
 	binbo_server:game_move(Pid, Move).
@@ -157,3 +160,12 @@ all_legal_moves(Pid) ->
 -spec all_legal_moves(pid(), int | bin | str) -> binbo_server:all_legal_moves_ret().
 all_legal_moves(Pid, MoveType) ->
 	binbo_server:all_legal_moves(Pid, MoveType).
+
+%% new_uci_game/2
+-spec new_uci_game(pid(), binbo_server:uci_game_opts()) -> binbo_server:new_uci_game_ret().
+new_uci_game(Pid, Opts) ->
+	binbo_server:new_uci_game(Pid, Opts).
+
+%% uci_mode/2
+uci_mode(Pid) ->
+	binbo_server:uci_mode(Pid).
