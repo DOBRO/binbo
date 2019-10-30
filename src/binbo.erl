@@ -26,7 +26,7 @@
 -export([stop_server/1]).
 -export([new_uci_game/2]).
 -export([uci_command/2]).
--export([uci_mode/1]).
+-export([uci_mode/1, uci_bestmove/2]).
 -export([set_uci_logger/2]).
 
 -define(APPLICATION, ?MODULE).
@@ -177,6 +177,11 @@ uci_command(Pid, Command) ->
 %% @todo Add spec
 uci_mode(Pid) ->
 	binbo_server:uci_mode(Pid).
+
+%% uci_bestmove/2
+%% @todo Add spec
+uci_bestmove(Pid, Opts) ->
+	binbo_server:uci_bestmove(Pid, Opts).
 
 %% set_uci_logger/2
 %% @todo Add spec

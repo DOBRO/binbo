@@ -23,7 +23,7 @@
 -export([all_legal_moves/2]).
 -export([new_uci_game/2]).
 -export([uci_command/2]).
--export([uci_mode/1]).
+-export([uci_mode/1, uci_bestmove/2]).
 -export([set_uci_logger/2]).
 
 %%% gen_server export.
@@ -207,9 +207,13 @@ handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Pref
 	State = case PrefixHandler(Data, Prefix, PrefixSize) of
 		skip ->
 			State0;
-		reply_ok ->
+		Reply ->
+			Result = case Reply of
+				reply_ok -> ok;
+				{reply, Val} -> {ok, Val}
+			end,
 			ReplyTo = State0#state.uci_from,
-			_ = gen_server:reply(ReplyTo, ok), % reply here
+			_ = gen_server:reply(ReplyTo, Result), % reply here
 			State0#state{
 				uci_from = undefined,
 				uci_ready = true,
@@ -307,6 +311,12 @@ uci_command(Pid, Command) ->
 %% @todo Add spec
 uci_mode(Pid) ->
 	uci_command(Pid, binbo_uci:command_spec_uci()).
+
+%% uci_bestmove/2
+%% @todo Add spec
+uci_bestmove(Pid, Opts) ->
+	uci_command(Pid, binbo_uci:command_spec_bestmove(Opts)).
+
 
 %% set_uci_logger/2
 %% @todo Add spec
