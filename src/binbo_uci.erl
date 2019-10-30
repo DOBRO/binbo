@@ -18,6 +18,7 @@
 -export([send_command/2]).
 -export([command_spec_uci/0]).
 -export([simple_prefix_handler/3]).
+-export([default_logger/1]).
 
 %%%------------------------------------------------------------------------------
 %%%   Types
@@ -41,6 +42,7 @@ open_port(EnginePath) ->
 	end.
 
 %% send_command/2
+%% @todo Add spec
 send_command(Port, Command) ->
 	erlang:port_command(Port, [Command, $\n]).
 
@@ -49,13 +51,19 @@ send_command(Port, Command) ->
 command_spec_uci() ->
 	{<<"uci">>, <<"uciok">>, fun ?MODULE:simple_prefix_handler/3}.
 
+%% simple_prefix_handler/3
 %% @todo Add spec
 simple_prefix_handler(Data, Prefix, PrefixSize) ->
 	Binaries = split_data(Data),
 	case prefix_match_any(Binaries, Prefix, PrefixSize) of
-		match   -> reply;
+		match   -> reply_ok;
 		nomatch -> skip
 	end.
+
+-spec default_logger(binary()) -> ok.
+default_logger(Data) ->
+	_ = io:format("--- UCI LOG BEGIN---~n~s---UCI LOG END---~n", [Data]),
+	ok.
 
 
 %%%------------------------------------------------------------------------------

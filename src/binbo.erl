@@ -25,7 +25,9 @@
 -export([all_legal_moves/1, all_legal_moves/2]).
 -export([stop_server/1]).
 -export([new_uci_game/2]).
+-export([uci_command/2]).
 -export([uci_mode/1]).
+-export([set_uci_logger/2]).
 
 -define(APPLICATION, ?MODULE).
 
@@ -166,6 +168,17 @@ all_legal_moves(Pid, MoveType) ->
 new_uci_game(Pid, Opts) ->
 	binbo_server:new_uci_game(Pid, Opts).
 
-%% uci_mode/2
+%% uci_command/2
+%% @todo Add spec
+uci_command(Pid, Command) ->
+	binbo_server:uci_command(Pid, Command).
+
+%% uci_mode/1
+%% @todo Add spec
 uci_mode(Pid) ->
 	binbo_server:uci_mode(Pid).
+
+%% set_uci_logger/2
+%% @todo Add spec
+set_uci_logger(Pid, Logger) ->
+	binbo_server:set_uci_logger(Pid, Logger).

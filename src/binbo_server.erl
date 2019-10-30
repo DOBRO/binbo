@@ -22,7 +22,9 @@
 -export([game_state/1, game_status/1, game_draw/2]).
 -export([all_legal_moves/2]).
 -export([new_uci_game/2]).
+-export([uci_command/2]).
 -export([uci_mode/1]).
+-export([set_uci_logger/2]).
 
 %%% gen_server export.
 -export([init/1]).
@@ -68,7 +70,8 @@
 	uci_from = undefined :: undefined | from(),
 	uci_wait_prefix = undefined :: undefined | binary(),
 	uci_wait_prefix_size = undefined :: undefined | pos_integer(),
-	uci_wait_prefix_handler = undefined :: undefined | fun()
+	uci_wait_prefix_handler = undefined :: undefined | fun(),
+	uci_logger = undefined :: undefined | default | fun()
 }).
 -type state() :: #state{}.
 
@@ -172,27 +175,27 @@ handle_call({new_uci_game, Opts}, _From, State0) ->
 		{error, _} = Error ->
 			{reply, Error, State0}
 	end;
-handle_call({uci_command, Command, WaitPrefix, PrefixHandler}, From, #state{uci_port = Port} = State0) when is_port(Port) ->
-	_ = send_uci_command(Port, Command),
-	case erlang:is_binary(WaitPrefix) of
-		true ->
-			State = State0#state{
-				uci_from = From,
-				uci_ready = false,
-				uci_wait_prefix = WaitPrefix,
-				uci_wait_prefix_size = erlang:byte_size(WaitPrefix),
-				uci_wait_prefix_handler = PrefixHandler
-			},
-			{noreply, State};
-		false ->
-			{reply, ok, State0}
-	end;
-handle_call({uci_command, _}, _From, State0) ->
+handle_call({uci_command, _}, _From, #state{uci_port = undefined} = State0) ->
 	{reply, {error, uci_port_not_open}, State0};
+handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uci_port = Port} = State0) ->
+	_ = uci_port_command(Port, Command),
+	State = State0#state{
+		uci_from = From,
+		uci_ready = false,
+		uci_wait_prefix = WaitPrefix,
+		uci_wait_prefix_size = erlang:byte_size(WaitPrefix),
+		uci_wait_prefix_handler = PrefixHandler
+	},
+	{noreply, State};
+handle_call({uci_command, Command}, _From, #state{uci_port = Port} = State0) ->
+	_ = uci_port_command(Port, Command),
+	{reply, ok, State0};
 handle_call(_Msg, _From, State) ->
 	{reply, ignored, State}.
 
 %% handle_cast/2
+handle_cast({set_uci_logger, Logger}, State0) ->
+	{noreply, State0#state{uci_logger = Logger}};
 handle_cast(stop, State) ->
 	{stop, normal, State};
 handle_cast(_Msg, State) ->
@@ -200,14 +203,13 @@ handle_cast(_Msg, State) ->
 
 %% handle_info/2
 handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
-	io:format("From port: ~p~n~n", [Data]),
 	#state{uci_wait_prefix_size = PrefixSize, uci_wait_prefix_handler = PrefixHandler} = State0,
 	State = case PrefixHandler(Data, Prefix, PrefixSize) of
 		skip ->
 			State0;
-		reply ->
+		reply_ok ->
 			ReplyTo = State0#state.uci_from,
-			_ = gen_server:reply(ReplyTo, {ok, Prefix}), % reply here
+			_ = gen_server:reply(ReplyTo, ok), % reply here
 			State0#state{
 				uci_from = undefined,
 				uci_ready = true,
@@ -216,7 +218,11 @@ handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Pref
 				uci_wait_prefix_handler = undefined
 			}
 	end,
+	_ = maybe_log_uci(State0#state.uci_logger, Data),
 	{noreply, State};
+handle_info({Port, {data, Data}}, #state{uci_port = Port} = State0) ->
+	_ = maybe_log_uci(State0#state.uci_logger, Data),
+	{noreply, State0};
 handle_info({'EXIT', Port, _}, #state{uci_port = Port} = State0) ->
 	% @todo Handle port exit
 	State = State0#state{uci_port = undefined},
@@ -292,10 +298,20 @@ all_legal_moves(Pid, MoveType) ->
 new_uci_game(Pid, Opts) ->
 	call(Pid, {new_uci_game, Opts}).
 
-%% uci_mode/2
-uci_mode(Pid) ->
-	call_uci(Pid, binbo_uci:command_spec_uci()).
+%% uci_command/2
+%% @todo Add spec
+uci_command(Pid, Command) ->
+	call_uci(Pid, Command).
 
+%% uci_mode/1
+%% @todo Add spec
+uci_mode(Pid) ->
+	uci_command(Pid, binbo_uci:command_spec_uci()).
+
+%% set_uci_logger/2
+%% @todo Add spec
+set_uci_logger(Pid, Logger) ->
+	gen_server:cast(Pid, {set_uci_logger, Logger}).
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
@@ -306,8 +322,8 @@ call(Pid, Msg) ->
 	gen_server:call(Pid, Msg).
 
 %% call_uci/2
-call_uci(Pid, {Command, WaitPrefix, WaitPrefixHandler}) ->
-	call(Pid, {uci_command, Command, WaitPrefix, WaitPrefixHandler}).
+call_uci(Pid, CommandSpec) ->
+	call(Pid, {uci_command, CommandSpec}).
 
 %% init_uci_game/2
 -spec init_uci_game(uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error()}.
@@ -365,6 +381,17 @@ maybe_open_uci_port(EnginePath, #state{uci_port = OldPort} = State) ->
 open_uci_port(EnginePath) ->
 	binbo_uci:open_port(EnginePath).
 
-%% send_uci_command/2
-send_uci_command(Port, Command) ->
+%% uci_port_command/2
+%% @todo Add spec
+uci_port_command(Port, Command) ->
 	binbo_uci:send_command(Port, Command).
+
+%% @todo Add spec
+maybe_log_uci(Logger, Data) ->
+	_ = case Logger of
+		undefined -> ok;
+		default -> binbo_uci:default_logger(Data);
+		_ when is_function(Logger) -> Logger(Data);
+		_ -> ok
+	end,
+	ok.
