@@ -24,7 +24,7 @@
 -export([new_uci_game/2]).
 -export([uci_command/2]).
 -export([uci_mode/1, uci_bestmove/2]).
--export([set_uci_logger/2]).
+-export([set_uci_handler/2]).
 
 %%% gen_server export.
 -export([init/1]).
@@ -71,7 +71,7 @@
 	uci_wait_prefix = undefined :: undefined | binary(),
 	uci_wait_prefix_size = undefined :: undefined | pos_integer(),
 	uci_wait_prefix_handler = undefined :: undefined | fun(),
-	uci_logger = undefined :: undefined | default | fun()
+	uci_handler = undefined :: undefined | default | fun()
 }).
 -type state() :: #state{}.
 
@@ -194,8 +194,8 @@ handle_call(_Msg, _From, State) ->
 	{reply, ignored, State}.
 
 %% handle_cast/2
-handle_cast({set_uci_logger, Logger}, State0) ->
-	{noreply, State0#state{uci_logger = Logger}};
+handle_cast({set_uci_handler, Handler}, State0) ->
+	{noreply, State0#state{uci_handler = Handler}};
 handle_cast(stop, State) ->
 	{stop, normal, State};
 handle_cast(_Msg, State) ->
@@ -222,10 +222,10 @@ handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Pref
 				uci_wait_prefix_handler = undefined
 			}
 	end,
-	_ = maybe_log_uci(State0#state.uci_logger, Data),
+	_ = maybe_handle_uci_message(State0#state.uci_handler, Data),
 	{noreply, State};
 handle_info({Port, {data, Data}}, #state{uci_port = Port} = State0) ->
-	_ = maybe_log_uci(State0#state.uci_logger, Data),
+	_ = maybe_handle_uci_message(State0#state.uci_handler, Data),
 	{noreply, State0};
 handle_info({'EXIT', Port, _}, #state{uci_port = Port} = State0) ->
 	% @todo Handle port exit
@@ -318,10 +318,10 @@ uci_bestmove(Pid, Opts) ->
 	uci_command(Pid, binbo_uci:command_spec_bestmove(Opts)).
 
 
-%% set_uci_logger/2
+%% set_uci_handler/2
 %% @todo Add spec
-set_uci_logger(Pid, Logger) ->
-	gen_server:cast(Pid, {set_uci_logger, Logger}).
+set_uci_handler(Pid, Handler) ->
+	gen_server:cast(Pid, {set_uci_handler, Handler}).
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
@@ -397,11 +397,11 @@ uci_port_command(Port, Command) ->
 	binbo_uci:send_command(Port, Command).
 
 %% @todo Add spec
-maybe_log_uci(Logger, Data) ->
-	_ = case Logger of
+maybe_handle_uci_message(Handler, Data) ->
+	_ = case Handler of
 		undefined -> ok;
-		default -> binbo_uci:default_logger(Data);
-		_ when is_function(Logger) -> Logger(Data);
+		default -> binbo_uci:default_handler(Data);
+		_ when is_function(Handler) -> Handler(Data);
 		_ -> ok
 	end,
 	ok.

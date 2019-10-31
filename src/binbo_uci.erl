@@ -19,7 +19,7 @@
 -export([command_spec_uci/0, command_spec_bestmove/1]).
 -export([simple_prefix_handler/3]).
 -export([bestmove_prefix_handler/3]).
--export([default_logger/1]).
+-export([default_handler/1]).
 
 %%%------------------------------------------------------------------------------
 %%%   Types
@@ -76,9 +76,9 @@ bestmove_prefix_handler(Data, Prefix, PrefixSize) ->
 		nomatch    -> skip
 	end.
 
-%% default_logger/1
--spec default_logger(binary()) -> ok.
-default_logger(Data) ->
+%% default_handler/1
+-spec default_handler(binary()) -> ok.
+default_handler(Data) ->
 	_ = io:format("~n--- UCI LOG BEGIN ---~n~s--- UCI LOG END ---~n", [Data]),
 	ok.
 
