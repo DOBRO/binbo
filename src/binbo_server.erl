@@ -195,7 +195,18 @@ handle_call(_Msg, _From, State) ->
 
 %% handle_cast/2
 handle_cast({set_uci_handler, Handler}, State0) ->
-	{noreply, State0#state{uci_handler = Handler}};
+	NewHandler = case Handler of
+		default ->
+			fun binbo_uci:default_handler/1;
+		_ when is_function(Handler) ->
+			case erlang:fun_info(Handler, arity) of
+				{arity,1} -> Handler;
+				_ -> undefined
+			end;
+		_ ->
+			undefined
+	end,
+	{noreply, State0#state{uci_handler = NewHandler}};
 handle_cast(stop, State) ->
 	{stop, normal, State};
 handle_cast(_Msg, State) ->
@@ -398,10 +409,7 @@ uci_port_command(Port, Command) ->
 
 %% @todo Add spec
 maybe_handle_uci_message(Handler, Data) ->
-	_ = case Handler of
-		undefined -> ok;
-		default -> binbo_uci:default_handler(Data);
-		_ when is_function(Handler) -> Handler(Data);
-		_ -> ok
-	end,
-	ok.
+	case Handler of
+		undefined -> undefined;
+		_ -> Handler(Data)
+	end.
