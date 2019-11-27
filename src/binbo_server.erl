@@ -54,12 +54,14 @@
 -type load_pgn_ret() :: {ok, game_status()} | {error, binbo_game:load_pgn_error()}.
 -type load_pgn_file_ret() :: {ok, game_status()} | {error, any()}.
 -type all_legal_moves_ret() :: binbo_game:all_legal_moves_ret().
+-type uci_bestmove_ret() :: {ok, binary()} | {error, term()}.
 -type engine_path() :: binbo_uci:engine_path().
 -type uci_game_opts() :: #{
 	engine_path := engine_path(),
 	fen => fen()
 }.
 -type init_uci_game_error() :: {game_over_with_status, game_status()} | could_not_open_port.
+-type uci_handler() :: undefined | default | fun((binary()) -> term()).
 
 %% @todo Add comments for record fields
 -record(state, {
@@ -70,7 +72,7 @@
 	uci_wait_prefix = undefined :: undefined | binary(),
 	uci_wait_prefix_size = undefined :: undefined | pos_integer(),
 	uci_wait_prefix_handler = undefined :: undefined | fun(),
-	uci_handler = undefined :: undefined | default | fun()
+	uci_handler = undefined :: uci_handler()
 }).
 -type state() :: #state{}.
 
@@ -79,8 +81,9 @@
 -export_type([game_state_ret/0, game_status_ret/0, game_draw_ret/0]).
 -export_type([all_legal_moves_ret/0]).
 -export_type([stop_ret/0]).
--export_type([new_uci_game_ret/0]).
+-export_type([new_uci_game_ret/0, uci_bestmove_ret/0]).
 -export_type([uci_game_opts/0]).
+-export_type([uci_handler/0]).
 
 %%%------------------------------------------------------------------------------
 %%% start/stop
@@ -313,23 +316,23 @@ new_uci_game(Pid, Opts) ->
 	call(Pid, {new_uci_game, Opts}).
 
 %% uci_command/2
-%% @todo Add spec
+-spec uci_command(pid(), iodata() | binbo_uci:command_spec()) -> term().
 uci_command(Pid, Command) ->
 	call_uci(Pid, Command).
 
 %% uci_mode/1
-%% @todo Add spec
+-spec uci_mode(pid()) -> ok | {error, term()}.
 uci_mode(Pid) ->
 	uci_command(Pid, binbo_uci:command_spec_uci()).
 
 %% uci_bestmove/2
-%% @todo Add spec
+-spec uci_bestmove(pid(), binbo_uci:bestmove_opts()) -> uci_bestmove_ret().
 uci_bestmove(Pid, Opts) ->
 	uci_command(Pid, binbo_uci:command_spec_bestmove(Opts)).
 
 
 %% set_uci_handler/2
-%% @todo Add spec
+-spec set_uci_handler(pid(), uci_handler()) -> ok.
 set_uci_handler(Pid, Handler) ->
 	gen_server:cast(Pid, {set_uci_handler, Handler}).
 
@@ -338,10 +341,12 @@ set_uci_handler(Pid, Handler) ->
 %%%------------------------------------------------------------------------------
 
 %% call/2
+-spec call(pid(), term()) -> term().
 call(Pid, Msg) ->
 	gen_server:call(Pid, Msg).
 
 %% call_uci/2
+-spec call_uci(pid(), iodata() | binbo_uci:command_spec()) -> term().
 call_uci(Pid, CommandSpec) ->
 	call(Pid, {uci_command, CommandSpec}).
 
@@ -420,11 +425,12 @@ open_uci_port(EnginePath) ->
 	binbo_uci:open_port(EnginePath).
 
 %% uci_port_command/2
-%% @todo Add spec
+-spec uci_port_command(port(), iodata()) -> ok.
 uci_port_command(Port, Command) ->
 	binbo_uci:send_command(Port, Command).
 
-%% @todo Add spec
+%% maybe_handle_uci_message/2
+-spec maybe_handle_uci_message(uci_handler(), binary()) -> term().
 maybe_handle_uci_message(Handler, Data) ->
 	case Handler of
 		undefined -> undefined;

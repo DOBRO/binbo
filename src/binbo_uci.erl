@@ -25,9 +25,17 @@
 %%%   Types
 %%%------------------------------------------------------------------------------
 -type engine_path() :: binary() | string().
+-type bestmove_opt_key() :: depth | wtime | btime | winc | binc.
+-type bestmove_opt_val() :: string() | binary() | non_neg_integer().
+-type bestmove_opts() :: #{
+	bestmove_opt_key() => bestmove_opt_val()
+}.
+-type command_spec() :: {binary(), binary(), fun()}.
 
 
 -export_type([engine_path/0]).
+-export_type([command_spec/0]).
+-export_type([bestmove_opts/0]).
 
 %%%------------------------------------------------------------------------------
 %%%   API
@@ -43,23 +51,24 @@ open_port(EnginePath) ->
 	end.
 
 %% send_command/2
-%% @todo Add spec
+-spec send_command(port(), iodata()) -> ok.
 send_command(Port, Command) ->
-	erlang:port_command(Port, [Command, $\n]).
+	_ = erlang:port_command(Port, [Command, $\n]),
+	ok.
 
 %% command_spec_uci/0
-%% @todo Add spec
+-spec command_spec_uci() -> command_spec().
 command_spec_uci() ->
 	{<<"uci">>, <<"uciok">>, fun ?MODULE:simple_prefix_handler/3}.
 
 %% command_spec_bestmove/1
-%% @todo Add spec
+-spec command_spec_bestmove(bestmove_opts()) -> command_spec().
 command_spec_bestmove(Opts) ->
 	Command = get_bestmove_cmd(Opts),
 	{Command, <<"bestmove ">>, fun ?MODULE:bestmove_prefix_handler/3}.
 
 %% simple_prefix_handler/3
-%% @todo Add spec
+-spec simple_prefix_handler(binary(), binary(), pos_integer()) -> reply_ok | skip.
 simple_prefix_handler(Data, Prefix, PrefixSize) ->
 	Binaries = split_data(Data),
 	case prefix_match_any(Binaries, Prefix, PrefixSize) of
@@ -68,7 +77,7 @@ simple_prefix_handler(Data, Prefix, PrefixSize) ->
 	end.
 
 %% simple_prefix_handler/3
-%% @todo Add spec
+-spec bestmove_prefix_handler(binary(), binary(), pos_integer()) -> {reply, binary()} | skip.
 bestmove_prefix_handler(Data, Prefix, PrefixSize) ->
 	Binaries = split_data(Data),
 	case prefix_match_any(Binaries, Prefix, PrefixSize) of
@@ -87,7 +96,8 @@ default_handler(Data) ->
 %%%   Internal functions
 %%%------------------------------------------------------------------------------
 
-%% @todo Add spec
+%% prefix_match_any/3
+-spec prefix_match_any([binary()], binary(), pos_integer()) -> {match, binary()} | nomatch.
 prefix_match_any([], _, _) ->
 	nomatch;
 prefix_match_any([B|Tail], Prefix, PrefixSize) ->
@@ -98,16 +108,19 @@ prefix_match_any([B|Tail], Prefix, PrefixSize) ->
 			prefix_match_any(Tail, Prefix, PrefixSize)
 	end.
 
-%% @todo Add spec
+%% split_data/1
+-spec split_data(binary()) -> [binary()].
 split_data(Data) ->
 	uef_bin:split(Data, <<"\n">>).
 
-%% @todo Add spec
+%% get_bestmove_cmd/1
+-spec get_bestmove_cmd(bestmove_opts()) -> iodata().
 get_bestmove_cmd(Opts) ->
 	Keys = [depth, wtime, btime, winc, binc],
 	get_bestmove_cmd(<<"go">>, Opts, Keys).
 
-%% @todo Add spec
+%% get_bestmove_cmd/3
+-spec get_bestmove_cmd(iodata(), bestmove_opts(), [bestmove_opt_key()]) -> iodata().
 get_bestmove_cmd(Cmd, _, []) ->
 	Cmd;
 get_bestmove_cmd(Cmd, Opts, [Key|Tail]) ->

@@ -169,21 +169,21 @@ new_uci_game(Pid, Opts) ->
 	binbo_server:new_uci_game(Pid, Opts).
 
 %% uci_command/2
-%% @todo Add spec
+-spec uci_command(pid(), iodata()) -> term().
 uci_command(Pid, Command) ->
 	binbo_server:uci_command(Pid, Command).
 
 %% uci_mode/1
-%% @todo Add spec
+-spec uci_mode(pid()) -> ok | {error, term()}.
 uci_mode(Pid) ->
 	binbo_server:uci_mode(Pid).
 
 %% uci_bestmove/2
-%% @todo Add spec
+-spec uci_bestmove(pid(), binbo_uci:bestmove_opts()) -> binbo_server:uci_bestmove_ret().
 uci_bestmove(Pid, Opts) ->
 	binbo_server:uci_bestmove(Pid, Opts).
 
 %% set_uci_handler/2
-%% @todo Add spec
+-spec set_uci_handler(pid(), binbo_server:uci_handler()) -> ok.
 set_uci_handler(Pid, Handler) ->
 	binbo_server:set_uci_handler(Pid, Handler).
