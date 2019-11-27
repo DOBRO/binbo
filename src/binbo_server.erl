@@ -115,16 +115,7 @@ init(_Args) ->
 	{ok, State}.
 
 %% handle_call/3
--spec handle_call({new_game, fen()}, from(), state()) -> {reply, new_game_ret(), state()}
-				; ({new_uci_game, uci_game_opts()}, from(), state()) -> {reply, new_uci_game_ret(), state()}
-				; ({game_move, sq | san, sq_move()}, from(), state()) -> {reply, game_move_ret(), state()}
-				; (game_state, from(), state()) -> {reply, game_state_ret(), state()}
-				; (game_status, from(), state()) -> {reply, game_status_ret(), state()}
-				; ({load_pgn, binary, binbo_pgn:pgn()}, from(), state()) -> {reply, load_pgn_ret(), state()}
-				; ({load_pgn, file, binbo_game:filename()}, from(), state()) -> {reply, load_pgn_file_ret(), state()}
-				; (get_fen, from(), state()) -> {reply, get_fen_ret(), state()}
-				; ({all_legal_moves, int | bin | str}, from(), state()) -> {reply, all_legal_moves_ret(), state()}
-				; ({game_draw, term()}, from(), state()) -> {reply, game_draw_ret(), state()}.
+-spec handle_call(term(), from(), state()) -> {reply, term(), state()} | {noreply, state()}.
 handle_call({new_game, Fen}, _From, State) ->
 	{Reply, State2} = case binbo_game:new(Fen) of
 		{ok, {Game, GameStatus}} ->
@@ -188,6 +179,7 @@ handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uc
 		uci_wait_prefix_size = erlang:byte_size(WaitPrefix),
 		uci_wait_prefix_handler = PrefixHandler
 	},
+	% Do NOT reply here. Reply later in handle_info/2.
 	{noreply, State};
 handle_call({uci_command, Command}, _From, #state{uci_port = Port} = State0) ->
 	_ = uci_port_command(Port, Command),
