@@ -64,7 +64,6 @@
 %% @todo Add comments for record fields
 -record(state, {
 	game = undefined :: undefined | bb_game(),
-	uci_path = undefined :: undefined | engine_path(),
 	uci_port = undefined :: undefined | port(),
 	uci_ready = false :: boolean(),
 	uci_from = undefined :: undefined | from(),
@@ -172,8 +171,8 @@ handle_call({new_uci_game, Opts}, _From, State0) ->
 	case init_uci_game(Opts, State0) of
 		{ok, #state{game = Game} = State} ->
 			{reply, binbo_game:status(Game), State};
-		{error, _} = Error ->
-			{reply, Error, State0}
+		{error, Reason, State} ->
+			{reply, {error, Reason}, State}
 	end;
 handle_call({uci_command, _}, _From, #state{uci_port = undefined} = State0) ->
 	{reply, {error, uci_port_not_open}, State0};
@@ -347,55 +346,73 @@ call_uci(Pid, CommandSpec) ->
 	call(Pid, {uci_command, CommandSpec}).
 
 %% init_uci_game/2
--spec init_uci_game(uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error()}.
+-spec init_uci_game(uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error(), state()}.
 init_uci_game(Opts, State) ->
-	Steps = [fen, open_port],
+	Steps = [fen, close_port, open_port, uci_commands],
 	init_uci_game(Steps, Opts, State).
 
 %% init_uci_game/3
--spec init_uci_game([fen|open_port], uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error()}.
+-spec init_uci_game([fen|close_port|open_port|uci_commands], uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error(), state()}.
 init_uci_game([], _Opts, State) ->
 	{ok, State};
 init_uci_game([fen|Tail], Opts, State) ->
 	Fen = maps:get(fen, Opts, binbo_fen:initial()),
 	case binbo_game:new(Fen) of
 		{ok, {Game, GameStatus}} ->
+			State2 = State#state{game = Game},
 			case binbo_position:is_status_inprogress(GameStatus) of
 				true  ->
-					init_uci_game(Tail, Opts, State#state{game = Game});
+					init_uci_game(Tail, Opts, State2);
 				false ->
-					{error, {game_over_with_status, GameStatus}}
+					{error, {game_over_with_status, GameStatus}, State2}
 			end;
-		Error ->
-			Error
-	end;
-init_uci_game([open_port|Tail], Opts, State) ->
-	EnginePath = maps:get(engine_path, Opts, ""),
-	case maybe_open_uci_port(EnginePath, State) of
-		{ok, Port} ->
-			init_uci_game(Tail, Opts, State#state{uci_port = Port, uci_path = EnginePath});
-		{already_open, _} ->
-			init_uci_game(Tail, Opts, State);
 		{error, Reason} ->
-			{error, {could_not_open_port, Reason}}
-	end.
+			{error, Reason, State}
+	end;
+init_uci_game([close_port|Tail], Opts, State) ->
+	#state{uci_port = Port} = State,
+	_ = maybe_close_port(Port),
+	State2 = state_without_uci_port(State),
+	init_uci_game(Tail, Opts, State2);
+init_uci_game([open_port|Tail], Opts, State) ->
+	EnginePath = maps:get(engine_path, Opts, undefined),
+	case open_uci_port(EnginePath) of
+		{ok, Port} ->
+			State2 = state_with_uci_port(State, Port),
+			init_uci_game(Tail, Opts, State2);
+		{error, Reason} ->
+			{error, {could_not_open_port, Reason}, State}
+	end;
+init_uci_game([uci_commands|Tail], Opts, State) ->
+	#state{uci_port = Port, game = Game} = State,
+	{ok, Fen} = binbo_game:get_fen(Game),
+	Command = [
+		"uci", $\n,
+		"ucinewgame", $\n,
+		"position fen ", Fen
+	],
+	_ = uci_port_command(Port, Command),
+	init_uci_game(Tail, Opts, State).
 
-%% maybe_open_uci_port/2
--spec maybe_open_uci_port(engine_path(), state()) -> {ok, port()} | {already_open, port()} | {error, any()}.
-maybe_open_uci_port(EnginePath, #state{uci_port = OldPort} = State) ->
-	case erlang:port_info(OldPort, id) of
-		undefined ->
-			open_uci_port(EnginePath);
-		_ ->
-			#state{uci_path = OldPath} = State,
-			case (OldPath =/= undefined andalso EnginePath =:= OldPath) of
-				true  ->
-					{already_open, OldPort};
-				false ->
-					_ = erlang:port_close(OldPort),
-					open_uci_port(EnginePath)
-			end
-	end.
+
+%% state_with_uci_port/1
+-spec state_with_uci_port(state(), port()) -> state().
+state_with_uci_port(State, Port) ->
+	State#state{uci_port = Port}.
+
+%% state_without_uci_port/1
+-spec state_without_uci_port(state()) -> state().
+state_without_uci_port(State) ->
+	State#state{uci_port = undefined}.
+
+%% maybe_close_port/1
+-spec maybe_close_port(term()) -> ok.
+maybe_close_port(Port) ->
+	_ = case erlang:port_info(Port, id) of
+		undefined -> undefined;
+		_ -> erlang:port_close(Port)
+	end,
+	ok.
 
 %% open_uci_port/1
 -spec open_uci_port(engine_path()) -> {ok, port()} | {error, any()}.
