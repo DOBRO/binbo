@@ -169,7 +169,7 @@ new_uci_game(Pid, Opts) ->
 	binbo_server:new_uci_game(Pid, Opts).
 
 %% uci_command/2
--spec uci_command(pid(), iodata()) -> term().
+-spec uci_command(pid(), iodata()) -> ok | {error, term()}.
 uci_command(Pid, Command) ->
 	binbo_server:uci_command(Pid, Command).
 

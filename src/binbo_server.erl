@@ -316,7 +316,7 @@ new_uci_game(Pid, Opts) ->
 	call(Pid, {new_uci_game, Opts}).
 
 %% uci_command/2
--spec uci_command(pid(), iodata() | binbo_uci:command_spec()) -> term().
+-spec uci_command(pid(), iodata() | binbo_uci:command_spec()) -> ok | {ok, term()} | {error, term()}.
 uci_command(Pid, Command) ->
 	call_uci(Pid, Command).
 
