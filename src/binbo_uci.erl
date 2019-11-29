@@ -25,7 +25,7 @@
 %%%   Types
 %%%------------------------------------------------------------------------------
 -type engine_path() :: binary() | string().
--type bestmove_opt_key() :: depth | wtime | btime | winc | binc.
+-type bestmove_opt_key() :: depth | wtime | btime | winc | binc | movestogo | nodes | movetime.
 -type bestmove_opt_val() :: string() | binary() | non_neg_integer().
 -type bestmove_opts() :: #{
 	bestmove_opt_key() => bestmove_opt_val()
@@ -116,7 +116,16 @@ split_data(Data) ->
 %% get_bestmove_cmd/1
 -spec get_bestmove_cmd(bestmove_opts()) -> iodata().
 get_bestmove_cmd(Opts) ->
-	Keys = [depth, wtime, btime, winc, binc],
+	Keys = [
+		depth,		% depth <x> (search x plies only)
+		wtime,		% wtime <x> (white has x msec left on the clock)
+		btime,		% btime <x> (black has x msec left on the clock)
+		winc,		% winc <x> (white increment per move in mseconds if x > 0)
+		binc,		% binc <x> (black increment per move in mseconds if x > 0)
+		movestogo,	% movestogo <x> (there are x moves to the next time control)
+		nodes,		% nodes <x> (search x nodes only)
+		movetime	% movetime <x> (search exactly x mseconds)
+	],
 	get_bestmove_cmd(<<"go">>, Opts, Keys).
 
 %% get_bestmove_cmd/3
