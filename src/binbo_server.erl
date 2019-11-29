@@ -67,7 +67,6 @@
 -record(state, {
 	game = undefined :: undefined | bb_game(),
 	uci_port = undefined :: undefined | port(),
-	uci_ready = false :: boolean(),
 	uci_from = undefined :: undefined | from(),
 	uci_wait_prefix = undefined :: undefined | binary(),
 	uci_wait_prefix_size = undefined :: undefined | pos_integer(),
@@ -174,7 +173,6 @@ handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uc
 	_ = uci_port_command(Port, Command),
 	State = State0#state{
 		uci_from = From,
-		uci_ready = false,
 		uci_wait_prefix = WaitPrefix,
 		uci_wait_prefix_size = erlang:byte_size(WaitPrefix),
 		uci_wait_prefix_handler = PrefixHandler
@@ -221,7 +219,6 @@ handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Pref
 			_ = gen_server:reply(ReplyTo, Result), % reply here
 			State0#state{
 				uci_from = undefined,
-				uci_ready = true,
 				uci_wait_prefix = undefined,
 				uci_wait_prefix_size = undefined,
 				uci_wait_prefix_handler = undefined
