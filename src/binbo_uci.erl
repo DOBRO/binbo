@@ -134,7 +134,7 @@ get_bestmove_cmd(Cmd, _, []) ->
 	Cmd;
 get_bestmove_cmd(Cmd, Opts, [Key|Tail]) ->
 	Cmd2 = case Opts of
-		#{Key := Val} -> [Cmd, $\s, to_iodata(Val)];
+		#{Key := Val} -> [Cmd, $\s, to_iodata(Key), $\s, to_iodata(Val)];
 		_ -> Cmd
 	end,
 	get_bestmove_cmd(Cmd2, Opts, Tail).
