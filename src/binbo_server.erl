@@ -23,7 +23,7 @@
 -export([all_legal_moves/2]).
 -export([new_uci_game/2]).
 -export([uci_command/2]).
--export([uci_mode/1, uci_bestmove/2]).
+-export([uci_mode/1, uci_bestmove/3]).
 -export([set_uci_handler/2]).
 
 %%% gen_server export.
@@ -307,7 +307,12 @@ new_uci_game(Pid, Opts) ->
 %% uci_command/2
 -spec uci_command(pid(), iodata() | binbo_uci:command_spec()) -> ok | {ok, term()} | {error, term()}.
 uci_command(Pid, Command) ->
-	call_uci(Pid, Command).
+	uci_command(Pid, Command, 5000).
+
+%% uci_command/3
+-spec uci_command(pid(), iodata() | binbo_uci:command_spec(), timeout()) -> ok | {ok, term()} | {error, term()}.
+uci_command(Pid, Command, Timeout) ->
+	call_uci(Pid, Command, Timeout).
 
 %% uci_mode/1
 -spec uci_mode(pid()) -> ok | {error, term()}.
@@ -315,9 +320,9 @@ uci_mode(Pid) ->
 	uci_command(Pid, binbo_uci:command_spec_uci()).
 
 %% uci_bestmove/2
--spec uci_bestmove(pid(), binbo_uci:bestmove_opts()) -> uci_bestmove_ret().
-uci_bestmove(Pid, Opts) ->
-	uci_command(Pid, binbo_uci:command_spec_bestmove(Opts)).
+-spec uci_bestmove(pid(), binbo_uci:bestmove_opts(), timeout()) -> uci_bestmove_ret().
+uci_bestmove(Pid, Opts, Timeout) ->
+	uci_command(Pid, binbo_uci:command_spec_bestmove(Opts), Timeout).
 
 
 %% set_uci_handler/2
@@ -332,12 +337,17 @@ set_uci_handler(Pid, Handler) ->
 %% call/2
 -spec call(pid(), term()) -> term().
 call(Pid, Msg) ->
-	gen_server:call(Pid, Msg).
+	call(Pid, Msg, 5000).
+
+%% call/3
+-spec call(pid(), term(), timeout()) -> term().
+call(Pid, Msg, Timeout) ->
+	gen_server:call(Pid, Msg, Timeout).
 
 %% call_uci/2
--spec call_uci(pid(), iodata() | binbo_uci:command_spec()) -> term().
-call_uci(Pid, CommandSpec) ->
-	call(Pid, {uci_command, CommandSpec}).
+-spec call_uci(pid(), iodata() | binbo_uci:command_spec(), timeout()) -> term().
+call_uci(Pid, CommandSpec, Timeout) ->
+	call(Pid, {uci_command, CommandSpec}, Timeout).
 
 %% init_uci_game/2
 -spec init_uci_game(uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error(), state()}.
