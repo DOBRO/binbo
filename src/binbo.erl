@@ -26,7 +26,7 @@
 -export([stop_server/1]).
 -export([new_uci_game/2]).
 -export([uci_command/2]).
--export([uci_mode/1, uci_bestmove/2, uci_bestmove/3]).
+-export([uci_mode/1, uci_bestmove/1, uci_bestmove/2]).
 -export([set_uci_handler/2]).
 
 -define(APPLICATION, ?MODULE).
@@ -178,15 +178,15 @@ uci_command(Pid, Command) ->
 uci_mode(Pid) ->
 	binbo_server:uci_mode(Pid).
 
+%% uci_bestmove/1
+-spec uci_bestmove(pid()) -> binbo_server:uci_bestmove_ret().
+uci_bestmove(Pid) ->
+	binbo_server:uci_bestmove(Pid, #{}).
+
 %% uci_bestmove/2
 -spec uci_bestmove(pid(), binbo_uci:bestmove_opts()) -> binbo_server:uci_bestmove_ret().
 uci_bestmove(Pid, Opts) ->
-	uci_bestmove(Pid, Opts, 5000).
-
-%% uci_bestmove/3
--spec uci_bestmove(pid(), binbo_uci:bestmove_opts(), timeout()) -> binbo_server:uci_bestmove_ret().
-uci_bestmove(Pid, Opts, Timeout) ->
-	binbo_server:uci_bestmove(Pid, Opts, Timeout).
+	binbo_server:uci_bestmove(Pid, Opts).
 
 %% set_uci_handler/2
 -spec set_uci_handler(pid(), binbo_server:uci_handler()) -> ok.

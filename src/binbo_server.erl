@@ -23,7 +23,7 @@
 -export([all_legal_moves/2]).
 -export([new_uci_game/2]).
 -export([uci_command/2]).
--export([uci_mode/1, uci_bestmove/3]).
+-export([uci_mode/1, uci_bestmove/2]).
 -export([set_uci_handler/2]).
 
 %%% gen_server export.
@@ -320,10 +320,20 @@ uci_mode(Pid) ->
 	uci_command(Pid, binbo_uci:command_spec_uci()).
 
 %% uci_bestmove/2
--spec uci_bestmove(pid(), binbo_uci:bestmove_opts(), timeout()) -> uci_bestmove_ret().
-uci_bestmove(Pid, Opts, Timeout) ->
-	uci_command(Pid, binbo_uci:command_spec_bestmove(Opts), Timeout).
-
+-spec uci_bestmove(pid(), binbo_uci:bestmove_opts()) -> uci_bestmove_ret().
+uci_bestmove(Pid, Opts) ->
+	Movetime = binbo_uci:bestmove_search_time(Opts),
+	CommandSpec = binbo_uci:command_spec_bestmove(Opts, Movetime),
+	Timeout = case is_integer(Movetime) of
+		true  ->
+			% The engine searches the best move exactly Movetime milliseconds.
+			% That's why we add extra time (1000 milliseconds) to give a possibility for gen_server
+			% to receive the message from port after search and not to crash by timeout (Movetime)
+			(Movetime + 1000);
+		false ->
+			infinity
+	end,
+	uci_command(Pid, CommandSpec, Timeout).
 
 %% set_uci_handler/2
 -spec set_uci_handler(pid(), uci_handler()) -> ok.

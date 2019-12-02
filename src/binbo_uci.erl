@@ -16,22 +16,28 @@
 
 -export([open_port/1]).
 -export([send_command/2]).
--export([command_spec_uci/0, command_spec_bestmove/1]).
+-export([command_spec_uci/0, command_spec_bestmove/2]).
 -export([simple_prefix_handler/3]).
 -export([bestmove_prefix_handler/3]).
 -export([default_handler/1]).
+-export([bestmove_search_time/1]).
 
 %%%------------------------------------------------------------------------------
 %%%   Types
 %%%------------------------------------------------------------------------------
 -type engine_path() :: binary() | string().
 -type bestmove_opt_key() :: depth | wtime | btime | winc | binc | movestogo | nodes | movetime.
--type bestmove_opt_val() :: string() | binary() | non_neg_integer().
 -type bestmove_opts() :: #{
-	bestmove_opt_key() => bestmove_opt_val()
+	depth		=> pos_integer(),		% depth <x> (search x plies only)
+	wtime		=> non_neg_integer(),	% wtime <x> (white has x msec left on the clock)
+	btime		=> non_neg_integer(),	% btime <x> (black has x msec left on the clock)
+	winc		=> pos_integer(),		% winc <x> (white increment per move in mseconds if x > 0)
+	binc		=> pos_integer(),		% binc <x> (black increment per move in mseconds if x > 0)
+	movestogo	=> pos_integer(),		% movestogo <x> (there are x moves to the next time control, this will only be sent if x > 0, if you don't get this and get the wtime and btime it's sudden death)
+	nodes		=> pos_integer(),		% nodes <x> (search x nodes only)
+	movetime	=> pos_integer()		% movetime <x> (search exactly x mseconds)
 }.
 -type command_spec() :: {binary(), binary(), fun()}.
-
 
 -export_type([engine_path/0]).
 -export_type([command_spec/0]).
@@ -62,9 +68,12 @@ command_spec_uci() ->
 	{<<"uci">>, <<"uciok">>, fun ?MODULE:simple_prefix_handler/3}.
 
 %% command_spec_bestmove/1
--spec command_spec_bestmove(bestmove_opts()) -> command_spec().
-command_spec_bestmove(Opts) ->
-	Command = get_bestmove_cmd(Opts),
+-spec command_spec_bestmove(bestmove_opts(), pos_integer() | undefined) -> command_spec().
+command_spec_bestmove(Opts, Movetime) ->
+	Command = case is_integer(Movetime) of
+		true  -> get_bestmove_cmd(Opts#{movetime => Movetime});
+		false -> get_bestmove_cmd(Opts)
+	end,
 	{Command, <<"bestmove ">>, fun ?MODULE:bestmove_prefix_handler/3}.
 
 %% simple_prefix_handler/3
@@ -91,6 +100,15 @@ default_handler(Data) ->
 	_ = io:format("~n--- UCI LOG BEGIN ---~n~s--- UCI LOG END ---~n", [Data]),
 	ok.
 
+%% bestmove_search_time/2
+-spec bestmove_search_time(bestmove_opts()) -> pos_integer() | undefined.
+bestmove_search_time(Opts) ->
+	case Opts of
+		#{movetime := Movetime} when is_integer(Movetime) andalso (Movetime > 0) ->
+			Movetime;
+		_ ->
+			undefined
+	end.
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
@@ -116,16 +134,7 @@ split_data(Data) ->
 %% get_bestmove_cmd/1
 -spec get_bestmove_cmd(bestmove_opts()) -> iodata().
 get_bestmove_cmd(Opts) ->
-	Keys = [
-		depth,		% depth <x> (search x plies only)
-		wtime,		% wtime <x> (white has x msec left on the clock)
-		btime,		% btime <x> (black has x msec left on the clock)
-		winc,		% winc <x> (white increment per move in mseconds if x > 0)
-		binc,		% binc <x> (black increment per move in mseconds if x > 0)
-		movestogo,	% movestogo <x> (there are x moves to the next time control)
-		nodes,		% nodes <x> (search x nodes only)
-		movetime	% movetime <x> (search exactly x mseconds)
-	],
+	Keys = [depth, wtime, btime, winc, binc, movestogo, nodes, movetime],
 	get_bestmove_cmd(<<"go">>, Opts, Keys).
 
 %% get_bestmove_cmd/3
