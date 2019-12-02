@@ -27,6 +27,7 @@
 -export([new_uci_game/2]).
 -export([uci_command/2]).
 -export([uci_mode/1, uci_bestmove/1, uci_bestmove/2]).
+-export([uci_play/3]).
 -export([set_uci_handler/2]).
 
 -define(APPLICATION, ?MODULE).
@@ -192,3 +193,9 @@ uci_bestmove(Pid, Opts) ->
 -spec set_uci_handler(pid(), binbo_server:uci_handler()) -> ok.
 set_uci_handler(Pid, Handler) ->
 	binbo_server:set_uci_handler(Pid, Handler).
+
+
+%% uci_play/3
+%% @todo Add spec
+uci_play(Pid, BestMoveOpts, Move) ->
+	binbo_server:uci_play(Pid, BestMoveOpts, Move).

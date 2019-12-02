@@ -24,6 +24,7 @@
 -export([new_uci_game/2]).
 -export([uci_command/2]).
 -export([uci_mode/1, uci_bestmove/2]).
+-export([uci_play/3]).
 -export([set_uci_handler/2]).
 
 %%% gen_server export.
@@ -145,6 +146,8 @@ handle_call({load_pgn, Type, Data}, _From, State0) ->
 	{reply, Reply, State};
 handle_call(game_state, _From, #state{game = Game} = State) ->
 	{reply, Game, State};
+handle_call({update_game_state, Game}, _From, State) ->
+	{reply, ok, State#state{game = Game}};
 handle_call(game_status, _From, #state{game = Game} = State) ->
 	Reply = binbo_game:status(Game),
 	{reply, Reply, State};
@@ -340,6 +343,19 @@ uci_bestmove(Pid, Opts) ->
 set_uci_handler(Pid, Handler) ->
 	gen_server:cast(Pid, {set_uci_handler, Handler}).
 
+%% uci_play/3
+%% @todo Add spec
+uci_play(Pid, BestMoveOpts, Move) ->
+	Game0 = game_state(Pid),
+	case binbo_game:move(sq, Move, Game0) of
+		{ok, {Game, _GameStatus}} ->
+			uci_play(Pid, BestMoveOpts, Move, Game);
+		{error, _} = Error ->
+			Error
+	end.
+
+
+
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
 %%%------------------------------------------------------------------------------
@@ -444,4 +460,46 @@ maybe_handle_uci_message(Handler, Data) ->
 	case Handler of
 		undefined -> undefined;
 		_ -> Handler(Data)
+	end.
+
+
+%% uci_play/4
+%% @todo Add spec
+uci_play(Pid, BestMoveOpts, Lastmove, Game) ->
+	BestMoveRet = case Lastmove of
+		undefined ->
+			uci_bestmove(Pid, BestMoveOpts);
+		_ ->
+			{ok, Fen} = binbo_game:get_fen(Game),
+			Command = ["position fen ", Fen],
+			case uci_command(Pid, Command) of
+				ok ->
+					uci_bestmove(Pid, BestMoveOpts);
+				{error, _} = Err ->
+					Err
+			end
+	end,
+	case BestMoveRet of
+		{ok, BestMove} ->
+			do_uci_play(Pid, BestMove, Game);
+		{error, _} = Error ->
+			Error
+	end.
+
+%% do_uci_play/3
+%% @todo Add spec
+do_uci_play(Pid, BestMove, Game0) ->
+	case binbo_game:move(sq, BestMove, Game0) of
+		{ok, {Game, GameStatus}} ->
+			{ok, Fen} = binbo_game:get_fen(Game),
+			Command = ["position fen ", Fen],
+			case uci_command(Pid, Command) of
+				ok ->
+					ok = call(Pid, {update_game_state, Game}),
+					{ok, GameStatus, BestMove};
+				{error, _} = Err ->
+					Err
+			end;
+		{error, _} = Error ->
+			Error
 	end.
