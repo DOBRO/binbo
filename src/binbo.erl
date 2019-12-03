@@ -25,7 +25,7 @@
 -export([all_legal_moves/1, all_legal_moves/2]).
 -export([stop_server/1]).
 -export([new_uci_game/2]).
--export([uci_command/2]).
+-export([uci_command_call/2]).
 -export([uci_mode/1, uci_bestmove/1, uci_bestmove/2]).
 -export([uci_play/3]).
 -export([set_uci_handler/2]).
@@ -169,10 +169,10 @@ all_legal_moves(Pid, MoveType) ->
 new_uci_game(Pid, Opts) ->
 	binbo_server:new_uci_game(Pid, Opts).
 
-%% uci_command/2
--spec uci_command(pid(), iodata()) -> ok | {error, term()}.
-uci_command(Pid, Command) ->
-	binbo_server:uci_command(Pid, Command).
+%% uci_command_call/2
+-spec uci_command_call(pid(), iodata()) -> ok | {error, term()}.
+uci_command_call(Pid, Command) ->
+	binbo_server:uci_command_call(Pid, Command).
 
 %% uci_mode/1
 -spec uci_mode(pid()) -> ok | {error, term()}.

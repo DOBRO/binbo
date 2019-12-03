@@ -22,7 +22,7 @@
 -export([game_state/1, game_status/1, game_draw/2]).
 -export([all_legal_moves/2]).
 -export([new_uci_game/2]).
--export([uci_command/2]).
+-export([uci_command_call/2]).
 -export([uci_mode/1, uci_bestmove/2]).
 -export([uci_play/3]).
 -export([set_uci_handler/2]).
@@ -307,20 +307,20 @@ all_legal_moves(Pid, MoveType) ->
 new_uci_game(Pid, Opts) ->
 	call(Pid, {new_uci_game, Opts}).
 
-%% uci_command/2
--spec uci_command(pid(), iodata() | binbo_uci:command_spec()) -> ok | {ok, term()} | {error, term()}.
-uci_command(Pid, Command) ->
-	uci_command(Pid, Command, 5000).
+%% uci_command_call/2
+-spec uci_command_call(pid(), iodata() | binbo_uci:command_spec()) -> ok | {ok, term()} | {error, term()}.
+uci_command_call(Pid, Command) ->
+	uci_command_call(Pid, Command, 5000).
 
-%% uci_command/3
--spec uci_command(pid(), iodata() | binbo_uci:command_spec(), timeout()) -> ok | {ok, term()} | {error, term()}.
-uci_command(Pid, Command, Timeout) ->
+%% uci_command_call/3
+-spec uci_command_call(pid(), iodata() | binbo_uci:command_spec(), timeout()) -> ok | {ok, term()} | {error, term()}.
+uci_command_call(Pid, Command, Timeout) ->
 	call_uci(Pid, Command, Timeout).
 
 %% uci_mode/1
 -spec uci_mode(pid()) -> ok | {error, term()}.
 uci_mode(Pid) ->
-	uci_command(Pid, binbo_uci:command_spec_uci()).
+	uci_command_call(Pid, binbo_uci:command_spec_uci()).
 
 %% uci_bestmove/2
 -spec uci_bestmove(pid(), binbo_uci:bestmove_opts()) -> uci_bestmove_ret().
@@ -336,7 +336,7 @@ uci_bestmove(Pid, Opts) ->
 		false ->
 			infinity
 	end,
-	uci_command(Pid, CommandSpec, Timeout).
+	uci_command_call(Pid, CommandSpec, Timeout).
 
 %% set_uci_handler/2
 -spec set_uci_handler(pid(), uci_handler()) -> ok.
@@ -472,7 +472,7 @@ uci_play(Pid, BestMoveOpts, Lastmove, Game) ->
 		_ ->
 			{ok, Fen} = binbo_game:get_fen(Game),
 			Command = ["position fen ", Fen],
-			case uci_command(Pid, Command) of
+			case uci_command_call(Pid, Command) of
 				ok ->
 					uci_bestmove(Pid, BestMoveOpts);
 				{error, _} = Err ->
@@ -493,7 +493,7 @@ do_uci_play(Pid, BestMove, Game0) ->
 		{ok, {Game, GameStatus}} ->
 			{ok, Fen} = binbo_game:get_fen(Game),
 			Command = ["position fen ", Fen],
-			case uci_command(Pid, Command) of
+			case uci_command_call(Pid, Command) of
 				ok ->
 					ok = call(Pid, {update_game_state, Game}),
 					{ok, GameStatus, BestMove};
