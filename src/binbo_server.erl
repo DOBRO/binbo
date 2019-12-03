@@ -146,8 +146,6 @@ handle_call({load_pgn, Type, Data}, _From, State0) ->
 	{reply, Reply, State};
 handle_call(game_state, _From, #state{game = Game} = State) ->
 	{reply, Game, State};
-handle_call({update_game_state, Game}, _From, State) ->
-	{reply, ok, State#state{game = Game}};
 handle_call(game_status, _From, #state{game = Game} = State) ->
 	Reply = binbo_game:status(Game),
 	{reply, Reply, State};
@@ -196,6 +194,8 @@ handle_cast({uci_command, Command}, #state{uci_port = Port} = State) ->
 		_ -> uci_port_command(Port, Command)
 	end,
 	{noreply, State};
+handle_cast({update_game_state, Game}, State) ->
+	{noreply, State#state{game = Game}};
 handle_cast({set_uci_handler, Handler}, State0) ->
 	NewHandler = case Handler of
 		default ->
@@ -486,40 +486,32 @@ maybe_handle_uci_message(Handler, Data) ->
 %% uci_play/4
 %% @todo Add spec
 uci_play(Pid, BestMoveOpts, Lastmove, Game) ->
-	BestMoveRet = case Lastmove of
-		undefined ->
-			uci_bestmove(Pid, BestMoveOpts);
-		_ ->
-			{ok, Fen} = binbo_game:get_fen(Game),
-			Command = ["position fen ", Fen],
-			case uci_command_call(Pid, Command) of
-				ok ->
-					uci_bestmove(Pid, BestMoveOpts);
-				{error, _} = Err ->
-					Err
-			end
+	_ = case Lastmove of
+		undefined -> ok;
+		_ -> uci_send_game_position(Pid, Game)
 	end,
-	case BestMoveRet of
+	case uci_bestmove(Pid, BestMoveOpts) of
 		{ok, BestMove} ->
-			do_uci_play(Pid, BestMove, Game);
+			uci_play_update(Pid, BestMove, Game);
 		{error, _} = Error ->
 			Error
 	end.
 
-%% do_uci_play/3
+%% uci_play_update/3
 %% @todo Add spec
-do_uci_play(Pid, BestMove, Game0) ->
+uci_play_update(Pid, BestMove, Game0) ->
 	case binbo_game:move(sq, BestMove, Game0) of
 		{ok, {Game, GameStatus}} ->
-			{ok, Fen} = binbo_game:get_fen(Game),
-			Command = ["position fen ", Fen],
-			case uci_command_call(Pid, Command) of
-				ok ->
-					ok = call(Pid, {update_game_state, Game}),
-					{ok, GameStatus, BestMove};
-				{error, _} = Err ->
-					Err
-			end;
+			ok = uci_send_game_position(Pid, Game),
+			ok = cast(Pid, {update_game_state, Game}),
+			{ok, GameStatus, BestMove};
 		{error, _} = Error ->
 			Error
 	end.
+
+
+%% uci_send_game_position/2
+-spec uci_send_game_position(pid(), bb_game()) -> ok.
+uci_send_game_position(Pid, Game) ->
+	{ok, Fen} = binbo_game:get_fen(Game),
+	uci_command_cast(Pid, <<"position fen ", Fen/bits>>).
