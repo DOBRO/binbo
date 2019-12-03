@@ -50,7 +50,7 @@
 %% open_port/1
 -spec open_port(engine_path()) -> {ok, port()} | {error, any()}.
 open_port(EnginePath) ->
-	try erlang:open_port({spawn_executable, EnginePath}, [binary, stream, exit_status]) of
+	try erlang:open_port({spawn_executable, EnginePath}, [binary, stream]) of
 		Port -> {ok, Port}
 	catch
 		_:Reason -> {error, Reason}

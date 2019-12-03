@@ -242,14 +242,17 @@ handle_info({Port, {data, Data}}, #state{uci_port = Port} = State0) ->
 	_ = maybe_handle_uci_message(State0#state.uci_handler, Data),
 	{noreply, State0};
 handle_info({'EXIT', Port, _}, #state{uci_port = Port} = State0) ->
-	% @todo Handle port exit
+	% Handle UCI port exit
 	State = State0#state{uci_port = undefined},
 	{noreply, State};
 handle_info(_Msg, State) ->
 	{noreply, State}.
 
 %% terminate/2
-terminate(_Reason, _State) ->
+-spec terminate(term(), state()) -> ok.
+terminate(_Reason, State) ->
+	#state{uci_port = Port} = State,
+	_ = maybe_close_port(Port),
 	ok.
 
 %% code_change/3
