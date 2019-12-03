@@ -62,7 +62,7 @@
 	engine_path := engine_path(),
 	fen => fen()
 }.
--type init_uci_game_error() :: {game_over_with_status, game_status()} | could_not_open_port.
+-type init_uci_game_error() :: could_not_open_port.
 -type uci_handler() :: undefined | default | fun((binary()) -> term()).
 
 %% @todo Add comments for record fields
@@ -415,14 +415,8 @@ init_uci_game([], _Opts, State) ->
 init_uci_game([fen|Tail], Opts, State) ->
 	Fen = maps:get(fen, Opts, binbo_fen:initial()),
 	case binbo_game:new(Fen) of
-		{ok, {Game, GameStatus}} ->
-			State2 = State#state{game = Game},
-			case binbo_position:is_status_inprogress(GameStatus) of
-				true  ->
-					init_uci_game(Tail, Opts, State2);
-				false ->
-					{error, {game_over_with_status, GameStatus}, State2}
-			end;
+		{ok, {Game, _GameStatus}} ->
+			init_uci_game(Tail, Opts, State#state{game = Game});
 		{error, Reason} ->
 			{error, Reason, State}
 	end;
