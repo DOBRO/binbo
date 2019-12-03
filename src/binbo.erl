@@ -28,6 +28,7 @@
 -export([uci_command_call/2, uci_command_cast/2]).
 -export([uci_mode/1, uci_bestmove/1, uci_bestmove/2]).
 -export([uci_play/2, uci_play/3]).
+-export([uci_set_position/2]).
 -export([set_uci_handler/2]).
 
 -define(APPLICATION, ?MODULE).
@@ -208,3 +209,8 @@ uci_play(Pid, BestMoveOpts) ->
 -spec uci_play(pid(), binbo_uci:bestmove_opts(), binbo_move:sq_move()) -> binbo_server:uci_play_ret().
 uci_play(Pid, BestMoveOpts, Move) ->
 	binbo_server:uci_play(Pid, BestMoveOpts, Move).
+
+%% uci_set_position/2
+-spec uci_set_position(pid(), binbo_fen:fen()) -> {ok, binbo_game:game_status()} | {error, term()}.
+uci_set_position(Pid, Fen) ->
+	binbo_server:uci_set_position(Pid, Fen).

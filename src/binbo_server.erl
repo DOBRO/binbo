@@ -25,6 +25,7 @@
 -export([uci_command_call/2, uci_command_cast/2]).
 -export([uci_mode/1, uci_bestmove/2]).
 -export([uci_play/2, uci_play/3]).
+-export([uci_set_position/2]).
 -export([set_uci_handler/2]).
 
 %%% gen_server export.
@@ -62,8 +63,9 @@
 	engine_path := engine_path(),
 	fen => fen()
 }.
--type init_uci_game_error() :: could_not_open_port.
+-type init_uci_game_error() :: {could_not_open_port, term()}.
 -type uci_handler() :: undefined | default | fun((binary()) -> term()).
+-type uci_cmd_spec() :: iodata() | binbo_uci:command_spec() | {set_position, fen()}.
 
 %% @todo Add comments for record fields
 -record(state, {
@@ -121,7 +123,7 @@ handle_call({new_game, Fen}, _From, State) ->
 	{Reply, State2} = case binbo_game:new(Fen) of
 		{ok, {Game, GameStatus}} ->
 			{{ok, GameStatus}, State#state{game = Game}};
-		Error ->
+		{error, _} = Error ->
 			{Error, State}
 	end,
 	{reply, Reply, State2};
@@ -158,8 +160,10 @@ handle_call({all_legal_moves, MoveType}, _From, #state{game = Game} = State) ->
 	{reply, Reply, State};
 handle_call({game_draw, Reason}, _From, #state{game = Game0} = State0) ->
 	{Reply, State} = case binbo_game:draw(Reason, Game0) of
-		{ok, Game} -> {ok, State0#state{game = Game}};
-		Error      -> {Error, State0}
+		{ok, Game} ->
+			{ok, State0#state{game = Game}};
+		{error, _} = Error ->
+			{Error, State0}
 	end,
 	{reply, Reply, State};
 handle_call({new_uci_game, Opts}, _From, State0) ->
@@ -171,6 +175,20 @@ handle_call({new_uci_game, Opts}, _From, State0) ->
 	end;
 handle_call({uci_command, _}, _From, #state{uci_port = undefined} = State0) ->
 	{reply, {error, uci_port_not_open}, State0};
+handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_port = Port} = State) ->
+	{Reply, State2} = case binbo_game:new(Fen) of
+		{ok, {Game, GameStatus}} ->
+			Command = [
+				"stop", $\n,
+				"ucinewgame", $\n,
+				"position fen ", Fen
+			],
+			_ = uci_port_command(Port, Command),
+			{{ok, GameStatus}, State#state{game = Game}};
+		{error, _} = Error ->
+			{Error, State}
+	end,
+	{reply, Reply, State2};
 handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uci_port = Port} = State0) ->
 	_ = uci_port_command(Port, Command),
 	State = State0#state{
@@ -320,12 +338,12 @@ new_uci_game(Pid, Opts) ->
 	call(Pid, {new_uci_game, Opts}).
 
 %% uci_command_call/2
--spec uci_command_call(pid(), iodata() | binbo_uci:command_spec()) -> ok | {ok, term()} | {error, term()}.
+-spec uci_command_call(pid(), uci_cmd_spec()) -> ok | {ok, term()} | {error, term()}.
 uci_command_call(Pid, Command) ->
 	uci_command_call(Pid, Command, 5000).
 
 %% uci_command_call/3
--spec uci_command_call(pid(), iodata() | binbo_uci:command_spec(), timeout()) -> ok | {ok, term()} | {error, term()}.
+-spec uci_command_call(pid(), uci_cmd_spec(), timeout()) -> ok | {ok, term()} | {error, term()}.
 uci_command_call(Pid, Command, Timeout) ->
 	call_uci(Pid, Command, Timeout).
 
@@ -377,6 +395,10 @@ uci_play(Pid, BestMoveOpts, Move) ->
 			Error
 	end.
 
+%% uci_set_position/2
+-spec uci_set_position(pid(), fen()) -> {ok, game_status()} | {error, term()}.
+uci_set_position(Pid, Fen) ->
+	uci_command_call(Pid, {set_position, Fen}).
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
@@ -393,7 +415,7 @@ call(Pid, Msg, Timeout) ->
 	gen_server:call(Pid, Msg, Timeout).
 
 %% call_uci/2
--spec call_uci(pid(), iodata() | binbo_uci:command_spec(), timeout()) -> term().
+-spec call_uci(pid(), uci_cmd_spec(), timeout()) -> term().
 call_uci(Pid, CommandSpec, Timeout) ->
 	call(Pid, {uci_command, CommandSpec}, Timeout).
 
@@ -509,7 +531,6 @@ uci_play_update(Pid, BestMove, Game0) ->
 		{error, _} = Error ->
 			Error
 	end.
-
 
 %% uci_send_game_position/2
 -spec uci_send_game_position(pid(), bb_game()) -> ok.
