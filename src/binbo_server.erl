@@ -22,7 +22,7 @@
 -export([game_state/1, game_status/1, game_draw/2]).
 -export([all_legal_moves/2]).
 -export([new_uci_game/2]).
--export([uci_command_call/2]).
+-export([uci_command_call/2, uci_command_cast/2]).
 -export([uci_mode/1, uci_bestmove/2]).
 -export([uci_play/3]).
 -export([set_uci_handler/2]).
@@ -98,7 +98,7 @@ start_link(Args) ->
 -spec stop(pid()) -> stop_ret().
 stop(Pid) ->
 	case is_pid(Pid) of
-		true  -> gen_server:cast(Pid, stop);
+		true  -> cast(Pid, stop);
 		false -> {error, {not_pid, Pid}}
 	end.
 
@@ -189,6 +189,13 @@ handle_call(_Msg, _From, State) ->
 	{reply, ignored, State}.
 
 %% handle_cast/2
+-spec handle_cast(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
+handle_cast({uci_command, Command}, #state{uci_port = Port} = State) ->
+	_ = case Port of
+		undefined -> ok;
+		_ -> uci_port_command(Port, Command)
+	end,
+	{noreply, State};
 handle_cast({set_uci_handler, Handler}, State0) ->
 	NewHandler = case Handler of
 		default ->
@@ -208,6 +215,7 @@ handle_cast(_Msg, State) ->
 	{noreply, State}.
 
 %% handle_info/2
+-spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
 	#state{uci_wait_prefix_size = PrefixSize, uci_wait_prefix_handler = PrefixHandler} = State0,
 	State = case PrefixHandler(Data, Prefix, PrefixSize) of
@@ -317,6 +325,13 @@ uci_command_call(Pid, Command) ->
 uci_command_call(Pid, Command, Timeout) ->
 	call_uci(Pid, Command, Timeout).
 
+
+%% uci_command_cast/2
+-spec uci_command_cast(pid(), iodata()) -> ok.
+uci_command_cast(Pid, Command) ->
+	cast(Pid, {uci_command, Command}).
+
+
 %% uci_mode/1
 -spec uci_mode(pid()) -> ok | {error, term()}.
 uci_mode(Pid) ->
@@ -341,7 +356,7 @@ uci_bestmove(Pid, Opts) ->
 %% set_uci_handler/2
 -spec set_uci_handler(pid(), uci_handler()) -> ok.
 set_uci_handler(Pid, Handler) ->
-	gen_server:cast(Pid, {set_uci_handler, Handler}).
+	cast(Pid, {set_uci_handler, Handler}).
 
 %% uci_play/3
 %% @todo Add spec
@@ -374,6 +389,11 @@ call(Pid, Msg, Timeout) ->
 -spec call_uci(pid(), iodata() | binbo_uci:command_spec(), timeout()) -> term().
 call_uci(Pid, CommandSpec, Timeout) ->
 	call(Pid, {uci_command, CommandSpec}, Timeout).
+
+%% cast/2
+-spec cast(pid(), term()) -> ok.
+cast(Pid, Msg) ->
+	gen_server:cast(Pid, Msg).
 
 %% init_uci_game/2
 -spec init_uci_game(uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error(), state()}.
