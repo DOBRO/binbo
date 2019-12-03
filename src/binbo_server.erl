@@ -24,7 +24,7 @@
 -export([new_uci_game/2]).
 -export([uci_command_call/2, uci_command_cast/2]).
 -export([uci_mode/1, uci_bestmove/2]).
--export([uci_play/3]).
+-export([uci_play/2, uci_play/3]).
 -export([set_uci_handler/2]).
 
 %%% gen_server export.
@@ -56,6 +56,7 @@
 -type load_pgn_file_ret() :: {ok, game_status()} | {error, any()}.
 -type all_legal_moves_ret() :: binbo_game:all_legal_moves_ret().
 -type uci_bestmove_ret() :: {ok, binary()} | {error, term()}.
+-type uci_play_ret() :: {ok, game_status(), sq_move()} | {error, term()}.
 -type engine_path() :: binbo_uci:engine_path().
 -type uci_game_opts() :: #{
 	engine_path := engine_path(),
@@ -81,7 +82,7 @@
 -export_type([game_state_ret/0, game_status_ret/0, game_draw_ret/0]).
 -export_type([all_legal_moves_ret/0]).
 -export_type([stop_ret/0]).
--export_type([new_uci_game_ret/0, uci_bestmove_ret/0]).
+-export_type([new_uci_game_ret/0, uci_bestmove_ret/0, uci_play_ret/0]).
 -export_type([uci_game_opts/0]).
 -export_type([uci_handler/0]).
 
@@ -325,12 +326,10 @@ uci_command_call(Pid, Command) ->
 uci_command_call(Pid, Command, Timeout) ->
 	call_uci(Pid, Command, Timeout).
 
-
 %% uci_command_cast/2
 -spec uci_command_cast(pid(), iodata()) -> ok.
 uci_command_cast(Pid, Command) ->
 	cast(Pid, {uci_command, Command}).
-
 
 %% uci_mode/1
 -spec uci_mode(pid()) -> ok | {error, term()}.
@@ -358,8 +357,14 @@ uci_bestmove(Pid, Opts) ->
 set_uci_handler(Pid, Handler) ->
 	cast(Pid, {set_uci_handler, Handler}).
 
+%% uci_play/2
+-spec uci_play(pid(), binbo_uci:bestmove_opts()) -> uci_play_ret().
+uci_play(Pid, BestMoveOpts) ->
+	Game = game_state(Pid),
+	uci_play(Pid, BestMoveOpts, undefined, Game).
+
 %% uci_play/3
-%% @todo Add spec
+-spec uci_play(pid(), binbo_uci:bestmove_opts(), sq_move()) -> uci_play_ret().
 uci_play(Pid, BestMoveOpts, Move) ->
 	Game0 = game_state(Pid),
 	case binbo_game:move(sq, Move, Game0) of
@@ -368,7 +373,6 @@ uci_play(Pid, BestMoveOpts, Move) ->
 		{error, _} = Error ->
 			Error
 	end.
-
 
 
 %%%------------------------------------------------------------------------------
@@ -484,7 +488,7 @@ maybe_handle_uci_message(Handler, Data) ->
 
 
 %% uci_play/4
-%% @todo Add spec
+-spec uci_play(pid(), binbo_uci:bestmove_opts(), sq_move() | undefined, bb_game()) -> uci_play_ret().
 uci_play(Pid, BestMoveOpts, Lastmove, Game) ->
 	_ = case Lastmove of
 		undefined -> ok;
@@ -498,7 +502,7 @@ uci_play(Pid, BestMoveOpts, Lastmove, Game) ->
 	end.
 
 %% uci_play_update/3
-%% @todo Add spec
+-spec uci_play_update(pid(), sq_move(), bb_game()) -> uci_play_ret().
 uci_play_update(Pid, BestMove, Game0) ->
 	case binbo_game:move(sq, BestMove, Game0) of
 		{ok, {Game, GameStatus}} ->
