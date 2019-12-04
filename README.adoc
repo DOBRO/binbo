@@ -13,7 +13,7 @@ It's called `Binbo` because its ground is a **bin**ary **bo**ard containing only
 
 Binbo also uses the https://www.chessprogramming.org/Magic_Bitboards[Magic Bitboards] approach for a **blazing fast** move generation of sliding pieces (rook, bishop, and queen).
 
-**Note:** it's not a chess engine but it could be a good starting point for it. It can play the role of a core (regarding move generation and validation) for multiple chess engines running on distributed Erlang nodes, since Binbo is an OTP application itself.
+**Note:** it's not a chess engine but it could be a good starting point for it. It can play the role of a core (regarding move generation and validation) for multiple chess engines running on distributed Erlang nodes, since Binbo is an OTP application itself. In addition, Binbo can communicate with foreign engines that support https://www.chessprogramming.org/UCI[Universal Chess Interface] (UCI).
 
 image::https://user-images.githubusercontent.com/296845/61208986-40792d80-a701-11e9-93c8-d2c41c5ef00d.png[Binbo sample]
 
@@ -41,6 +41,7 @@ toc::[]
 *** King and Bishop versus King and Bishop with the bishops on the same color;
 * Unicode chess symbols support for the board visualization right in Erlang shell: +
 &#9817;{nbsp}&#9816;{nbsp}&#9815;{nbsp}&#9814;{nbsp}&#9813;{nbsp}&#9812;{nbsp}{nbsp}{nbsp}{nbsp}&#9823;{nbsp}&#9822;{nbsp}&#9821;{nbsp}&#9820;{nbsp}&#9819;{nbsp}&#9818;
+* UCI protocol support.
 * Passes all https://www.chessprogramming.org/Perft_Results[perft] tests.
 * Ready for use on game servers.
 
