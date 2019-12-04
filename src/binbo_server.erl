@@ -276,7 +276,7 @@ handle_info(_Msg, State) ->
 -spec terminate(term(), state()) -> ok.
 terminate(_Reason, State) ->
 	#state{uci_port = Port} = State,
-	_ = maybe_close_port(Port),
+	_ = maybe_close_uci_port(Port),
 	ok.
 
 %% code_change/3
@@ -458,7 +458,7 @@ init_uci_game([fen|Tail], Opts, State) ->
 	end;
 init_uci_game([close_port|Tail], Opts, State) ->
 	#state{uci_port = Port} = State,
-	_ = maybe_close_port(Port),
+	_ = maybe_close_uci_port(Port),
 	State2 = state_without_uci_port(State),
 	init_uci_game(Tail, Opts, State2);
 init_uci_game([open_port|Tail], Opts, State) ->
@@ -492,12 +492,19 @@ state_with_uci_port(State, Port) ->
 state_without_uci_port(State) ->
 	State#state{uci_port = undefined}.
 
-%% maybe_close_port/1
--spec maybe_close_port(term()) -> ok.
-maybe_close_port(Port) ->
+%% maybe_close_uci_port/1
+-spec maybe_close_uci_port(term()) -> ok.
+maybe_close_uci_port(Port) ->
 	_ = case erlang:port_info(Port, id) of
-		undefined -> undefined;
-		_ -> erlang:port_close(Port)
+		undefined ->
+			undefined;
+		_ ->
+			try
+				_ = uci_port_command(Port, "quit"),
+				erlang:port_close(Port)
+			catch
+				_:_ -> ok % we don't care
+			end
 	end,
 	ok.
 
