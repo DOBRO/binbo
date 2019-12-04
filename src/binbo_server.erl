@@ -393,7 +393,8 @@ set_uci_handler(Pid, Handler) ->
 -spec uci_play(pid(), binbo_uci:bestmove_opts()) -> uci_play_ret().
 uci_play(Pid, BestMoveOpts) ->
 	Game = game_state(Pid),
-	uci_play(Pid, BestMoveOpts, undefined, Game).
+	% Do NOT call uci_play/3 here! Do call uci_play_bestmove/3 directly!
+	uci_play_bestmove(Pid, BestMoveOpts, Game).
 
 %% uci_play/3
 -spec uci_play(pid(), binbo_uci:bestmove_opts(), sq_move()) -> uci_play_ret().
@@ -401,7 +402,9 @@ uci_play(Pid, BestMoveOpts, Move) ->
 	Game0 = game_state(Pid),
 	case binbo_game:move(sq, Move, Game0) of
 		{ok, {Game, _GameStatus}} ->
-			uci_play(Pid, BestMoveOpts, Move, Game);
+			% Sync game position with the engine's one to find the correct best move
+			ok = uci_send_game_position(Pid, Game),
+			uci_play_bestmove(Pid, BestMoveOpts, Game);
 		{error, _} = Error ->
 			Error
 	end.
@@ -516,14 +519,9 @@ maybe_handle_uci_message(Handler, Data) ->
 		_ -> Handler(Data)
 	end.
 
-
-%% uci_play/4
--spec uci_play(pid(), binbo_uci:bestmove_opts(), sq_move() | undefined, bb_game()) -> uci_play_ret().
-uci_play(Pid, BestMoveOpts, Lastmove, Game) ->
-	_ = case Lastmove of
-		undefined -> ok;
-		_ -> uci_send_game_position(Pid, Game)
-	end,
+%% uci_play_bestmove/3
+-spec uci_play_bestmove(pid(), binbo_uci:bestmove_opts(), bb_game()) -> uci_play_ret().
+uci_play_bestmove(Pid, BestMoveOpts, Game) ->
 	case uci_bestmove(Pid, BestMoveOpts) of
 		{ok, BestMove} ->
 			uci_play_update(Pid, BestMove, Game);
@@ -536,8 +534,8 @@ uci_play(Pid, BestMoveOpts, Lastmove, Game) ->
 uci_play_update(Pid, BestMove, Game0) ->
 	case binbo_game:move(sq, BestMove, Game0) of
 		{ok, {Game, GameStatus}} ->
-			ok = uci_send_game_position(Pid, Game),
-			ok = cast(Pid, {update_game_state, Game}),
+			ok = cast(Pid, {update_game_state, Game}), % update game in the process state
+			ok = uci_send_game_position(Pid, Game), % change the internal engine's position
 			{ok, GameStatus, BestMove};
 		{error, _} = Error ->
 			Error
