@@ -67,14 +67,17 @@
 -type uci_handler() :: undefined | default | fun((binary()) -> term()).
 -type uci_cmd_spec() :: iodata() | binbo_uci:command_spec() | {set_position, fen()}.
 
-%% @todo Add comments for record fields
+-type uci_wait_prefix() :: binary().
+-type uci_wait_prefix_size() :: pos_integer().
+-type uci_wait_prefix_handler() :: fun((Message :: binary(), uci_wait_prefix(), uci_wait_prefix_size()) -> reply_ok | {reply, term()} | skip).
+
 -record(state, {
 	game = undefined :: undefined | bb_game(),
 	uci_port = undefined :: undefined | port(),
 	uci_from = undefined :: undefined | from(),
-	uci_wait_prefix = undefined :: undefined | binary(),
-	uci_wait_prefix_size = undefined :: undefined | pos_integer(),
-	uci_wait_prefix_handler = undefined :: undefined | fun(),
+	uci_wait_prefix = undefined :: undefined | uci_wait_prefix(),
+	uci_wait_prefix_size = undefined :: undefined | uci_wait_prefix_size(),
+	uci_wait_prefix_handler = undefined :: undefined | uci_wait_prefix_handler(),
 	uci_handler = undefined :: uci_handler()
 }).
 -type state() :: #state{}.
