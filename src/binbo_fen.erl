@@ -51,7 +51,7 @@
 -type fen_part_tuples() :: [fen_part_tuple(),...].
 -type cur_idx() :: non_neg_integer().
 -type fen_rank_idx() :: {binary(), ?A1_IDX | ?A2_IDX | ?A3_IDX | ?A4_IDX | ?A5_IDX | ?A6_IDX | ?A7_IDX | ?A8_IDX}.
--type atom_color() :: white | black.
+-type atom_color() :: binbo_board:atom_color().
 -type qty() :: non_neg_integer().
 -type pieces_totals() :: #{
 	?WP := qty(), ?WN := qty(), ?WB := qty(), ?WR := qty(), ?WQ := qty(), ?WK := qty(),

@@ -19,6 +19,7 @@
 -export([status/1, draw/2]).
 -export([pretty_board/2, get_fen/1]).
 -export([all_legal_moves/2]).
+-export([side_to_move/1]).
 
 %%%------------------------------------------------------------------------------
 %%%   Includes
@@ -49,10 +50,11 @@
 -type status_ret() :: {ok, game_status()} | {error, bad_game_term()}.
 -type get_fen_ret() :: {ok, binary()} | {error, bad_game_term()}.
 -type all_legal_moves_ret() :: {ok, legal_moves()} | {error, bad_game_term()}.
+-type side_to_move_ret() :: {ok, binbo_board:atom_color()} | {error, bad_game_term()}.
 
 -export_type([game/0, game_fen/0, filename/0]).
 -export_type([game_status/0, status_ret/0, get_fen_ret/0]).
--export_type([all_legal_moves_ret/0]).
+-export_type([all_legal_moves_ret/0, side_to_move_ret/0]).
 -export_type([init_error/0, move_error/0, draw_error/0]).
 -export_type([load_pgn_error/0, pretty_board_error/0]).
 
@@ -152,6 +154,14 @@ get_fen(Game) ->
 all_legal_moves(Game, MoveType) ->
 	case erlang:is_map(Game) of
 		true  -> {ok, binbo_movegen:all_valid_moves(Game, MoveType)};
+		false -> {error, {bad_game, Game}}
+	end.
+
+%% side_to_move/1
+-spec side_to_move(game()) -> side_to_move_ret().
+side_to_move(Game) ->
+	case erlang:is_map(Game) of
+		true  -> {ok, binbo_position:plain_sidetomove(Game)};
 		false -> {error, {bad_game, Game}}
 	end.
 

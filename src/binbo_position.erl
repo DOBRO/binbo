@@ -15,7 +15,7 @@
 -module(binbo_position).
 
 -export([init_bb_game/1, validate_loaded_fen/1]).
--export([get_piece/2, get_sidetomove/1]).
+-export([get_piece/2, get_sidetomove/1, plain_sidetomove/1]).
 -export([get_status/1, with_status/3, is_status_inprogress/1, manual_draw/2]).
 -export([make_move/2, finalize_move/2]).
 -export([get_fen/1, pretty_board/2]).
@@ -145,7 +145,6 @@
 init_bb_game(ParsedFen) ->
 	load_parsed_fen(ParsedFen, empty_bb_game()).
 
-
 %% get_piece/2
 -spec get_piece(sq_idx(), bb_game()) -> piece() | empty_sq().
 get_piece(Idx, Game) ->
@@ -156,6 +155,14 @@ get_piece(Idx, Game) ->
 -spec get_sidetomove(bb_game()) -> color().
 get_sidetomove(#{?GAME_KEY_SIDETOMOVE := SideToMove}) ->
 	SideToMove.
+
+%% plain_sidetomove/1
+-spec plain_sidetomove(bb_game()) -> binbo_board:atom_color().
+plain_sidetomove(Game) ->
+	case get_sidetomove(Game) of
+		?WHITE -> white;
+		?BLACK -> black
+	end.
 
 %% set_sidetomove/2
 -spec set_sidetomove(color(), bb_game()) -> bb_game().

@@ -36,6 +36,7 @@
 %%%------------------------------------------------------------------------------
 
 -type color() :: ?WHITE | ?BLACK.
+-type atom_color() :: white | black.
 -type rank() :: 0..7.
 -type file() :: 0..7.
 -type rank_number() :: 1..8.
@@ -52,7 +53,7 @@
 -type side_castling() :: ?CASTLING_W_OO | ?CASTLING_W_OOO | ?CASTLING_B_OO | ?CASTLING_B_OOO.
 
 -export_type([rank/0, file/0, rank_number/0]).
--export_type([color/0, piece/0, piece_type/0, empty_square/0]).
+-export_type([color/0, atom_color/0, piece/0, piece_type/0, empty_square/0]).
 -export_type([square_index/0, square_notation/0]).
 -export_type([side_castling/0, unicode_char/0]).
 

@@ -20,7 +20,7 @@
 -export([new_game/2, game_move/2, game_san_move/2, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
 -export([game_state/1, game_status/1, game_draw/2]).
--export([all_legal_moves/2]).
+-export([all_legal_moves/2, side_to_move/1]).
 -export([new_uci_game/2]).
 -export([uci_command_call/2, uci_command_cast/2]).
 -export([uci_mode/1, uci_bestmove/2]).
@@ -157,6 +157,9 @@ handle_call(get_fen, _From, #state{game = Game} = State) ->
 	{reply, Reply, State};
 handle_call({all_legal_moves, MoveType}, _From, #state{game = Game} = State) ->
 	Reply = binbo_game:all_legal_moves(Game, MoveType),
+	{reply, Reply, State};
+handle_call(side_to_move, _From, #state{game = Game} = State) ->
+	Reply = binbo_game:side_to_move(Game),
 	{reply, Reply, State};
 handle_call({game_draw, Reason}, _From, #state{game = Game0} = State0) ->
 	{Reply, State} = case binbo_game:draw(Reason, Game0) of
@@ -331,6 +334,11 @@ get_fen(Pid) ->
 -spec all_legal_moves(pid(), int | bin | str) -> all_legal_moves_ret().
 all_legal_moves(Pid, MoveType) ->
 	call(Pid, {all_legal_moves, MoveType}).
+
+%% side_to_move/1
+-spec side_to_move(pid()) -> binbo_game:side_to_move_ret().
+side_to_move(Pid) ->
+	call(Pid, side_to_move).
 
 %% new_uci_game/2
 -spec new_uci_game(pid(), uci_game_opts()) -> new_uci_game_ret().

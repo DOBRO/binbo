@@ -17,7 +17,7 @@
 -export([start/0, stop/0]).
 -export([new_server/0, new_server/1]).
 -export([new_game/1, new_game/2]).
--export([game_state/1, game_status/1]).
+-export([game_state/1, game_status/1, side_to_move/1]).
 -export([move/2, san_move/2, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
 -export([game_draw/1, game_draw/2]).
@@ -164,6 +164,11 @@ all_legal_moves(Pid) ->
 -spec all_legal_moves(pid(), int | bin | str) -> binbo_server:all_legal_moves_ret().
 all_legal_moves(Pid, MoveType) ->
 	binbo_server:all_legal_moves(Pid, MoveType).
+
+%% side_to_move/1
+-spec side_to_move(pid()) -> binbo_game:side_to_move_ret().
+side_to_move(Pid) ->
+	binbo_server:side_to_move(Pid).
 
 %% new_uci_game/2
 -spec new_uci_game(pid(), binbo_server:uci_game_opts()) -> binbo_server:new_uci_game_ret().
