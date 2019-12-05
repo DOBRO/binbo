@@ -550,6 +550,34 @@ The values of `From` and `To` depend on `Movetype` as follows:
 
 ----
 
+=== Side to move
+
+[source,erlang]
+----
+binbo:side_to_move(Pid) -> {ok, white | black} | {error, Reason}.
+----
+
+If White is to move, it returns `{ok, white}`. If Black is to move, it returns `{ok, black}`.
+
+.Example:
+[source,erlang]
+----
+> {ok, Pid} = binbo:new_server().
+{ok,<0.232.0>}
+
+> binbo:new_game(Pid).
+{ok,continue}
+
+> binbo:side_to_move(Pid). % White is to move
+{ok,white}
+
+> binbo:move(Pid, <<"e2e4">>).
+{ok,continue}
+
+> binbo:side_to_move(Pid). % Black is to move now
+{ok,black}
+----
+
 [[setting-a-draw]]
 === Setting a draw
 
