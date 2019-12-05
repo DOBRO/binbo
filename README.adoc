@@ -627,6 +627,113 @@ To stop Binbo, call:
 binbo:stop().
 ----
 
+=== Using chess engines
+
+You can write a chess bot application or play with engine using functions described in this section.
+
+.Please note:
+* Chess engine must support UCI protocol;
+* Chess engine must be installed on the same machine where Binbo runs on.
+
+==== Quick start playing with engine
+
+Run `make shell` or `rebar3 shell` and then:
+
+[source,erlang]
+----
+%% Start Binbo application first:
+> binbo:start().
+{ok,[compiler,syntax_tools,uef,binbo]}
+
+%% Start new process for the game:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.157.0>}
+
+%% Set full path to the engine's executable file:
+> EnginePath = "/usr/local/bin/stockfish".
+"/usr/local/bin/stockfish"
+
+%% Start new game in the process:
+> binbo:new_uci_game(Pid, #{engine_path => EnginePath}).
+{ok,continue}
+
+%% Which side is to move?
+> binbo:side_to_move(Pid).
+{ok,white}
+
+%% Say, you want to play Black. Let the engine make move for White.
+> binbo:uci_play(Pid, #{}).
+{ok,continue,<<"e2e4">>}
+
+%% Make your move for Black and get the engine's move immediately:
+> binbo:uci_play(Pid, #{}, <<"e7e5">>).
+{ok,continue,<<"g1f3">>}   % the engine's move was "g1f3"
+
+%% Make your next move for Black and, again, get the engine's move at once:
+> binbo:uci_play(Pid, #{}, <<"b8c6">>).
+{ok,continue,<<"b1c3">>}   % the engine's move was "b1c3"
+
+%% Look at the board with ascii or unicode pieces:
+binbo:print_board(Pid).
+binbo:print_board(Pid, [unicode]).
+
+%% It's tour turn now. Let the engine search the best move for you with default options.
+%% No move actually done, just hint:
+> binbo:uci_bestmove(Pid, #{}).
+{ok,<<"g8f6">>}
+
+%% Search the best move at depth 20:
+> binbo:uci_bestmove(Pid, #{depth => 20}).
+{ok,<<"g8f6">>}
+----
+
+==== Start new game with engine
+
+[source,erlang]
+----
+binbo:new_uci_game(Pid, Options) -> {ok, GameStatus} | {error, Reason}.
+----
+
+.Types:
+[source,erlang]
+----
+Pid :: pid(),
+
+Options :: #{
+    engine_path := EnginePath,
+    fen => Fen
+}.
+
+EnginePath :: binary() | string().
+Fen :: binary() | string().
+----
+
+
+.where:
+* `Pid` is the `pid` of the process where the game is to be initialized;
+* `EnginePath` is the full path to the engine's executable file (e.g. `/usr/local/bin/stockfish`);
+* `Fen` is the Forsyth–Edwards Notation (FEN), defaults to initial if omitted;
+* `GameStatus` is the link:#game-status[game status].
+
+
+.Example:
+[source,erlang]
+----
+%% In Erlang shell.
+
+> {ok, Pid} = binbo:new_server().
+{ok,<0.185.0>}
+
+% New game from the starting position:
+> binbo:new_uci_game(Pid, #{engine_path => "/usr/local/bin/stockfish"}).
+{ok,continue}
+
+% New game with the given FEN:
+> binbo:new_uci_game(Pid, #{engine_path => "/usr/local/bin/stockfish", fen => <<"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1">>}).
+{ok,continue}
+----
+
+
 == Building and testing
 
 Two possible ways are presented here for building and testing the application (with `make` and `rebar3`).
