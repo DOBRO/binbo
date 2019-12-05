@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+- UCI protocol support added.
+- UCI protocol related functions:
+  - `binbo:new_uci_game/2`;
+  - `binbo:uci_command_call/2`;
+  - `binbo:uci_command_cast/2`;
+  - `binbo:uci_mode/1`;
+  - `binbo:uci_bestmove/1`;
+  - `binbo:set_uci_handler/2`;
+  - `binbo:uci_play/2,3`;
+  - `binbo:uci_set_position/2`.
+- New function `binbo:side_to_move/1`.
+
 ## [1.1.2] - 2019-09-26
 
 - Performance optimization in game state update.
