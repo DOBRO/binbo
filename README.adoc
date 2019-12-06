@@ -54,8 +54,18 @@ toc::[]
 
 == Quick start
 
-Run `make shell` or `rebar3 shell` and then:
+Clone repository, change directory to `binbo` and run `rebar3 shell` (or `make shell`):
 
+[source,bash]
+----
+$ git clone https://github.com/DOBRO/binbo.git
+$ cd binbo
+$ rebar3 shell
+----
+
+=== Common example
+
+.In Erlang shell:
 [source,erlang]
 ----
 %% Start Binbo application first:
@@ -81,6 +91,100 @@ binbo:move(Pid, <<"e7e5">>).
 %% Have a look at the board again:
 binbo:print_board(Pid).
 binbo:print_board(Pid, [unicode]).
+----
+
+=== Play with engine
+
+.In Erlang shell:
+[source,erlang]
+----
+%% Start Binbo application first:
+> binbo:start().
+{ok,[compiler,syntax_tools,uef,binbo]}
+
+%% Start new process for the game:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.157.0>}
+
+%% Set full path to the engine's executable file:
+> EnginePath = "/usr/local/bin/stockfish".
+"/usr/local/bin/stockfish"
+
+%% Start new game in the process:
+> binbo:new_uci_game(Pid, #{engine_path => EnginePath}).
+{ok,continue}
+
+%% Which side is to move?
+> binbo:side_to_move(Pid).
+{ok,white}
+
+%% Say, you want to play Black. Tell the engine to make move for White.
+> binbo:uci_play(Pid, #{}).
+{ok,continue,<<"e2e4">>}
+
+%% Make your move for Black and get the engine's move immediately:
+> binbo:uci_play(Pid, #{}, <<"e7e5">>).
+{ok,continue,<<"g1f3">>}   % the engine's move was "g1f3"
+
+%% Make your next move for Black and, again, get the engine's move at once:
+> binbo:uci_play(Pid, #{}, <<"b8c6">>).
+{ok,continue,<<"b1c3">>}   % the engine's move was "b1c3"
+
+%% Look at the board with ascii or unicode pieces.
+%% Flip the board to see Black on downside:
+binbo:print_board(Pid, [flip]).
+binbo:print_board(Pid, [unicode, flip]).
+
+%% It's your turn now. Let the engine search the best move for you with default options.
+%% No move actually done, just hint:
+> binbo:uci_bestmove(Pid, #{}).
+{ok,<<"g8f6">>}
+
+%% Tell the engine to search the best move at depth 20:
+> binbo:uci_bestmove(Pid, #{depth => 20}).
+{ok,<<"g8f6">>}
+
+%% To make the gameplay more convenient, introduce new function:
+> Play = fun(Move) -> Result = binbo:uci_play(Pid, #{}, Move), binbo:print_board(Pid, [unicode, flip]), Result end.
+
+%% Now, with this function, go through three steps at once:
+%%   - make move "g8f6",
+%%   - get the engine's move,
+%%   - see how the position was changed.
+> Play("g8f6").
+----
+
+&#8230; engine's move was "d2d4":
+[source]
+----
+
+   +---+---+---+---+---+---+---+---+
+ 1 | ♖ |   | ♗ | ♔ | ♕ | ♗ |   | ♖ |
+   +---+---+---+---+---+---+---+---+
+ 2 | ♙ | ♙ | ♙ |   |   | ♙ | ♙ | ♙ |
+   +---+---+---+---+---+---+---+---+
+ 3 |   |   | ♘ |   |   | ♘ |   |   |
+   +---+---+---+---+---+---+---+---+
+ 4 |   |   |   | ♙ | ♙ |   |   |   |
+   +---+---+---+---+---+---+---+---+
+ 5 |   |   |   | ♟ |   |   |   |   |
+   +---+---+---+---+---+---+---+---+
+ 6 |   |   | ♞ |   |   | ♞ |   |   |
+   +---+---+---+---+---+---+---+---+
+ 7 | ♟ | ♟ | ♟ |   | ♟ | ♟ | ♟ | ♟ |
+   +---+---+---+---+---+---+---+---+
+ 8 | ♜ |   | ♝ | ♚ | ♛ | ♝ |   | ♜ |
+   +---+---+---+---+---+---+---+---+
+     H   G   F   E   D   C   B   A
+
+  Side to move: Black
+  Lastmove: d2-d4, WHITE_PAWN
+  Fullmove: 4
+  Halfmove: 0
+  FEN: "r1bqkb1r/pppp1ppp/2n2n2/4p3/3PP3/2N2N2/PPP2PPP/R1BQKB1R b KQkq d3 0 4"
+  Status: continue
+
+{ok,continue,<<"d2d4">>}
 ----
 
 == Interface
@@ -635,57 +739,7 @@ You can write a chess bot application or play with engine using functions descri
 * Chess engine must support UCI protocol;
 * Chess engine must be installed on the same machine where Binbo runs on.
 
-==== Quick start playing with engine
-
-Run `make shell` or `rebar3 shell` and then:
-
-[source,erlang]
-----
-%% Start Binbo application first:
-> binbo:start().
-{ok,[compiler,syntax_tools,uef,binbo]}
-
-%% Start new process for the game:
-> {ok, Pid} = binbo:new_server().
-{ok,<0.157.0>}
-
-%% Set full path to the engine's executable file:
-> EnginePath = "/usr/local/bin/stockfish".
-"/usr/local/bin/stockfish"
-
-%% Start new game in the process:
-> binbo:new_uci_game(Pid, #{engine_path => EnginePath}).
-{ok,continue}
-
-%% Which side is to move?
-> binbo:side_to_move(Pid).
-{ok,white}
-
-%% Say, you want to play Black. Let the engine make move for White.
-> binbo:uci_play(Pid, #{}).
-{ok,continue,<<"e2e4">>}
-
-%% Make your move for Black and get the engine's move immediately:
-> binbo:uci_play(Pid, #{}, <<"e7e5">>).
-{ok,continue,<<"g1f3">>}   % the engine's move was "g1f3"
-
-%% Make your next move for Black and, again, get the engine's move at once:
-> binbo:uci_play(Pid, #{}, <<"b8c6">>).
-{ok,continue,<<"b1c3">>}   % the engine's move was "b1c3"
-
-%% Look at the board with ascii or unicode pieces:
-binbo:print_board(Pid).
-binbo:print_board(Pid, [unicode]).
-
-%% It's tour turn now. Let the engine search the best move for you with default options.
-%% No move actually done, just hint:
-> binbo:uci_bestmove(Pid, #{}).
-{ok,<<"g8f6">>}
-
-%% Search the best move at depth 20:
-> binbo:uci_bestmove(Pid, #{depth => 20}).
-{ok,<<"g8f6">>}
-----
+Read the https://gist.github.com/DOBRO/2592c6dad754ba67e6dcaec8c90165bf[description of the Universal Chess Interface (UCI)] with examples for details.
 
 ==== Start new game with engine
 
