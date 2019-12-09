@@ -823,6 +823,8 @@ For example, calling `binbo:uci_bestmove(Pid, #{movetime =&gt; 2000, depth =&gt;
 
 **Note:** the very important option is `movetime`, it tells the engine how long (in milliseconds) to search for the best move.
 
+Functions `binbo:uci_bestmove/2,3` do NOT change the position on the board, they return the bestmove as a hint. To make moves and play with engine, use functions link:#binbo-uci-play-docs[binbo:uci_play/2,3].
+
 .Example:
 [source,erlang]
 ----
@@ -853,6 +855,7 @@ For example, calling `binbo:uci_bestmove(Pid, #{movetime =&gt; 2000, depth =&gt;
 {ok,<<"e1g1">>}
 ----
 
+[[binbo-uci-play-docs]]
 ==== Play with engine, make moves
 
 [source,erlang]
@@ -865,7 +868,7 @@ binbo:uci_play(Pid, BestMoveOptions, YourMove) -> {ok, GameStatus, EngineMove} |
 * `Pid` - `pid` of the game process;
 * `BestMoveOptions` - options for the best move the engine should search for, same as options for link:#search-for-the-best-move[binbo:uci_bestmove/2];
 * `EngineMove` - move that was done by the engine;
-* `YourMove` - your move to send to the engine before it make its move, e.g. `&lt;&lt;"e2e4"&gt;&gt;`, &lt;&lt;"a7a8q"&gt;&gt;, &#8230;
+* `YourMove` - your move to send to the engine before it makes its move, e.g. `&lt;&lt;"e2e4"&gt;&gt;`, &lt;&lt;"a7a8q"&gt;&gt;, &#8230;
 * `GameStatus` is the link:#game-status[game status].
 
 Function `binbo:uci_play(Pid, BestMoveOptions)` goes through the following steps:
