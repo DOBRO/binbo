@@ -868,7 +868,7 @@ binbo:uci_play(Pid, BestMoveOptions, YourMove) -> {ok, GameStatus, EngineMove} |
 * `Pid` - `pid` of the game process;
 * `BestMoveOptions` - options for the best move the engine should search for, same as options for link:#search-for-the-best-move[binbo:uci_bestmove/2];
 * `EngineMove` - move that was done by the engine;
-* `YourMove` - your move to send to the engine before it makes its move, e.g. `&lt;&lt;"e2e4"&gt;&gt;`, &lt;&lt;"a7a8q"&gt;&gt;, &#8230;
+* `YourMove` - your move to send to the engine before it makes its move, e.g. `&lt;&lt;"e2e4"&gt;&gt;`, `&lt;&lt;"a7a8q"&gt;&gt;`, &#8230;
 * `GameStatus` is the link:#game-status[game status].
 
 Function `binbo:uci_play(Pid, BestMoveOptions)` goes through the following steps:
@@ -924,6 +924,134 @@ ok
 
 % Set hash to 32 MB (asynchronous):
 > binbo:uci_command_cast(Pid, "setoption name Hash value 32").
+ok
+----
+
+==== Handling messages from engine
+
+[source,erlang]
+----
+binbo:set_uci_handler(Pid, Handler) -> ok.
+----
+
+.Types:
+[source,erlang]
+----
+Pid :: pid().
+Handler :: undefined | default | fun().
+----
+
+.where:
+* `Pid` - `pid` of the game process;
+* `Handler` - what to do with the message received from the engine.
+
+If `Handler` is `undefined`, no operations are performed (the initial behaviour).
+
+If `Handler` is set to `default`, function `binbo_uci:default_handler/1` from module link:src/binbo_uci.erl[binbo_uci] is performed. It just prints the message to the Erlang shell.
+
+If `Handler` is a **function of arity 1**, this function is performed. The only argument the function takes is the message received from the engine.
+
+`binbo:set_uci_handler/1` is an asynchronous function. You are able to call it any time you want.
+
+**Note**: all the messages received from the engine are of `binary()` type.
+
+.Example with default handler:
+[source,erlang]
+----
+%% In Erlang shell.
+
+% Start new process for the game:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.185.0>}
+
+% Start new game (no message handler):
+> binbo:new_uci_game(Pid, #{engine_path => "/usr/local/bin/stockfish"}).
+{ok,continue}
+
+% Set default message handler:
+> binbo:set_uci_handler(Pid, default).
+ok
+
+% Now start new game (with default message handler):
+> binbo:new_uci_game(Pid, #{engine_path => "/usr/local/bin/stockfish"}).
+{ok,continue}
+----
+
+.&#8230; and get the messages from the engine:
+[source]
+----
+--- UCI LOG BEGIN ---
+Stockfish 10 64 POPCNT by T. Romstad, M. Costalba, J. Kiiski, G. Linscott
+--- UCI LOG END ---
+
+--- UCI LOG BEGIN ---
+id name Stockfish 10 64 POPCNT
+id author T. Romstad, M. Costalba, J. Kiiski, G. Linscott
+
+option name Debug Log File type string default
+option name Contempt type spin default 24 min -100 max 100
+option name Analysis Contempt type combo default Both var Off var White var Black var Both
+option name Threads type spin default 1 min 1 max 512
+option name Hash type spin default 16 min 1 max 131072
+option name Clear Hash type button
+option name Ponder type check default false
+option name MultiPV type spin default 1 min 1 max 500
+option name Skill Level type spin default 20 min 0 max 20
+option name Move Overhead type spin default 30 min 0 max 5000
+option name Minimum Thinking Time type spin default 20 min 0 max 5000
+option name Slow Mover type spin default 84 min 10 max 1000
+option name nodestime type spin default 0 min 0 max 10000
+option name UCI_Chess960 type check default false
+option name UCI_AnalyseMode type check default false
+option name SyzygyPath type string default <empty>
+option name SyzygyProbeDepth type spin default 1 min 1 max 100
+option name Syzygy50MoveRule type check default true
+option name SyzygyProbeLimit type spin default 7 min 0 max 7
+uciok
+--- UCI LOG END ---
+----
+
+.Example with custom message handler:
+[source,erlang]
+----
+%% In Erlang shell.
+
+% Start new process for the game:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.185.0>}
+
+% Start new game (no message handler):
+> binbo:new_uci_game(Pid, #{engine_path => "/usr/local/bin/stockfish"}).
+{ok,continue}
+
+% Remember pid of the calling process:
+> SomePid = self().
+<0.411.0>
+
+% Set custom message handler as a function that resends messages to the process with pid SomePid:
+> binbo:set_uci_handler(Pid, fun(Message) -> SomePid ! Message end).
+ok
+
+% Tell the engine to search for the bestmove:
+> binbo:uci_bestmove(Pid).
+{ok,<<"e2e4">>}
+
+% Get the messages received:
+> flush().
+Shell got <<"info depth 1 seldepth 1 multipv 1 score cp 116 nodes 20 nps 20000 tbhits 0 time 1 pv e2e4\n">>
+Shell got <<"info depth 2 seldepth 2 multipv 1 score cp 112 nodes 54 nps 54000 tbhits 0 time 1 pv e2e4 b7b6\n">>
+Shell got <<"info depth 3 seldepth 3 multipv 1 score cp 148 nodes 136 nps 136000 tbhits 0 time 1 pv d2d4 d7d6 e2e4\n">>
+Shell got <<"info depth 4 seldepth 4 multipv 1 score cp 137 nodes 247 nps 123500 tbhits 0 time 2 pv d2d4 e7e6 e2e4 c7c6\n">>
+Shell got <<"info depth 5 seldepth 5 multipv 1 score cp 77 nodes 1157 nps 385666 tbhits 0 time 3 pv c2c3 d7d5 d2d4 b8c6 c1g5\n">>
+Shell got <<"info depth 6 seldepth 6 multipv 1 score cp 83 nodes 2250 nps 562500 tbhits 0 time 4 pv e2e4 b8c6 d2d4 d7d6 f1c4 g8f6\n">>
+Shell got <<"info depth 7 seldepth 7 multipv 1 score cp 67 nodes 4481 nps 746833 tbhits 0 time 6 pv e2e4 e7e5 d2d4 e5d4 d1d4 b8c6 d4d1\n">>
+Shell got <<"info depth 8 seldepth 8 multipv 1 score cp 60 nodes 7849 nps 981125 tbhits 0 time 8 pv e2e4 e7e5 g1f3 d7d5 d2d4 b8c6 f3e5\n">>
+Shell got <<"info depth 9 seldepth 11 multipv 1 score cp 115 nodes 11846 nps 1184600 tbhits 0 time 10 pv e2e4 e7e5 g1f3 g8f6 b1c3\n">>
+Shell got <<"info depth 10 seldepth 10 multipv 1 score cp 106 upperbound nodes 14951 nps 1245916 tbhits 0 time 12 pv e2e4 d7d5\nbestmove e2e4 ponder d7d5\n">>
+ok
+
+% Now turn the message handler off:
+> binbo:set_uci_handler(Pid, undefined).
 ok
 ----
 
