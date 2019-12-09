@@ -135,12 +135,12 @@ binbo:print_board(Pid, [unicode]).
 binbo:print_board(Pid, [flip]).
 binbo:print_board(Pid, [unicode, flip]).
 
-%% It's your turn now. Let the engine search the best move for you with default options.
+%% It's your turn now. Let the engine search for the best move for you with default options.
 %% No move actually done, just hint:
 > binbo:uci_bestmove(Pid, #{}).
 {ok,<<"g8f6">>}
 
-%% Tell the engine to search the best move at depth 20:
+%% Tell the engine to search for the best move at depth 20:
 > binbo:uci_bestmove(Pid, #{depth => 20}).
 {ok,<<"g8f6">>}
 
@@ -751,11 +751,11 @@ binbo:new_uci_game(Pid, Options) -> {ok, GameStatus} | {error, Reason}.
 .Types:
 [source,erlang]
 ----
-Pid :: pid(),
+Pid :: pid().
 
 Options :: #{
-    engine_path := EnginePath,
-    fen => Fen
+  engine_path := EnginePath,
+  fen => Fen
 }.
 
 EnginePath :: binary() | string().
@@ -775,6 +775,7 @@ Fen :: binary() | string().
 ----
 %% In Erlang shell.
 
+% Start new process for the game
 > {ok, Pid} = binbo:new_server().
 {ok,<0.185.0>}
 
@@ -787,6 +788,68 @@ Fen :: binary() | string().
 {ok,continue}
 ----
 
+==== Search for the best move
+
+[source,erlang]
+----
+binbo:uci_bestmove(Pid) -> {ok, Move} | {error, Reason}.
+binbo:uci_bestmove(Pid, Options) -> {ok, Move} | {error, Reason}.
+----
+
+.Types:
+[source,erlang]
+----
+Pid :: pid().
+Move :: binary() % e.g. <<"e2e4">>, <<"a7a8q">>, ...
+
+Options :: #{
+  depth  => pos_integer(),     % depth <x> (search x plies only)
+  wtime  => non_neg_integer(), % wtime <x> (white has x msec left on the clock)
+  btime  => non_neg_integer(), % btime <x> (black has x msec left on the clock)
+  winc  => pos_integer(),      % winc <x> (white increment per move in mseconds if x > 0)
+  binc  => pos_integer(),      % binc <x> (black increment per move in mseconds if x > 0)
+  movestogo => pos_integer(),  % movestogo <x> (there are x moves to the next time control, this will only be sent if x > 0, if you don't get this and get the wtime and btime it's sudden death)
+  nodes  => pos_integer(),     % nodes <x> (search x nodes only)
+  movetime => pos_integer()    % movetime <x> (search exactly x mseconds)
+}.
+----
+
+`binbo:uci_bestmove(Pid)` is the same as `binbo:uci_bestmove(Pid, #{})`, it sends command `go` to the engine.
+`binbo:uci_bestmove(Pid, Options)` sends command `go ...` to the engine adding values associated with the keys of `Options`.
+
+For example, calling `binbo:uci_bestmove(Pid, #{movetime =&gt; 2000, depth =&gt; 10})` means sending command `go movetime 2000 depth 10` to the engine.
+
+**Note:** the very important option is `movetime`, it tells the engine how long (in milliseconds) to search for the best move.
+
+.Example:
+[source,erlang]
+----
+%% In Erlang shell.
+
+% Start new process for the game
+> {ok, Pid} = binbo:new_server().
+{ok,<0.185.0>}
+
+% New game with the given FEN:
+> binbo:new_uci_game(Pid, #{engine_path => "/usr/local/bin/stockfish", fen => <<"r1bqkbnr/pp1ppp1p/2n3p1/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4">>}).
+{ok,continue}
+
+% Search for the best move (no options given):
+> binbo:uci_bestmove(Pid).
+{ok,<<"e1g1">>}
+
+% Search exactly 1000 milliseconds:
+> binbo:uci_bestmove(Pid, #{movetime => 1000}).
+{ok,<<"e1g1">>}
+
+% Search for the best move at depth 10:
+> binbo:uci_bestmove(Pid, #{depth => 10}).
+{ok,<<"b5c6">>}
+
+% Search exactly 5000 milliseconds at depth 30:
+> binbo:uci_bestmove(Pid, #{depth => 30, movetime => 5000}).
+{ok,<<"e1g1">>}
+----
 
 == Building and testing
 
