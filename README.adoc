@@ -776,7 +776,7 @@ Fen :: binary() | string().
 ----
 %% In Erlang shell.
 
-% Start new process for the game
+% Start new process for the game:
 > {ok, Pid} = binbo:new_server().
 {ok,<0.185.0>}
 
@@ -830,7 +830,7 @@ Functions `binbo:uci_bestmove/2,3` do NOT change the position on the board, they
 ----
 %% In Erlang shell.
 
-% Start new process for the game
+% Start new process for the game:
 > {ok, Pid} = binbo:new_server().
 {ok,<0.185.0>}
 
@@ -886,6 +886,47 @@ The behaviour of function `binbo:uci_play(Pid, BestMoveOptions, YourMove)` is sl
 * tuple `{ok, GameStatus, EngineMove}` is returned.
 
 See how to play with engine in the link:#quickstart-play-with-engine[example] from _&quot;Quick start&quot;_ section.
+
+==== Send any command to engine
+
+[source,erlang]
+----
+binbo:uci_command_call(Pid, Command) -> ok | {error, Reason}.
+binbo:uci_command_cast(Pid, Command) -> ok.
+----
+
+.where:
+* `Pid` - `pid` of the game process;
+* `Command` - UCI command to send to the engine.
+
+You can send any command to the engine with functions `binbo:uci_command_call/2` and `binbo:uci_command_cast/2`.
+
+`binbo:uci_command_call/2` is a synchronous function, it calls https://erlang.org/doc/man/gen_server.html#call-2[gen_server:call/2] inside. Returns `ok` if `Command` is sent, or tuple `{error, uci_port_not_open}` if the engine's process is not connected to the game process.
+
+`binbo:uci_command_cast/2` is an asynchronous function, it calls https://erlang.org/doc/man/gen_server.html#cast-2[gen_server:cast/2] inside. Returns `ok`. It also checks if the engine's process is connected to the game process before sending message and, if not connected, returns `ok` anyway.
+
+.Example:
+[source,erlang]
+----
+%% In Erlang shell.
+
+% Start new process for the game:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.185.0>}
+
+% Start new game:
+> binbo:new_uci_game(Pid, #{engine_path => "/usr/local/bin/stockfish"}).
+{ok,continue}
+
+% Set hash to 32 MB (synchronous):
+> binbo:uci_command_call(Pid, "setoption name Hash value 32").
+ok
+
+% Set hash to 32 MB (asynchronous):
+> binbo:uci_command_cast(Pid, "setoption name Hash value 32").
+ok
+----
+
 
 == Building and testing
 
