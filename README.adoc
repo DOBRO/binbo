@@ -93,6 +93,7 @@ binbo:print_board(Pid).
 binbo:print_board(Pid, [unicode]).
 ----
 
+[[quickstart-play-with-engine]]
 === Play with engine
 
 .In Erlang shell:
@@ -788,21 +789,22 @@ Fen :: binary() | string().
 {ok,continue}
 ----
 
+[[search-for-the-best-move]]
 ==== Search for the best move
 
 [source,erlang]
 ----
-binbo:uci_bestmove(Pid) -> {ok, Move} | {error, Reason}.
-binbo:uci_bestmove(Pid, Options) -> {ok, Move} | {error, Reason}.
+binbo:uci_bestmove(Pid) -> {ok, BestMove} | {error, Reason}.
+binbo:uci_bestmove(Pid, BestMoveOptions) -> {ok, BestMove} | {error, Reason}.
 ----
 
 .Types:
 [source,erlang]
 ----
 Pid :: pid().
-Move :: binary() % e.g. <<"e2e4">>, <<"a7a8q">>, ...
+BestMove :: binary() % e.g. <<"e2e4">>, <<"a7a8q">>, ...
 
-Options :: #{
+BestMoveOptions :: #{
   depth  => pos_integer(),     % depth <x> (search x plies only)
   wtime  => non_neg_integer(), % wtime <x> (white has x msec left on the clock)
   btime  => non_neg_integer(), % btime <x> (black has x msec left on the clock)
@@ -815,7 +817,7 @@ Options :: #{
 ----
 
 `binbo:uci_bestmove(Pid)` is the same as `binbo:uci_bestmove(Pid, #{})`, it sends command `go` to the engine.
-`binbo:uci_bestmove(Pid, Options)` sends command `go ...` to the engine adding values associated with the keys of `Options`.
+`binbo:uci_bestmove(Pid, BestMoveOptions)` sends command `go ...` to the engine adding values associated with the keys of `BestMoveOptions`.
 
 For example, calling `binbo:uci_bestmove(Pid, #{movetime =&gt; 2000, depth =&gt; 10})` means sending command `go movetime 2000 depth 10` to the engine.
 
@@ -850,6 +852,37 @@ For example, calling `binbo:uci_bestmove(Pid, #{movetime =&gt; 2000, depth =&gt;
 > binbo:uci_bestmove(Pid, #{depth => 30, movetime => 5000}).
 {ok,<<"e1g1">>}
 ----
+
+==== Play with engine, make moves
+
+[source,erlang]
+----
+binbo:uci_play(Pid, BestMoveOptions) -> {ok, GameStatus, EngineMove} | {error, Reason}.
+binbo:uci_play(Pid, BestMoveOptions, YourMove) -> {ok, GameStatus, EngineMove} | {error, Reason}.
+----
+
+.where:
+* `Pid` - `pid` of the game process;
+* `BestMoveOptions` - options for the best move the engine should search for, same as options for link:#search-for-the-best-move[binbo:uci_bestmove/2];
+* `EngineMove` - move that was done by the engine;
+* `YourMove` - your move to send to the engine before it make its move, e.g. `&lt;&lt;"e2e4"&gt;&gt;`, &lt;&lt;"a7a8q"&gt;&gt;, &#8230;
+* `GameStatus` is the link:#game-status[game status].
+
+Function `binbo:uci_play(Pid, BestMoveOptions)` goes through the following steps:
+
+* the engine searches for the bestmove (`EngineMove`) from the current position;
+* the engine makes this move and changes its internal position;
+* tuple `{ok, GameStatus, EngineMove}` is returned.
+
+The behaviour of function `binbo:uci_play(Pid, BestMoveOptions, YourMove)` is slightly different. Here are the steps it goes through:
+
+* your move `YourMove` is sent to the engine;
+* the engine receives `YourMove` and changes its internal position;
+* the engine searches for the bestmove (`EngineMove`) from the changed position;
+* the engine makes this move and changes its internal position;
+* tuple `{ok, GameStatus, EngineMove}` is returned.
+
+See how to play with engine in the link:#quickstart-play-with-engine[example] from _&quot;Quick start&quot;_ section.
 
 == Building and testing
 
