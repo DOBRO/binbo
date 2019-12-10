@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.2.0] - 2019-12-10
 
 - UCI protocol support added.
 - UCI protocol related functions:
