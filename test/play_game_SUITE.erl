@@ -17,7 +17,7 @@
 	castling_black_after_rook_move/1,
 	castling_white_when_attacked/1,
 	castling_black_when_attacked/1,
-	enpassant_moves/1
+	enpassant_moves/1, simple_game/1
 ]).
 
 
@@ -37,7 +37,7 @@ groups() ->
 		castling_black_after_rook_move,
 		castling_white_when_attacked,
 		castling_black_when_attacked,
-		enpassant_moves
+		enpassant_moves, simple_game
 	]}].
 
 %% init_per_suite/1
@@ -111,21 +111,27 @@ move_all_pieces(Config) ->
 checkmate_white(Config) ->
 	Pid = get_pid(Config),
 	{ok, continue} = binbo:new_game(Pid, <<"rnbqkbnr/3ppppp/ppp5/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq -">>),
+	{ok, <<"rnbqkbnr/3ppppp/ppp5/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1">>} = binbo:get_fen(Pid),
 	{ok, checkmate} = binbo:move(Pid, <<"c4f7">>),
+	{ok,checkmate} = binbo:game_status(Pid),
 	ok.
 
 %% checkmate_black/1
 checkmate_black(Config) ->
 	Pid = get_pid(Config),
 	{ok, continue} = binbo:new_game(Pid, <<"rnb1k1nr/pppp1ppp/8/2b1p3/P6q/NP6/2PPPPPP/R1BQKBNR b KQkq -">>),
+	{ok, <<"rnb1k1nr/pppp1ppp/8/2b1p3/P6q/NP6/2PPPPPP/R1BQKBNR b KQkq - 0 1">>} = binbo:get_fen(Pid),
 	{ok, checkmate} = binbo:move(Pid, <<"h4f2">>),
+	{ok, checkmate} = binbo:game_status(Pid),
 	ok.
 
 %% stalemate_white/1
 stalemate_white(Config) ->
 	Pid = get_pid(Config),
 	{ok, continue} = binbo:new_game(Pid, <<"k7/8/8/8/7Q/8/3K4/1R6 w - -">>),
+	{ok, <<"k7/8/8/8/7Q/8/3K4/1R6 w - - 0 1">>} = binbo:get_fen(Pid),
 	{ok, {draw,stalemate}} = binbo:move(Pid, <<"h4h7">>),
+	{ok, {draw,stalemate}} = binbo:game_status(Pid),
 	ok.
 
 %% stalemate_black/1
@@ -133,6 +139,7 @@ stalemate_black(Config) ->
 	Pid = get_pid(Config),
 	{ok, continue} = binbo:new_game(Pid, <<"1q2b1b1/8/8/8/8/7k/8/K7 b - -">>),
 	{ok, {draw,stalemate}} = binbo:move(Pid, <<"e8g6">>),
+	{ok, {draw,stalemate}} = binbo:game_status(Pid),
 	ok.
 
 %% castling_kingside/1
@@ -143,6 +150,7 @@ castling_kingside(Config) ->
 	{ok, continue} = binbo:move(Pid, <<"e1g1">>),
 	% Black castling
 	{ok, continue} = binbo:move(Pid, <<"e8g8">>),
+	{ok, continue} = binbo:game_status(Pid),
 	ok.
 
 %% castling_queenside/1
@@ -346,4 +354,34 @@ enpassant_moves(Config) ->
 		, <<"c2b3">>, <<"h7h5">>
 		, <<"g5h6">> % white pawn enpassant move
 	]),
+	ok.
+
+%% simple_game/1
+simple_game(Config) ->
+	Pid = get_pid(Config),
+	InitialFen = <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>,
+	InitialFen = binbo_fen:initial(),
+	{ok, continue} = binbo:new_game(Pid),
+	{ok, InitialFen} = binbo:get_fen(Pid),
+	{ok, white} = binbo:side_to_move(Pid),
+	{ok, continue} = binbo:game_status(Pid),
+
+	{ok, continue} = binbo:move(Pid, "e2e4"),
+	{ok, black} = binbo:side_to_move(Pid),
+	{ok, continue} = binbo:game_status(Pid),
+	{ok, <<"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1">>} = binbo:get_fen(Pid),
+
+	{ok, continue} = binbo:move(Pid, "e7e5"),
+	{ok, white} = binbo:side_to_move(Pid),
+	{ok, continue} = binbo:game_status(Pid),
+	{ok, <<"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2">>} = binbo:get_fen(Pid),
+
+	{ok, continue} = binbo:new_game(Pid),
+	{ok, continue} = binbo:san_move(Pid, <<"e4">>),
+	{ok, <<"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1">>} = binbo:get_fen(Pid),
+	{ok, continue} = binbo:san_move(Pid, "e5"),
+	{ok, <<"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2">>} = binbo:get_fen(Pid),
+
+	ok = binbo:print_board(Pid),
+	ok = binbo:print_board(Pid, [unicode, flip]),
 	ok.
