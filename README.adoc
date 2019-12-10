@@ -65,7 +65,7 @@ $ rebar3 shell
 
 === Common example
 
-.In Erlang shell:
+.In the Erlang shell:
 [source,erlang]
 ----
 %% Start Binbo application first:
@@ -96,7 +96,7 @@ binbo:print_board(Pid, [unicode]).
 [[quickstart-play-with-engine]]
 === Play with engine
 
-.In Erlang shell:
+.In the Erlang shell:
 [source,erlang]
 ----
 %% Start Binbo application first:
@@ -251,7 +251,7 @@ binbo:new_game(Pid, Fen3).
 .Example:
 [source,erlang]
 ----
-%% In Erlang shell.
+%% In the Erlang shell.
 
 > {ok, Pid} = binbo:new_server().
 {ok,<0.185.0>}
@@ -289,7 +289,7 @@ Function `binbo:san_move/2` is intended to handle various formats of argument `M
 .Examples for `binbo:move/2`:
 [source,erlang]
 ----
-%% In Erlang shell.
+%% In the Erlang shell.
 
 % New game from the starting position:
 > {ok, Pid} = binbo:new_server().
@@ -324,7 +324,7 @@ Function `binbo:san_move/2` is intended to handle various formats of argument `M
 .Examples for `binbo:san_move/2`:
 [source,erlang]
 ----
-%% In Erlang shell.
+%% In the Erlang shell.
 
 % New game from the starting position:
 > {ok, Pid} = binbo:new_server().
@@ -742,6 +742,7 @@ You can write a chess bot application or play with engine using functions descri
 
 Read the https://gist.github.com/DOBRO/2592c6dad754ba67e6dcaec8c90165bf[description of the Universal Chess Interface (UCI)] with examples for details.
 
+[[start-new-game-with-engine]]
 ==== Start new game with engine
 
 [source,erlang]
@@ -774,7 +775,7 @@ Fen :: binary() | string().
 .Example:
 [source,erlang]
 ----
-%% In Erlang shell.
+%% In the Erlang shell.
 
 % Start new process for the game:
 > {ok, Pid} = binbo:new_server().
@@ -828,7 +829,7 @@ Functions `binbo:uci_bestmove/2,3` do NOT change the position on the board, they
 .Example:
 [source,erlang]
 ----
-%% In Erlang shell.
+%% In the Erlang shell.
 
 % Start new process for the game:
 > {ok, Pid} = binbo:new_server().
@@ -887,6 +888,37 @@ The behaviour of function `binbo:uci_play(Pid, BestMoveOptions, YourMove)` is sl
 
 See how to play with engine in the link:#quickstart-play-with-engine[example] from _&quot;Quick start&quot;_ section.
 
+==== Сhange position after the game is created
+
+[source,erlang]
+----
+binbo:uci_set_position(Pid, Fen) -> {ok, GameStatus} | {error, Reason}.
+----
+
+.where:
+* `Pid` - `pid` of the game process;
+* `Fen` is the Forsyth–Edwards Notation (FEN);
+* `GameStatus` is the link:#game-status[game status].
+
+Using this function you can change the position at any time. The game MUST be link:#start-new-game-with-engine[created] before.
+
+.Example:
+[source,erlang]
+----
+%% In the Erlang shell.
+
+% Start new process for the game:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.185.0>}
+
+% Start new game from the initial position:
+> binbo:new_uci_game(Pid, #{engine_path => "/usr/local/bin/stockfish"}).
+
+% Set up new position with the given FEN:
+> binbo:uci_set_position(Pid, <<"r1bqk1nr/ppppppb1/2n3p1/7p/2PP4/5NPP/PP2PP2/RNBQKB1R b KQkq - 2 5">>).
+{ok,continue}
+----
+
 ==== Send any command to engine
 
 [source,erlang]
@@ -908,7 +940,7 @@ You can send any command to the engine with functions `binbo:uci_command_call/2`
 .Example:
 [source,erlang]
 ----
-%% In Erlang shell.
+%% In the Erlang shell.
 
 % Start new process for the game:
 > {ok, Pid} = binbo:new_server().
@@ -958,7 +990,7 @@ If `Handler` is a **function of arity 1**, this function is performed. The only 
 .Example with default handler:
 [source,erlang]
 ----
-%% In Erlang shell.
+%% In the Erlang shell.
 
 % Start new process for the game:
 > {ok, Pid} = binbo:new_server().
@@ -1014,7 +1046,7 @@ uciok
 .Example with custom message handler:
 [source,erlang]
 ----
-%% In Erlang shell.
+%% In the Erlang shell.
 
 % Start new process for the game:
 > {ok, Pid} = binbo:new_server().
