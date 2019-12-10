@@ -25,7 +25,7 @@
 -export([uci_command_call/2, uci_command_cast/2]).
 -export([uci_mode/1, uci_bestmove/2]).
 -export([uci_play/2, uci_play/3]).
--export([uci_set_position/2]).
+-export([uci_set_position/2, uci_sync_position/1]).
 -export([set_uci_handler/2]).
 
 %%% gen_server export.
@@ -65,7 +65,7 @@
 }.
 -type init_uci_game_error() :: {could_not_open_port, term()}.
 -type uci_handler() :: undefined | default | fun((binary()) -> term()).
--type uci_cmd_spec() :: iodata() | binbo_uci:command_spec() | {set_position, fen()}.
+-type uci_cmd_spec() :: iodata() | binbo_uci:command_spec() | {set_position, fen()} | sync_position.
 
 -type uci_wait_prefix() :: binary().
 -type uci_wait_prefix_size() :: pos_integer().
@@ -195,6 +195,20 @@ handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_port = Port} =
 			{Error, State}
 	end,
 	{reply, Reply, State2};
+handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_port = Port} = State) ->
+	Reply = case binbo_game:get_fen(Game) of
+		{ok, Fen} ->
+			Command = [
+				"stop", $\n,
+				"ucinewgame", $\n,
+				"position fen ", Fen
+			],
+			_ = uci_port_command(Port, Command),
+			ok;
+		{error, _} = Error ->
+			Error
+	end,
+	{reply, Reply, State};
 handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uci_port = Port} = State0) ->
 	_ = uci_port_command(Port, Command),
 	State = State0#state{
@@ -413,6 +427,11 @@ uci_play(Pid, BestMoveOpts, Move) ->
 -spec uci_set_position(pid(), fen()) -> {ok, game_status()} | {error, term()}.
 uci_set_position(Pid, Fen) ->
 	uci_command_call(Pid, {set_position, Fen}).
+
+%% uci_sync_position/1
+-spec uci_sync_position(pid()) -> ok | {error, term()}.
+uci_sync_position(Pid) ->
+	uci_command_call(Pid, sync_position).
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions

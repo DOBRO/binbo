@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
   - `binbo:set_uci_handler/2`;
   - `binbo:uci_play/2,3`;
   - `binbo:uci_set_position/2`.
+  - `binbo:uci_sync_position/1`.
 - New function `binbo:side_to_move/1`.
 
 ## [1.1.2] - 2019-09-26
