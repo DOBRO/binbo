@@ -1154,11 +1154,15 @@ $ rebar3 dialyzer
 [source,bash]
 ----
 $ make test
+
+$ UCI_ENGINE_PATH="/path/to/engine" make test
 ----
 
 [source,bash]
 ----
 $ rebar3 ct --verbose
+
+$ UCI_ENGINE_PATH="/path/to/engine" rebar3 ct --verbose
 ----
 
 === Code coverage
