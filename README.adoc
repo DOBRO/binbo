@@ -919,6 +919,39 @@ Using this function you can change the position at any time. The game MUST be li
 {ok,continue}
 ----
 
+==== Synchronize positions
+
+[source,erlang]
+----
+binbo:uci_sync_position(Pid) -> ok | {error, Reason}.
+----
+
+.where:
+* `Pid` - `pid` of the game process;
+
+It can be useful to call this function when the position of the game process was changed somehow and the engine wasn't notified about that.
+
+.Example:
+[source,erlang]
+----
+%% In the Erlang shell.
+
+% Start new process for the game:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.185.0>}
+
+% Start new game from the initial position:
+> binbo:new_uci_game(Pid, #{engine_path => "/usr/local/bin/stockfish"}).
+
+% Make move (the engine knows nothing about it):
+> binbo:move(Pid, "e2e4").
+{ok,continue}
+
+% Now synchronize the engine's position with the position of the game process:
+> binbo:uci_sync_position(Pid).
+ok
+----
+
 ==== Send any command to engine
 
 [source,erlang]
