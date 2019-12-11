@@ -19,3 +19,6 @@ branches:
   only:
   - master
   - develop
+cache:
+  directories:
+     - "$HOME/.cache/rebar3"
