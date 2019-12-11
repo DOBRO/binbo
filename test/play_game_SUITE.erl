@@ -366,6 +366,19 @@ simple_game(Config) ->
 	{ok, white} = binbo:side_to_move(Pid),
 	{ok, continue} = binbo:game_status(Pid),
 
+	{ok, IntMovelist} = binbo:all_legal_moves(Pid),
+	{ok, IntMovelist2} = binbo:all_legal_moves(Pid, int),
+	true = (IntMovelist =:= IntMovelist2),
+	{ok, BinMovelist} = binbo:all_legal_moves(Pid, bin),
+	{ok, StrMovelist} = binbo:all_legal_moves(Pid, str),
+
+	20 = erlang:length(IntMovelist),
+	20 = erlang:length(BinMovelist),
+	20 = erlang:length(StrMovelist),
+	ok = check_int_movelist(IntMovelist),
+	ok = check_bin_movelist(BinMovelist),
+	ok = check_str_movelist(StrMovelist),
+
 	{ok, continue} = binbo:move(Pid, "e2e4"),
 	{ok, black} = binbo:side_to_move(Pid),
 	{ok, continue} = binbo:game_status(Pid),
@@ -382,6 +395,40 @@ simple_game(Config) ->
 	{ok, continue} = binbo:san_move(Pid, "e5"),
 	{ok, <<"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2">>} = binbo:get_fen(Pid),
 
+	ok = binbo:game_draw(Pid),
+	{ok,{draw,{manual,undefined}}} = binbo:game_status(Pid),
+	{error,{already_has_status,{draw,{manual,undefined}}}} = binbo:game_draw(Pid),
+
+	{ok, continue} = binbo:new_game(Pid),
+	ok = binbo:game_draw(Pid, for_test),
+	{ok, {draw, {manual, for_test}}} = binbo:game_status(Pid),
+	{error, {already_has_status, {draw, {manual, for_test}}}} = binbo:game_draw(Pid),
+
 	ok = binbo:print_board(Pid),
 	ok = binbo:print_board(Pid, [unicode, flip]),
 	ok.
+
+%% check_int_movelist/1
+check_int_movelist([]) -> ok;
+check_int_movelist([{From,To}|Tail]) ->
+	true = (erlang:is_integer(From) andalso (From >= 0) andalso (From =< 63)),
+	true = (erlang:is_integer(To) andalso (To >= 0) andalso (To =< 63)),
+	true = (From =/= To),
+	check_int_movelist(Tail).
+
+%% check_bin_movelist/1
+check_bin_movelist([]) -> ok;
+check_bin_movelist([{From,To}|Tail]) ->
+	true = (erlang:is_binary(From) andalso (erlang:byte_size(From) =:= 2)),
+	true = (erlang:is_binary(To) andalso (erlang:byte_size(To) =:= 2)),
+	true = (From =/= To),
+	check_bin_movelist(Tail).
+
+
+%% check_str_movelist/1
+check_str_movelist([]) -> ok;
+check_str_movelist([{From,To}|Tail]) ->
+	true = (erlang:is_list(From) andalso (erlang:length(From) =:= 2)),
+	true = (erlang:is_list(To) andalso (erlang:length(To) =:= 2)),
+	true = (From =/= To),
+	check_str_movelist(Tail).
