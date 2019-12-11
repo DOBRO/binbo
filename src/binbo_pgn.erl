@@ -71,7 +71,7 @@ delete_headers(Pgn) ->
 %% replace_newlines/1
 -spec replace_newlines(pgn()) -> pgn().
 replace_newlines(Pgn) ->
-	re:replace(Pgn, <<"\\R+">>, <<$\s>>, [{return, binary}, global, bsr_anycrlf, never_utf]).
+	re:replace(Pgn, <<"(\\R|\\t)+">>, <<$\s>>, [{return, binary}, global, bsr_anycrlf, never_utf]).
 
 %% delete_comments/1
 -spec delete_comments(pgn()) -> pgn().

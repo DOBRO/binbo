@@ -21,7 +21,7 @@
 -export([groups/0]).
 -export([init_per_suite/1, end_per_suite/1]).
 -export([init_per_testcase/2, end_per_testcase/2]).
--export([load_pgn_nightmare/1, load_pgn_empty/1, load_pgn_not_binary/1, load_pgn_no_moves/1, load_pgn_no_result/1]).
+-export([load_pgn_nightmare/1, load_pgn_empty/1, load_pgn_not_binary/1, load_pgn_no_moves/1, load_pgn_no_result/1, load_pgn_from_file/1]).
 
 %% all/0
 all() -> [{group, pgn_loading}].
@@ -33,7 +33,8 @@ groups() ->
 		load_pgn_empty,
 		load_pgn_not_binary,
 		load_pgn_no_moves,
-		load_pgn_no_result
+		load_pgn_no_result,
+		load_pgn_from_file
 	]}].
 
 %% init_per_suite/1
@@ -106,6 +107,15 @@ load_pgn_nightmare(Config) ->
 	{ok, checkmate} = binbo:load_pgn(Pid, Pgn),
 	ok.
 
+%% load_pgn_from_file/1
+load_pgn_from_file(Config) ->
+	Pid = get_pid(Config),
+	DataDir = ?value(data_dir, Config), % ./pgn_SUITE_data/
+	Filename = filename:join(DataDir, "simple.pgn"),
+	{ok, _} = binbo:load_pgn_file(Pid, Filename),
+	ok.
+
+
 %%%------------------------------------------------------------------------------
 %%%   PGNs
 %%%------------------------------------------------------------------------------
@@ -141,7 +151,7 @@ pgn_nightmare() ->
     { B84: Sicilian Scheveningen: 6 Be2 a6, lines without early Be3 }
 1.e4
     { 0 }
-c5
+\t\t c5 \t\t {% !!! INCLUDE TABS FOR TEST !!! %}
     { 37 }
 2.Nf3
     { 0 }
