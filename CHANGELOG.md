@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2019-12-11
+
+- Fixed: PGN could not be loaded if it contained Tab characters.
+
 ## [1.2.0] - 2019-12-10
 
 - UCI protocol support added.
