@@ -21,4 +21,5 @@ branches:
   - develop
 cache:
   directories:
-     - "$HOME/.cache/rebar3"
+    - _build
+    - "$HOME/.cache/rebar3"
