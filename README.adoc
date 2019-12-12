@@ -17,6 +17,8 @@ Binbo also uses the https://www.chessprogramming.org/Magic_Bitboards[Magic Bitbo
 
 In addition, the application is able to communicate with https://www.chessprogramming.org/Category:UCI[chess engines that support UCI protocol] (https://www.chessprogramming.org/UCI[Universal Chess Interface]) such as _Stockfish_, _Shredder_, _Houdini_, etc. You can therefore write your own client-side or server-side **chess bot** application on top of Binbo, or just play with engine right in Erlang shell.
 
+Binbo is part of the https://github.com/h4cc/awesome-elixir[Awesome Elixir] list.
+
 image::https://user-images.githubusercontent.com/296845/61208986-40792d80-a701-11e9-93c8-d2c41c5ef00d.png[Binbo sample]
 
 '''
