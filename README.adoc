@@ -47,6 +47,7 @@ toc::[]
 &#9817;{nbsp}&#9816;{nbsp}&#9815;{nbsp}&#9814;{nbsp}&#9813;{nbsp}&#9812;{nbsp}{nbsp}{nbsp}{nbsp}&#9823;{nbsp}&#9822;{nbsp}&#9821;{nbsp}&#9820;{nbsp}&#9819;{nbsp}&#9818;
 * UCI protocol support.
 * Passes all https://www.chessprogramming.org/Perft_Results[perft] tests.
+* Cross-platform application. It can run on Linux, Unix, Windows, and macOS.
 * Ready for use on game servers.
 
 == Requirements
