@@ -983,14 +983,15 @@ validate_fen_enpassant(#{?GAME_KEY_ENPASSANT := EnpaBB}) when ?IS_NOT(EnpaBB, ?R
 	error;
 validate_fen_enpassant(#{?GAME_KEY_ENPASSANT := EnpaBB, ?GAME_KEY_OCCUPIED := AllPieces}) when ?IS_AND(EnpaBB, AllPieces) ->
 	error;
-validate_fen_enpassant(#{?GAME_KEY_ENPASSANT := EnpaBB} = Game) ->
+validate_fen_enpassant(#{?GAME_KEY_ENPASSANT := EnpaBB, ?GAME_KEY_OCCUPIED := AllPieces} = Game) ->
 	{Pawns, From, To} = case EnpaBB of
 		_ when ?IS_AND(EnpaBB, ?RANK_3_BB) ->
 			{white_pawns_bb(Game), binbo_bb:shift_south(EnpaBB), binbo_bb:shift_north(EnpaBB)};
 		_ when ?IS_AND(EnpaBB, ?RANK_6_BB) ->
 			{black_pawns_bb(Game), binbo_bb:shift_north(EnpaBB), binbo_bb:shift_south(EnpaBB)}
 	end,
-	case ?IS_NOT(From, Pawns) andalso ?IS_AND(To, Pawns) of
+	% From-square cannot be occupied by piece. To-square must be occupied by pawn.
+	case ?IS_NOT(From, AllPieces) andalso ?IS_AND(To, Pawns) of
 		true  -> ok;
 		false -> error
 	end.
