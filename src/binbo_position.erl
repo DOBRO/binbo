@@ -254,7 +254,10 @@ pawn_moves_bb(FromIdx, Color, Game) ->
 	AttacksBB = binbo_attacks:pawn_attacks_bb(FromIdx, Color),
 	ValidAttacksBB = AttacksBB band EnemySideBB,
 	PushesBB = binbo_bb:pawn_pushes_bb(Color, PawnBB, EmptySquaresBB),
-	EnpaMoveBB = enpassant_moves_bb(Color, AttacksBB, Game) band get_enpassant_bb(Game),
+	EnpaMoveBB = case get_enpassant_bb(Game) of
+		?EMPTY_BB -> ?EMPTY_BB;
+		PosEnpaBB -> enpassant_moves_bb(Color, AttacksBB, Game) band PosEnpaBB
+	end,
 	ValidAttacksBB bor PushesBB bor EnpaMoveBB.
 
 %% knight_moves_bb/1
