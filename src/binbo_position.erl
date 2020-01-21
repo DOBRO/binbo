@@ -430,7 +430,7 @@ all_pieces_bb(#{?GAME_KEY_OCCUPIED := BB}) ->
 %% empty_squares_bb/1
 -spec empty_squares_bb(bb_game()) -> bb().
 empty_squares_bb(Game) ->
-	binbo_bb:bb_not(?ALL_SQUARES_BB, all_pieces_bb(Game)).
+	?ALL_SQUARES_BB bxor all_pieces_bb(Game).
 
 
 %% white_king_bb/1
