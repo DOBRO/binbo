@@ -318,11 +318,13 @@ pawn_move(Game, MoveInfo) ->
 	MoveInfo2 = case (MovesBB =/= ?EMPTY_BB) andalso (ToBB =:= PosEnpaBB) of
 		true -> % en-passant capture
 			ToIdx = MoveInfo#move_info.to_idx,
-			CapturedIdx = enpassant_captured_index(ToIdx, ToBB),
+			CapturedIdx = case Pcolor of
+				?WHITE -> ToIdx - 8;
+				?BLACK -> ToIdx + 8
+			end,
 			CapturedPiece = binbo_position:get_piece(CapturedIdx, Game),
-			CaptColor = ?COLOR(CapturedPiece),
 			?PAWN = ?PIECE_TYPE(CapturedPiece), % ensure pawn is on square
-			CaptColor = ?SWITCH_COLOR(Pcolor), % ensure pawn belongs to enemy side
+			true = (?COLOR(CapturedPiece) =:= ?SWITCH_COLOR(Pcolor)), % ensure pawn belongs to enemy side
 			MoveInfo#move_info{captured = CapturedPiece, captured_idx = CapturedIdx};
 		false -> % other
 			MoveInfo
@@ -375,14 +377,6 @@ castling_flag(?WHITE, ?E1_IDX, ?C1_IDX) -> ?CASTLING_W_OOO;
 castling_flag(?BLACK, ?E8_IDX, ?G8_IDX) -> ?CASTLING_B_OO;
 castling_flag(?BLACK, ?E8_IDX, ?C8_IDX) -> ?CASTLING_B_OOO;
 castling_flag(_, _, _) -> ?CASTLING_NONE.
-
-
-%% enpassant_captured_index/2
--spec enpassant_captured_index(sq_idx(), sq_bb()) -> sq_idx().
-enpassant_captured_index(ToIdx, ToBB) when ?IS_AND(ToBB, ?RANK_6_BB) ->
-	ToIdx - 8;
-enpassant_captured_index(ToIdx, ToBB) when ?IS_AND(ToBB, ?RANK_3_BB) ->
-	ToIdx + 8.
 
 
 %% parse_san/2
