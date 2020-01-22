@@ -5,10 +5,14 @@
 @title The Binbo application
 @reference See <a href="https://github.com/DOBRO/binbo" target="_blank">Binbo page on github</a> for more information and examples.
 
-@doc `Binbo' is a Chess representation written in pure Erlang using Bitboards. It is basically aimed to be used on game servers where people play chess online.
+@doc <strong>Binbo</strong> is a full-featured Chess representation written in pure Erlang using <a href="https://www.chessprogramming.org/Bitboards" target="_blank">Bitboards</a>. It is basically aimed to be used on game servers where people play chess online.
 
 It’s called Binbo because its ground is a binary board containing only zeros and ones (0 and 1) since this is the main meaning of Bitboards as an internal chessboard representation.
 
-Binbo also uses the Magic Bitboards approach for a blazing fast move generation of sliding pieces (rook, bishop, and queen).
+Binbo also uses the <a href="https://www.chessprogramming.org/Magic_Bitboards" target="_blank">Magic Bitboards</a> approach for a blazing fast move generation of sliding pieces (rook, bishop, and queen).
 
 Note: it’s not a chess engine but it could be a good starting point for it. It can play the role of a core (regarding move generation and validation) for multiple chess engines running on distributed Erlang nodes, since Binbo is an OTP application itself.
+
+In addition, the application is able to communicate with <a href="https://www.chessprogramming.org/Category:UCI" target="_blank">chess engines that support UCI protocol</a> (<a href="https://www.chessprogramming.org/UCI" target="_blank">Universal Chess Interface</a>) such as Stockfish, Shredder, Houdini, etc. You can therefore write your own client-side or server-side chess bot application on top of Binbo, or just play with engine right in Erlang shell.
+
+Binbo is part of the <a href="https://github.com/h4cc/awesome-elixir" target="_blank">Awesome Elixir</a> list.
