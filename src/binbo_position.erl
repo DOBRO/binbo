@@ -20,7 +20,7 @@
 -export([make_move/2, finalize_move/2]).
 -export([get_fen/1, pretty_board/2]).
 -export([
-	pawn_moves_bb/3,
+	pawn_moves_bb/3, pawn_moves_bb/4,
 	knight_moves_bb/3,
 	bishop_moves_bb/2,
 	rook_moves_bb/2,
@@ -248,17 +248,24 @@ get_piece_indexes_on_rank(Piece, Rank, Game) ->
 %% pawn_moves_bb/3
 -spec pawn_moves_bb(sq_idx(), color(), bb_game()) -> bb().
 pawn_moves_bb(FromIdx, Color, Game) ->
+	PosEnpaBB = get_enpassant_bb(Game),
+	pawn_moves_bb(FromIdx, Color, Game, PosEnpaBB).
+
+%% pawn_moves_bb/4
+-spec pawn_moves_bb(sq_idx(), color(), bb_game(), enpa_bb()) -> bb().
+pawn_moves_bb(FromIdx, Color, Game, PosEnpaBB) ->
 	PawnBB = ?SQUARE_BB(FromIdx),
 	EnemySideBB = enemy_side_bb(Color, Game),
 	EmptySquaresBB = empty_squares_bb(Game),
 	AttacksBB = binbo_attacks:pawn_attacks_bb(FromIdx, Color),
 	ValidAttacksBB = AttacksBB band EnemySideBB,
 	PushesBB = binbo_bb:pawn_pushes_bb(Color, PawnBB, EmptySquaresBB),
-	EnpaMoveBB = case get_enpassant_bb(Game) of
-		?EMPTY_BB -> ?EMPTY_BB;
-		PosEnpaBB -> enpassant_moves_bb(Color, AttacksBB, Game) band PosEnpaBB
+	EnpaMoveBB = case (PosEnpaBB =:= ?EMPTY_BB) of
+		true  -> ?EMPTY_BB;
+		false -> enpassant_moves_bb(Color, AttacksBB, Game) band PosEnpaBB
 	end,
 	ValidAttacksBB bor PushesBB bor EnpaMoveBB.
+
 
 %% knight_moves_bb/1
 -spec knight_moves_bb(sq_idx(), color(), bb_game()) -> bb().

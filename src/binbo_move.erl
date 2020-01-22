@@ -313,8 +313,9 @@ piece_move(Game, #move_info{ptype = Ptype} = MoveInfo) ->
 -spec pawn_move(bb_game(), move_info()) -> {bb(), move_info()}.
 pawn_move(Game, MoveInfo) ->
 	#move_info{from_idx = FromIdx, pcolor = Pcolor, to_bb = ToBB} = MoveInfo,
-	MovesBB = binbo_position:pawn_moves_bb(FromIdx, Pcolor, Game),
-	MoveInfo2 = case (MovesBB =/= ?EMPTY_BB) andalso (ToBB =:= binbo_position:get_enpassant_bb(Game)) of
+	PosEnpaBB = binbo_position:get_enpassant_bb(Game),
+	MovesBB = binbo_position:pawn_moves_bb(FromIdx, Pcolor, Game, PosEnpaBB),
+	MoveInfo2 = case (MovesBB =/= ?EMPTY_BB) andalso (ToBB =:= PosEnpaBB) of
 		true -> % en-passant capture
 			ToIdx = MoveInfo#move_info.to_idx,
 			CapturedIdx = enpassant_captured_index(ToIdx, ToBB),
