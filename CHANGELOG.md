@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.3] - 2020-01-22
+
+- Performance improvements.
+
 ## [1.2.2] - 2020-01-10
 
 - Dependency `uef-lib` updated to 2.5.3.
