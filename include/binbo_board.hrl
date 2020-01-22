@@ -127,25 +127,24 @@
 %%%   Bitboards of squares
 %%%------------------------------------------------------------------------------
 
--define(A1_BB, 2#0000000000000000000000000000000000000000000000000000000000000001).
--define(B1_BB, (1 bsl ?B1_IDX)).
--define(C1_BB, (1 bsl ?C1_IDX)).
--define(D1_BB, (1 bsl ?D1_IDX)).
--define(E1_BB, (1 bsl ?E1_IDX)).
--define(F1_BB, (1 bsl ?F1_IDX)).
--define(G1_BB, (1 bsl ?G1_IDX)).
--define(H1_BB, (1 bsl ?H1_IDX)).
+-define(A1_BB, 16#01).
+-define(B1_BB, 16#02).               % (1 bsl ?B1_IDX)
+-define(C1_BB, 16#04).               % (1 bsl ?C1_IDX)
+-define(D1_BB, 16#08).               % (1 bsl ?D1_IDX)
+-define(E1_BB, 16#10).               % (1 bsl ?E1_IDX)
+-define(F1_BB, 16#20).               % (1 bsl ?F1_IDX)
+-define(G1_BB, 16#40).               % (1 bsl ?G1_IDX)
+-define(H1_BB, 16#80).               % (1 bsl ?H1_IDX)
+-define(A8_BB, 16#100000000000000).  % (1 bsl ?A8_IDX)
+-define(B8_BB, 16#200000000000000).  % (1 bsl ?B8_IDX)
+-define(C8_BB, 16#400000000000000).  % (1 bsl ?C8_IDX)
+-define(D8_BB, 16#800000000000000).  % (1 bsl ?D8_IDX)
+-define(E8_BB, 16#1000000000000000). % (1 bsl ?E8_IDX)
+-define(F8_BB, 16#2000000000000000). % (1 bsl ?F8_IDX)
+-define(G8_BB, 16#4000000000000000). % (1 bsl ?G8_IDX)
+-define(H8_BB, 16#8000000000000000). % (1 bsl ?H8_IDX)
 
--define(A8_BB, (1 bsl ?A8_IDX)).
--define(B8_BB, (1 bsl ?B8_IDX)).
--define(C8_BB, (1 bsl ?C8_IDX)).
--define(D8_BB, (1 bsl ?D8_IDX)).
--define(E8_BB, (1 bsl ?E8_IDX)).
--define(F8_BB, (1 bsl ?F8_IDX)).
--define(G8_BB, (1 bsl ?G8_IDX)).
--define(H8_BB, 2#1000000000000000000000000000000000000000000000000000000000000000).
-
--define(A1A8H1H8_BB, (?A1_BB bor ?A8_BB bor ?H1_BB bor ?H8_BB)).
+-define(A1A8H1H8_BB, 16#8100000000000081). % (?A1_BB bor ?A8_BB bor ?H1_BB bor ?H8_BB)
 
 
 %%%------------------------------------------------------------------------------
@@ -167,49 +166,49 @@
 %%%------------------------------------------------------------------------------
 
 -define(EMPTY_BB,         0).
--define(ALL_SQUARES_BB,   2#1111111111111111111111111111111111111111111111111111111111111111).
--define(DARK_SQUARES_BB,  2#1010101001010101101010100101010110101010010101011010101001010101).
--define(LIGHT_SQUARES_BB, 2#0101010110101010010101011010101001010101101010100101010110101010).
+-define(ALL_SQUARES_BB,   16#FFFFFFFFFFFFFFFF).
+-define(DARK_SQUARES_BB,  16#AA55AA55AA55AA55).
+-define(LIGHT_SQUARES_BB, 16#55AA55AA55AA55AA).
 
 
 %%%------------------------------------------------------------------------------
 %%%   Bitboards of files
 %%%------------------------------------------------------------------------------
 
--define(FILE_A_BB, 2#0000000100000001000000010000000100000001000000010000000100000001).
--define(FILE_B_BB, (?FILE_A_BB bsl 1)).
--define(FILE_C_BB, (?FILE_A_BB bsl 2)).
--define(FILE_D_BB, (?FILE_A_BB bsl 3)).
--define(FILE_E_BB, (?FILE_A_BB bsl 4)).
--define(FILE_F_BB, (?FILE_A_BB bsl 5)).
--define(FILE_G_BB, (?FILE_A_BB bsl 6)).
--define(FILE_H_BB, (?FILE_A_BB bsl 7)).
+-define(FILE_A_BB,      16#101010101010101).
+-define(FILE_B_BB,      16#202020202020202).  % (?FILE_A_BB bsl 1)
+-define(FILE_C_BB,      16#404040404040404).  % (?FILE_A_BB bsl 2)
+-define(FILE_D_BB,      16#808080808080808).  % (?FILE_A_BB bsl 3)
+-define(FILE_E_BB,      16#1010101010101010). % (?FILE_A_BB bsl 4)
+-define(FILE_F_BB,      16#2020202020202020). % (?FILE_A_BB bsl 5)
+-define(FILE_G_BB,      16#4040404040404040). % (?FILE_A_BB bsl 6)
+-define(FILE_H_BB,      16#8080808080808080). % (?FILE_A_BB bsl 7)
 
--define(FILE_AB_BB, (?FILE_A_BB bor ?FILE_B_BB)).
--define(FILE_GH_BB, (?FILE_G_BB bor ?FILE_H_BB)).
+-define(FILE_AB_BB,     16#303030303030303).  % (?FILE_A_BB bor ?FILE_B_BB)
+-define(FILE_GH_BB,     16#C0C0C0C0C0C0C0C0). % (?FILE_G_BB bor ?FILE_H_BB)
 
--define(NOT_FILE_A_BB, (?ALL_SQUARES_BB band (bnot ?FILE_A_BB))).
--define(NOT_FILE_H_BB, (?ALL_SQUARES_BB band (bnot ?FILE_H_BB))).
+-define(NOT_FILE_A_BB,  16#FEFEFEFEFEFEFEFE). % (?ALL_SQUARES_BB bxor ?FILE_A_BB)
+-define(NOT_FILE_H_BB,  16#7F7F7F7F7F7F7F7F). % (?ALL_SQUARES_BB bxor ?FILE_H_BB)
 
--define(NOT_FILE_AB_BB, (?ALL_SQUARES_BB band (bnot ?FILE_AB_BB))).
--define(NOT_FILE_GH_BB, (?ALL_SQUARES_BB band (bnot ?FILE_GH_BB))).
+-define(NOT_FILE_AB_BB, 16#FCFCFCFCFCFCFCFC). % (?ALL_SQUARES_BB bxor ?FILE_AB_BB)
+-define(NOT_FILE_GH_BB, 16#3F3F3F3F3F3F3F3F). % (?ALL_SQUARES_BB bxor ?FILE_GH_BB)
 
 
 %%%------------------------------------------------------------------------------
 %%%   Bitboards of ranks
 %%%------------------------------------------------------------------------------
 
--define(RANK_1_BB, 2#0000000000000000000000000000000000000000000000000000000011111111).
--define(RANK_2_BB, (?RANK_1_BB bsl  8)).
--define(RANK_3_BB, (?RANK_1_BB bsl 16)).
--define(RANK_4_BB, (?RANK_1_BB bsl 24)).
--define(RANK_5_BB, (?RANK_1_BB bsl 32)).
--define(RANK_6_BB, (?RANK_1_BB bsl 40)).
--define(RANK_7_BB, (?RANK_1_BB bsl 48)).
--define(RANK_8_BB, (?RANK_1_BB bsl 56)).
+-define(RANK_1_BB,     16#FF).
+-define(RANK_2_BB,     16#FF00).             % (?RANK_1_BB bsl  8)
+-define(RANK_3_BB,     16#FF0000).           % (?RANK_1_BB bsl 16)
+-define(RANK_4_BB,     16#FF000000).         % (?RANK_1_BB bsl 24)
+-define(RANK_5_BB,     16#FF00000000).       % (?RANK_1_BB bsl 32)
+-define(RANK_6_BB,     16#FF0000000000).     % (?RANK_1_BB bsl 40)
+-define(RANK_7_BB,     16#FF000000000000).   % (?RANK_1_BB bsl 48)
+-define(RANK_8_BB,     16#FF00000000000000). % (?RANK_1_BB bsl 56)
 
--define(NOT_RANK_1_BB, (?ALL_SQUARES_BB band (bnot ?RANK_1_BB))).
--define(NOT_RANK_8_BB, (?ALL_SQUARES_BB band (bnot ?RANK_8_BB))).
+-define(NOT_RANK_1_BB, 16#FFFFFFFFFFFFFF00). % (?ALL_SQUARES_BB bxor ?RANK_1_BB)
+-define(NOT_RANK_8_BB, 16#FFFFFFFFFFFFFF).   % (?ALL_SQUARES_BB bxor ?RANK_8_BB)
 
 
 %%%------------------------------------------------------------------------------
