@@ -270,8 +270,7 @@ pawn_moves_bb(FromIdx, Color, Game, PosEnpaBB) ->
 %% knight_moves_bb/1
 -spec knight_moves_bb(sq_idx(), color(), bb_game()) -> bb().
 knight_moves_bb(FromIdx, Color, Game) ->
-	AttacksBB = binbo_attacks:knight_attacks_bb(FromIdx),
-	AttacksBB band not_own_side(Color, Game).
+	binbo_attacks:knight_attacks_bb(FromIdx) band not_own_side(Color, Game).
 
 %% bishop_moves_bb/2
 -spec bishop_moves_bb(sq_idx(), bb_game()) -> bb().
@@ -295,8 +294,7 @@ queen_moves_bb(FromIdx, Game) ->
 -spec king_moves_bb(sq_idx(), color(), bb_game()) -> bb().
 king_moves_bb(FromIdx, Color, Game) ->
 	AttacksBB = binbo_attacks:king_attacks_bb(FromIdx) band not_own_side(Color, Game),
-	CastlingMovesBB = valid_castling_moves_bb(Color, FromIdx, Game),
-	AttacksBB bor CastlingMovesBB.
+	AttacksBB bor valid_castling_moves_bb(Color, FromIdx, Game).
 
 %% is_in_check/2
 -spec is_in_check(color(), bb_game()) -> boolean().
