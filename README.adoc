@@ -7,7 +7,7 @@ image:https://travis-ci.org/DOBRO/binbo.svg?branch=master["Build Status", link="
 image:https://img.shields.io/badge/erlang-%3E%3D%2020.0-0d6e8c.svg["Erlang", link="https://www.erlang.org/"]
 image:https://img.shields.io/badge/license-Apache%202.0-blue.svg["License", link="LICENSE"]
 
-Binbo is a Chess representation written in pure Erlang using https://www.chessprogramming.org/Bitboards[Bitboards]. It is basically aimed to be used on game servers where people play chess online.
+Binbo is a full-featured Chess representation written in pure Erlang using https://www.chessprogramming.org/Bitboards[Bitboards]. It is basically aimed to be used on game servers where people play chess online.
 
 It's called `Binbo` because its ground is a **bin**ary **bo**ard containing only _zeros_ and _ones_ (`0` and `1`) since this is the main meaning of Bitboards as an internal chessboard representation.
 

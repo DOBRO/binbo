@@ -1,5 +1,5 @@
 {application, binbo, [
-	{description, "Chess representation using Bitboards"},
+	{description, "Full-featured Chess representation using Bitboards"},
 	{vsn, "1.2.2"},
 	{modules, []},
 	{registered, [binbo_sup]},
