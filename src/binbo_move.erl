@@ -51,7 +51,6 @@
 -type idx_move() :: {sq_idx(), sq_idx()} | {sq_idx(), sq_idx(), q | r | b | n}.
 -type bb_game() :: binbo_position:bb_game().
 -type sq_idx() :: binbo_board:square_index().
--type sq_bb() :: binbo_bb:sq_bb().
 -type sq_notation() :: binbo_board:square_notation().
 -type promo_char() :: ?WN | ?WB | ?WR | ?WQ | ?BN | ?BB | ?BR | ?BQ.
 -type promo_type() :: ?KNIGHT | ?BISHOP | ?ROOK | ?QUEEN.
