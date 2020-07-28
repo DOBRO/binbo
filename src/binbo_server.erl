@@ -525,12 +525,22 @@ cast(Pid, Msg) ->
 %% reply_with_timeout/2
 -spec reply_with_timeout(Reply, state()) -> {reply, Reply, state(), timeout()} when Reply :: term().
 reply_with_timeout(Reply, State) ->
-	{reply, Reply, set_idle_timestamp(State), get_idle_timeout(State)}.
+	case get_idle_timeout(State) of
+		infinity ->
+			{reply, Reply, State, infinity};
+		Timeout  ->
+			{reply, Reply, set_idle_timestamp(State), Timeout}
+	end.
 
 %% noreply_with_timeout/1
 -spec noreply_with_timeout(state()) -> {noreply, state(), timeout()}.
 noreply_with_timeout(State) ->
-	{noreply, set_idle_timestamp(State), get_idle_timeout(State)}.
+	case get_idle_timeout(State) of
+		infinity ->
+			{noreply, State, infinity};
+		Timeout  ->
+			{noreply, set_idle_timestamp(State), Timeout}
+	end.
 
 %% get_idle_timeout/1
 -spec get_idle_timeout(state()) -> timeout().
