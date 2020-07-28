@@ -75,6 +75,7 @@
 
 -record(state, {
 	game = undefined :: undefined | bb_game(),
+	idle_timestamp = undefined :: undefined | integer(),
 	server_opts = #{} :: server_opts(),
 	uci_port = undefined :: undefined | port(),
 	uci_from = undefined :: undefined | from(),
@@ -123,7 +124,7 @@ init(ServerOpts) ->
 	process_flag(trap_exit, true),
 	case update_server_opts(ServerOpts, #state{}) of
 		{ok, State} ->
-			{ok, State, get_idle_timeout(State)};
+			{ok, set_idle_timestamp(State), get_idle_timeout(State)};
 		{error, Reason} ->
 			{stop, Reason}
 	end.
@@ -342,8 +343,22 @@ do_handle_info({'EXIT', Port, _}, #state{uci_port = Port} = State0) ->
 	% Handle UCI port exit
 	{noreply, State0#state{uci_port = undefined}};
 do_handle_info(timeout, State) ->
-	Reason = {shutdown, {idle_timeout_reached, get_idle_timeout(State)}},
-	{stop, Reason, State};
+	% Handle idle timeout.
+	% Since any process can send 'timeout' to our process (e.g. just for fun),
+	% we should check if it is a really valid message.
+	IdleTimeout = get_idle_timeout(State),
+	case is_integer(IdleTimeout) of
+		true  ->
+			case (idle_timestamp() - get_idle_timestamp(State)) >= IdleTimeout of
+				true  ->
+					Reason = {shutdown, {idle_timeout_reached, IdleTimeout}},
+					{stop, Reason, State};
+				false ->
+					{noreply, State}
+			end;
+		false -> % no timeout set, don't terminate
+			{noreply, State}
+	end;
 do_handle_info(_Msg, State) ->
 	{noreply, State}.
 
@@ -510,12 +525,32 @@ cast(Pid, Msg) ->
 %% reply_with_timeout/2
 -spec reply_with_timeout(Reply, state()) -> {reply, Reply, state(), timeout()} when Reply :: term().
 reply_with_timeout(Reply, State) ->
-	{reply, Reply, State, get_idle_timeout(State)}.
+	{reply, Reply, set_idle_timestamp(State), get_idle_timeout(State)}.
 
 %% noreply_with_timeout/1
 -spec noreply_with_timeout(state()) -> {noreply, state(), timeout()}.
 noreply_with_timeout(State) ->
-	{noreply, State, get_idle_timeout(State)}.
+	{noreply, set_idle_timestamp(State), get_idle_timeout(State)}.
+
+%% get_idle_timeout/1
+-spec get_idle_timeout(state()) -> timeout().
+get_idle_timeout(#state{server_opts = Opts}) ->
+	maps:get(idle_timeout, Opts, infinity).
+
+%% idle_timestamp/0
+-spec idle_timestamp() -> integer().
+idle_timestamp() ->
+	erlang:system_time(millisecond).
+
+%% get_idle_timestamp/1
+-spec get_idle_timestamp(state()) -> integer().
+get_idle_timestamp(#state{idle_timestamp = Time}) ->
+	Time.
+
+%% set_idle_timestamp/1
+-spec set_idle_timestamp(state()) -> state().
+set_idle_timestamp(State) ->
+	State#state{idle_timestamp = idle_timestamp()}.
 
 %% update_server_opts/2
 -spec update_server_opts(server_opts(), state()) -> {ok, state()} | {error, {bad_server_option, term()}} | {error, {bad_server_options_type, term()}}.
@@ -538,12 +573,6 @@ do_update_server_opts([{OptKey, OptVal} | OtherOpts], #state{server_opts = Opts}
 		true  -> do_update_server_opts(OtherOpts, State#state{server_opts = Opts#{OptKey => OptVal}});
 		false -> {error, {bad_server_option, {OptKey, OptVal}}}
 	end.
-
-
-%% get_idle_timeout/1
--spec get_idle_timeout(state()) -> timeout().
-get_idle_timeout(#state{server_opts = Opts}) ->
-	maps:get(idle_timeout, Opts, infinity).
 
 %% init_uci_game/2
 -spec init_uci_game(uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error(), state()}.
