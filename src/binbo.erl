@@ -60,18 +60,18 @@ stop() ->
 	application:stop(?APPLICATION).
 
 %% new_server/0
--spec new_server() -> {ok, pid()}.
-%% @equiv new_server([])
+-spec new_server() -> {ok, pid()} | {error, term()}.
+%% @equiv new_server(#{})
 new_server() ->
-	new_server([]).
+	new_server(#{}).
 
-%% new_server/0
--spec new_server(Args :: term()) -> {ok, pid()}.
+%% new_server/1
+-spec new_server(Opts :: binbo_server:server_opts()) -> {ok, pid()} | {error, term()}.
 %% @doc
 %% Call to start new game process.
 %% @end
-new_server(Args) ->
-	binbo_sup:start_child(Args).
+new_server(Opts) ->
+	binbo_sup:start_child(Opts).
 
 %% stop_server/1
 -spec stop_server(pid()) -> binbo_server:stop_ret().

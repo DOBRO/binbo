@@ -39,7 +39,9 @@
 %%%------------------------------------------------------------------------------
 %%%   Types
 %%%------------------------------------------------------------------------------
-
+-type server_opts() :: #{
+	idle_timeout => timeout()
+}.
 -type stop_ret() :: ok | {error, {not_pid, term()}}.
 -type from() :: {pid(), reference()}.
 -type bb_game() :: binbo_position:bb_game().
@@ -73,6 +75,7 @@
 
 -record(state, {
 	game = undefined :: undefined | bb_game(),
+	server_opts = #{} :: server_opts(),
 	uci_port = undefined :: undefined | port(),
 	uci_from = undefined :: undefined | from(),
 	uci_wait_prefix = undefined :: undefined | uci_wait_prefix(),
@@ -82,6 +85,7 @@
 }).
 -type state() :: #state{}.
 
+-export_type([server_opts/0]).
 -export_type([new_game_ret/0, game_move_ret/0, get_fen_ret/0]).
 -export_type([load_pgn_ret/0, load_pgn_file_ret/0]).
 -export_type([game_state_ret/0, game_status_ret/0, game_draw_ret/0]).
@@ -96,9 +100,9 @@
 %%%------------------------------------------------------------------------------
 
 %% start_link/0
--spec start_link(Args :: term()) -> {ok, pid()}.
-start_link(Args) ->
-	gen_server:start_link(?MODULE, Args, []).
+-spec start_link(ServerOpts :: server_opts()) -> {ok, pid()}.
+start_link(ServerOpts) ->
+	gen_server:start_link(?MODULE, ServerOpts, []).
 
 %% stop/1
 -spec stop(pid()) -> stop_ret().
@@ -114,75 +118,128 @@ stop(Pid) ->
 %%%------------------------------------------------------------------------------
 
 %% init/1
--spec init(Args :: term()) -> {ok, state()}.
-init(_Args) ->
+-spec init(ServerOpts :: server_opts()) -> {ok, state(), timeout()} | {stop, {error, term()}}.
+init(ServerOpts) ->
 	process_flag(trap_exit, true),
-	State = #state{},
-	{ok, State}.
+	case update_server_opts(ServerOpts, #state{}) of
+		{ok, State} ->
+			{ok, State, get_idle_timeout(State)};
+		{error, Reason} ->
+			{stop, Reason}
+	end.
 
 %% handle_call/3
--spec handle_call(term(), from(), state()) -> {reply, term(), state()} | {noreply, state()}.
-handle_call({new_game, Fen}, _From, State) ->
-	{Reply, State2} = case binbo_game:new(Fen) of
+-spec handle_call(term(), from(), state()) -> {reply, term(), state(), timeout()} | {noreply, state(), timeout()}.
+handle_call(Msg, From, State) ->
+	case do_handle_call(Msg, From, State) of
+		{reply, Reply, NewState} ->
+			reply_with_timeout(Reply, NewState);
+		{noreply, NewState} ->
+			noreply_with_timeout(NewState)
+	end.
+
+%% handle_cast/2
+-spec handle_cast(term(), state()) -> {noreply, state(), timeout()} | {stop, normal, state()}.
+handle_cast(Msg, State) ->
+	case do_handle_cast(Msg, State) of
+		{noreply, NewState} ->
+			noreply_with_timeout(NewState);
+		{stop, Reason, NewState} ->
+			{stop, Reason, NewState}
+	end.
+
+%% handle_info/2
+-spec handle_info(term(), state()) -> {noreply, state(), timeout()} | {stop, Reason :: term(), state()}.
+handle_info(Msg, State) ->
+	case do_handle_info(Msg, State) of
+		{noreply, NewState} ->
+			noreply_with_timeout(NewState);
+		{stop, Reason, NewState} ->
+			{stop, Reason, NewState}
+	end.
+
+%% terminate/2
+-spec terminate(term(), state()) -> ok.
+terminate(_Reason, State) ->
+	#state{uci_port = Port} = State,
+	_ = maybe_close_uci_port(Port),
+	ok.
+
+%% code_change/3
+code_change(_OldVsn, State, _Extra) ->
+	{ok, State}.
+
+
+
+%%%------------------------------------------------------------------------------
+%%%   gen_server intermediate handlers:
+%%%      do_handle_call/3, do_handle_cast/2, do_handle_info/2
+%%%------------------------------------------------------------------------------
+
+%% do_handle_call/3
+-spec do_handle_call(term(), from(), state()) -> {reply, term(), state()} | {noreply, state()}.
+do_handle_call({new_game, Fen}, _From, State) ->
+	{Reply, NewState} = case binbo_game:new(Fen) of
 		{ok, {Game, GameStatus}} ->
 			{{ok, GameStatus}, State#state{game = Game}};
 		{error, _} = Error ->
 			{Error, State}
 	end,
-	{reply, Reply, State2};
-handle_call({game_move, MoveNotation, Move}, _From, #state{game = Game0} = State0) ->
-	{Reply, State} = case binbo_game:move(MoveNotation, Move, Game0) of
+	{reply, Reply, NewState};
+do_handle_call({game_move, MoveNotation, Move}, _From, #state{game = Game0} = State0) ->
+	{Reply, NewState} = case binbo_game:move(MoveNotation, Move, Game0) of
 		{ok, {Game, GameStatus}} ->
 			{{ok, GameStatus}, State0#state{game = Game}};
 		{error, _} = Error ->
 			{Error, State0}
 	end,
-	{reply, Reply, State};
-handle_call({load_pgn, Type, Data}, _From, State0) ->
+	{reply, Reply, NewState};
+do_handle_call({load_pgn, Type, Data}, _From, State) ->
 	Result = case Type of
 		binary -> binbo_game:load_pgn(Data);
 		file   -> binbo_game:load_pgn_file(Data)
 	end,
-	{Reply, State} = case Result of
+	{Reply, NewState} = case Result of
 		{ok, {Game, GameStatus}} ->
-			{{ok, GameStatus}, State0#state{game = Game}};
+			{{ok, GameStatus}, State#state{game = Game}};
 		{error, _} = Error ->
-			{Error, State0}
+			{Error, State}
 	end,
-	{reply, Reply, State};
-handle_call(game_state, _From, #state{game = Game} = State) ->
+	{reply, Reply, NewState};
+do_handle_call(game_state, _From, #state{game = Game} = State) ->
 	{reply, Game, State};
-handle_call(game_status, _From, #state{game = Game} = State) ->
+do_handle_call(game_status, _From, #state{game = Game} = State) ->
 	Reply = binbo_game:status(Game),
 	{reply, Reply, State};
-handle_call(get_fen, _From, #state{game = Game} = State) ->
+do_handle_call(get_fen, _From, #state{game = Game} = State) ->
 	Reply = binbo_game:get_fen(Game),
 	{reply, Reply, State};
-handle_call({all_legal_moves, MoveType}, _From, #state{game = Game} = State) ->
+do_handle_call({all_legal_moves, MoveType}, _From, #state{game = Game} = State) ->
 	Reply = binbo_game:all_legal_moves(Game, MoveType),
 	{reply, Reply, State};
-handle_call(side_to_move, _From, #state{game = Game} = State) ->
+do_handle_call(side_to_move, _From, #state{game = Game} = State) ->
 	Reply = binbo_game:side_to_move(Game),
 	{reply, Reply, State};
-handle_call({game_draw, Reason}, _From, #state{game = Game0} = State0) ->
-	{Reply, State} = case binbo_game:draw(Reason, Game0) of
+do_handle_call({game_draw, Reason}, _From, #state{game = Game0} = State0) ->
+	{Reply, NewState} = case binbo_game:draw(Reason, Game0) of
 		{ok, Game} ->
 			{ok, State0#state{game = Game}};
 		{error, _} = Error ->
 			{Error, State0}
 	end,
-	{reply, Reply, State};
-handle_call({new_uci_game, Opts}, _From, State0) ->
-	case init_uci_game(Opts, State0) of
+	{reply, Reply, NewState};
+do_handle_call({new_uci_game, Opts}, _From, State0) ->
+	{Reply, NewState} = case init_uci_game(Opts, State0) of
 		{ok, #state{game = Game} = State} ->
-			{reply, binbo_game:status(Game), State};
+			{binbo_game:status(Game), State};
 		{error, Reason, State} ->
-			{reply, {error, Reason}, State}
-	end;
-handle_call({uci_command, _}, _From, #state{uci_port = undefined} = State0) ->
+			{{error, Reason}, State}
+	end,
+	{reply, Reply, NewState};
+do_handle_call({uci_command, _}, _From, #state{uci_port = undefined} = State0) ->
 	{reply, {error, uci_port_not_open}, State0};
-handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_port = Port} = State) ->
-	{Reply, State2} = case binbo_game:new(Fen) of
+do_handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_port = Port} = State) ->
+	{Reply, NewState} = case binbo_game:new(Fen) of
 		{ok, {Game, GameStatus}} ->
 			Command = [
 				"stop", $\n,
@@ -194,8 +251,8 @@ handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_port = Port} =
 		{error, _} = Error ->
 			{Error, State}
 	end,
-	{reply, Reply, State2};
-handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_port = Port} = State) ->
+	{reply, Reply, NewState};
+do_handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_port = Port} = State) ->
 	Reply = case binbo_game:get_fen(Game) of
 		{ok, Fen} ->
 			Command = [
@@ -209,7 +266,7 @@ handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_port = 
 			Error
 	end,
 	{reply, Reply, State};
-handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uci_port = Port} = State0) ->
+do_handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uci_port = Port} = State0) ->
 	_ = uci_port_command(Port, Command),
 	State = State0#state{
 		uci_from = From,
@@ -219,23 +276,24 @@ handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uc
 	},
 	% Do NOT reply here. Reply later in handle_info/2.
 	{noreply, State};
-handle_call({uci_command, Command}, _From, #state{uci_port = Port} = State0) ->
+do_handle_call({uci_command, Command}, _From, #state{uci_port = Port} = State) ->
 	_ = uci_port_command(Port, Command),
-	{reply, ok, State0};
-handle_call(_Msg, _From, State) ->
+	{reply, ok, State};
+do_handle_call(_Msg, _From, State) ->
 	{reply, ignored, State}.
 
-%% handle_cast/2
--spec handle_cast(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
-handle_cast({uci_command, Command}, #state{uci_port = Port} = State) ->
+
+%% do_handle_cast/2
+-spec do_handle_cast(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
+do_handle_cast({uci_command, Command}, #state{uci_port = Port} = State) ->
 	_ = case Port of
 		undefined -> ok;
 		_ -> uci_port_command(Port, Command)
 	end,
 	{noreply, State};
-handle_cast({update_game_state, Game}, State) ->
+do_handle_cast({update_game_state, Game}, State) ->
 	{noreply, State#state{game = Game}};
-handle_cast({set_uci_handler, Handler}, State0) ->
+do_handle_cast({set_uci_handler, Handler}, State0) ->
 	NewHandler = case Handler of
 		default ->
 			fun binbo_uci:default_handler/1;
@@ -248,16 +306,17 @@ handle_cast({set_uci_handler, Handler}, State0) ->
 			undefined
 	end,
 	{noreply, State0#state{uci_handler = NewHandler}};
-handle_cast(stop, State) ->
+do_handle_cast(stop, State) ->
 	{stop, normal, State};
-handle_cast(_Msg, State) ->
+do_handle_cast(_Msg, State) ->
 	{noreply, State}.
 
-%% handle_info/2
--spec handle_info(term(), state()) -> {noreply, state()}.
-handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
+
+%% do_handle_info/2
+-spec do_handle_info(term(), state()) -> {noreply, state()} | {stop, Reason :: term(), state()}.
+do_handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
 	#state{uci_wait_prefix_size = PrefixSize, uci_wait_prefix_handler = PrefixHandler} = State0,
-	State = case PrefixHandler(Data, Prefix, PrefixSize) of
+	NewState = case PrefixHandler(Data, Prefix, PrefixSize) of
 		skip ->
 			State0;
 		Reply ->
@@ -275,27 +334,18 @@ handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Pref
 			}
 	end,
 	_ = maybe_handle_uci_message(State0#state.uci_handler, Data),
-	{noreply, State};
-handle_info({Port, {data, Data}}, #state{uci_port = Port} = State0) ->
+	{noreply, NewState};
+do_handle_info({Port, {data, Data}}, #state{uci_port = Port} = State0) ->
 	_ = maybe_handle_uci_message(State0#state.uci_handler, Data),
 	{noreply, State0};
-handle_info({'EXIT', Port, _}, #state{uci_port = Port} = State0) ->
+do_handle_info({'EXIT', Port, _}, #state{uci_port = Port} = State0) ->
 	% Handle UCI port exit
-	State = State0#state{uci_port = undefined},
-	{noreply, State};
-handle_info(_Msg, State) ->
+	{noreply, State0#state{uci_port = undefined}};
+do_handle_info(timeout, State) ->
+	Reason = {shutdown, {idle_timeout_reached, get_idle_timeout(State)}},
+	{stop, Reason, State};
+do_handle_info(_Msg, State) ->
 	{noreply, State}.
-
-%% terminate/2
--spec terminate(term(), state()) -> ok.
-terminate(_Reason, State) ->
-	#state{uci_port = Port} = State,
-	_ = maybe_close_uci_port(Port),
-	ok.
-
-%% code_change/3
-code_change(_OldVsn, State, _Extra) ->
-	{ok, State}.
 
 
 %%%------------------------------------------------------------------------------
@@ -456,6 +506,44 @@ call_uci(Pid, CommandSpec, Timeout) ->
 -spec cast(pid(), term()) -> ok.
 cast(Pid, Msg) ->
 	gen_server:cast(Pid, Msg).
+
+%% reply_with_timeout/2
+-spec reply_with_timeout(Reply, state()) -> {reply, Reply, state(), timeout()} when Reply :: term().
+reply_with_timeout(Reply, State) ->
+	{reply, Reply, State, get_idle_timeout(State)}.
+
+%% noreply_with_timeout/1
+-spec noreply_with_timeout(state()) -> {noreply, state(), timeout()}.
+noreply_with_timeout(State) ->
+	{noreply, State, get_idle_timeout(State)}.
+
+%% update_server_opts/2
+-spec update_server_opts(server_opts(), state()) -> {ok, state()} | {error, {bad_server_option, term()}} | {error, {bad_server_options_type, term()}}.
+update_server_opts(Opts, State) when is_map(Opts) ->
+	do_update_server_opts(maps:to_list(Opts), State);
+update_server_opts(Opts, _State) ->
+	{error, {bad_server_options_type, Opts}}.
+
+%% do_update_server_opts/2
+-spec do_update_server_opts([{term(), term()}], state()) -> {ok, state()} | {error, {bad_server_option, term()}}.
+do_update_server_opts([], State) ->
+	{ok, State};
+do_update_server_opts([{OptKey, OptVal} | OtherOpts], #state{server_opts = Opts} = State) ->
+	IsValid = case {OptKey, OptVal} of
+		{idle_timeout, Timeout} when is_integer(Timeout) andalso (Timeout > 0) -> true;
+		{idle_timeout, infinity} -> true;
+		_ -> false
+	end,
+	case IsValid of
+		true  -> do_update_server_opts(OtherOpts, State#state{server_opts = Opts#{OptKey => OptVal}});
+		false -> {error, {bad_server_option, {OptKey, OptVal}}}
+	end.
+
+
+%% get_idle_timeout/1
+-spec get_idle_timeout(state()) -> timeout().
+get_idle_timeout(#state{server_opts = Opts}) ->
+	maps:get(idle_timeout, Opts, infinity).
 
 %% init_uci_game/2
 -spec init_uci_game(uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error(), state()}.

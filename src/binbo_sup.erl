@@ -46,6 +46,6 @@ init(_Args) ->
 
 
 %% start_child/1
--spec start_child(Args :: term()) -> {ok, pid()}.
-start_child(Args) ->
-	supervisor:start_child(?SUPERVISOR, [Args]).
+-spec start_child(Opts :: binbo_server:server_opts()) -> {ok, pid()} | {error, term()}.
+start_child(Opts) ->
+	supervisor:start_child(?SUPERVISOR, [Opts]).
