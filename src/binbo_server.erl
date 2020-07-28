@@ -550,7 +550,7 @@ get_idle_timeout(#state{server_opts = Opts}) ->
 %% idle_timestamp/0
 -spec idle_timestamp() -> integer().
 idle_timestamp() ->
-	erlang:system_time(millisecond).
+	erlang:monotonic_time(millisecond).
 
 %% get_idle_timestamp/1
 -spec get_idle_timestamp(state()) -> integer().
