@@ -16,6 +16,7 @@
 -behaviour(gen_server).
 
 -export([start_link/1]).
+-export([set_server_options/2]).
 -export([stop/1]).
 -export([new_game/2, game_move/2, game_san_move/2, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
@@ -280,6 +281,14 @@ do_handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state
 do_handle_call({uci_command, Command}, _From, #state{uci_port = Port} = State) ->
 	_ = uci_port_command(Port, Command),
 	{reply, ok, State};
+do_handle_call({set_server_options, Opts}, _From, State) ->
+	{Reply, NewState} = case update_server_opts(Opts, State) of
+		{ok, State2} ->
+			{ok, State2};
+		{error, _} = Error ->
+			{Error, State}
+	end,
+	{reply, Reply, NewState};
 do_handle_call(_Msg, _From, State) ->
 	{reply, ignored, State}.
 
@@ -339,11 +348,9 @@ do_handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = P
 do_handle_info({Port, {data, Data}}, #state{uci_port = Port} = State0) ->
 	_ = maybe_handle_uci_message(State0#state.uci_handler, Data),
 	{noreply, State0};
-do_handle_info({'EXIT', Port, _}, #state{uci_port = Port} = State0) ->
-	% Handle UCI port exit
+do_handle_info({'EXIT', Port, _}, #state{uci_port = Port} = State0) -> % Handle UCI port exit
 	{noreply, State0#state{uci_port = undefined}};
-do_handle_info(timeout, State) ->
-	% Handle idle timeout.
+do_handle_info(timeout, State) -> % Handle idle timeout
 	% Since any process can send 'timeout' to our process (e.g. just for fun),
 	% we should check if it is a really valid message.
 	IdleTimeout = get_idle_timeout(State),
@@ -366,6 +373,11 @@ do_handle_info(_Msg, State) ->
 %%%------------------------------------------------------------------------------
 %%%   API
 %%%------------------------------------------------------------------------------
+
+%% set_server_options/2
+-spec set_server_options(pid(), server_opts()) -> ok | {error, term()}.
+set_server_options(Pid, Opts) ->
+	call(Pid, {set_server_options, Opts}).
 
 %% new_game/2
 -spec new_game(pid(), fen()) -> new_game_ret().

@@ -16,6 +16,7 @@
 
 -export([start/0, stop/0]).
 -export([new_server/0, new_server/1]).
+-export([set_server_options/2]).
 -export([new_game/1, new_game/2]).
 -export([game_state/1, game_status/1, side_to_move/1]).
 -export([move/2, san_move/2, get_fen/1]).
@@ -40,7 +41,7 @@
 %% binbo:move(Pid, "e2e4").
 
 %%%------------------------------------------------------------------------------
-%%%   API
+%%%   API (application)
 %%%------------------------------------------------------------------------------
 
 %% start/0
@@ -58,6 +59,11 @@ start() ->
 %% @end
 stop() ->
 	application:stop(?APPLICATION).
+
+
+%%%------------------------------------------------------------------------------
+%%%   API (server)
+%%%------------------------------------------------------------------------------
 
 %% new_server/0
 -spec new_server() -> {ok, pid()} | {error, term()}.
@@ -80,6 +86,15 @@ new_server(Opts) ->
 %% @end
 stop_server(Pid) ->
 	binbo_server:stop(Pid).
+
+%% set_server_options/2
+-spec set_server_options(pid(), binbo_server:server_opts()) -> ok | {error, term()}.
+set_server_options(Pid, Opts) ->
+	binbo_server:set_server_options(Pid, Opts).
+
+%%%------------------------------------------------------------------------------
+%%%   API (game)
+%%%------------------------------------------------------------------------------
 
 %% new_game/1
 -spec new_game(pid()) -> binbo_server:new_game_ret().
