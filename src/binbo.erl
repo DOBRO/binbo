@@ -16,7 +16,7 @@
 
 -export([start/0, stop/0]).
 -export([new_server/0, new_server/1]).
--export([set_server_options/2]).
+-export([get_server_options/1, set_server_options/2]).
 -export([new_game/1, new_game/2]).
 -export([game_state/1, game_status/1, side_to_move/1]).
 -export([move/2, san_move/2, get_fen/1]).
@@ -87,10 +87,16 @@ new_server(Opts) ->
 stop_server(Pid) ->
 	binbo_server:stop(Pid).
 
+%% get_server_options/1
+-spec get_server_options(pid()) -> {ok, binbo_server:server_opts()}.
+get_server_options(Pid) ->
+	binbo_server:get_server_options(Pid).
+
 %% set_server_options/2
 -spec set_server_options(pid(), binbo_server:server_opts()) -> ok | {error, term()}.
 set_server_options(Pid, Opts) ->
 	binbo_server:set_server_options(Pid, Opts).
+
 
 %%%------------------------------------------------------------------------------
 %%%   API (game)

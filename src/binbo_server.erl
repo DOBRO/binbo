@@ -16,7 +16,7 @@
 -behaviour(gen_server).
 
 -export([start_link/1]).
--export([set_server_options/2]).
+-export([get_server_options/1, set_server_options/2]).
 -export([stop/1]).
 -export([new_game/2, game_move/2, game_san_move/2, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
@@ -289,6 +289,8 @@ do_handle_call({set_server_options, Opts}, _From, State) ->
 			{Error, State}
 	end,
 	{reply, Reply, NewState};
+do_handle_call(get_server_options, _From, #state{server_opts = Opts} = State) ->
+	{reply, {ok, Opts}, State};
 do_handle_call(_Msg, _From, State) ->
 	{reply, ignored, State}.
 
@@ -373,6 +375,11 @@ do_handle_info(_Msg, State) ->
 %%%------------------------------------------------------------------------------
 %%%   API
 %%%------------------------------------------------------------------------------
+
+%% get_server_options/1
+-spec get_server_options(pid()) -> {ok, server_opts()}.
+get_server_options(Pid) ->
+	call(Pid, get_server_options).
 
 %% set_server_options/2
 -spec set_server_options(pid(), server_opts()) -> ok | {error, term()}.
