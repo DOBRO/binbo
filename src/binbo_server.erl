@@ -349,7 +349,7 @@ do_handle_info(timeout, State) ->
 	IdleTimeout = get_idle_timeout(State),
 	case is_integer(IdleTimeout) of
 		true  ->
-			case (idle_timestamp() - get_idle_timestamp(State)) >= IdleTimeout of
+			case milliseconds_passed(get_idle_timestamp(State)) >= IdleTimeout of
 				true  ->
 					Reason = {shutdown, {idle_timeout_reached, IdleTimeout}},
 					{stop, Reason, State};
@@ -548,9 +548,14 @@ get_idle_timeout(#state{server_opts = Opts}) ->
 	maps:get(idle_timeout, Opts, infinity).
 
 %% idle_timestamp/0
--spec idle_timestamp() -> integer().
-idle_timestamp() ->
-	erlang:monotonic_time(millisecond).
+-spec timestamp() -> integer().
+timestamp() ->
+	erlang:monotonic_time().
+
+%% milliseconds_passed/1
+-spec milliseconds_passed(integer()) -> integer().
+milliseconds_passed(Timestamp) ->
+	erlang:convert_time_unit(timestamp() - Timestamp, native, microsecond) div 1000.
 
 %% get_idle_timestamp/1
 -spec get_idle_timestamp(state()) -> integer().
@@ -560,7 +565,7 @@ get_idle_timestamp(#state{idle_timestamp = Time}) ->
 %% set_idle_timestamp/1
 -spec set_idle_timestamp(state()) -> state().
 set_idle_timestamp(State) ->
-	State#state{idle_timestamp = idle_timestamp()}.
+	State#state{idle_timestamp = timestamp()}.
 
 %% update_server_opts/2
 -spec update_server_opts(server_opts(), state()) -> {ok, state()} | {error, {bad_server_option, term()}} | {error, {bad_server_options_type, term()}}.
