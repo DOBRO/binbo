@@ -4,6 +4,7 @@
 
 image:https://img.shields.io/hexpm/v/binbo.svg?color=yellow["Binbo on Hex.pm", link="https://hex.pm/packages/binbo"]
 image:https://travis-ci.org/DOBRO/binbo.svg?branch=master["Build Status", link="https://travis-ci.org/DOBRO/binbo"]
+image:https://codecov.io/gh/DOBRO/binbo/branch/master/graph/badge.svg["Code coverage", link="https://codecov.io/gh/DOBRO/binbo"]
 image:https://img.shields.io/badge/erlang-%3E%3D%2020.0-0d6e8c.svg["Erlang", link="https://www.erlang.org/"]
 image:https://img.shields.io/badge/license-Apache%202.0-blue.svg["License", link="LICENSE"]
 
