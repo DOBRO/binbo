@@ -15,7 +15,11 @@ before_script:
   - chmod +x ${HOME}/stockfish-10-linux/Linux/stockfish_10_x64
 script:
   - UCI_ENGINE_PATH=${HOME}/stockfish-10-linux/Linux/stockfish_10_x64 ./rebar3 ct
+  - ./rebar3 cover
+  - ./rebar3 covertool generate
   - ./rebar3 dialyzer
+after_success:
+  - bash <(curl -s https://codecov.io/bash) -f _build/test/covertool/binbo.covertool.xml
 branches:
   only:
   - master
