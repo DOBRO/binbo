@@ -1,0 +1,47 @@
+name: Binbo CI
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  linux:
+    name: Test on OTP ${{ matrix.otp_version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        otp_version: [20, 21, 22, 23]
+        os: [ubuntu-latest]
+
+    container:
+      image: erlang:${{ matrix.otp_version }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Download rebar3
+      run: curl -O https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
+    - name: Install Stockfish
+      run: |
+        rm -fr ${HOME}/stockfish-10-linux
+        rm -f ${HOME}/stockfish-10-linux.zip
+        curl https://stockfishchess.org/files/stockfish-10-linux.zip -o ${HOME}/stockfish-10-linux.zip
+        unzip ${HOME}/stockfish-10-linux.zip -d ${HOME}
+        chmod +x ${HOME}/stockfish-10-linux/Linux/stockfish_10_x64
+    - name: Compile
+      run: ./rebar3 compile
+    - name: CT tests
+      run: ./rebar3 ct
+    - name: Dialyzer
+      run: ./rebar3 dialyzer
+    - name: Code coverage
+      run: |
+        ./rebar3 cover
+        ./rebar3 covertool generate
+        bash <(curl -s https://codecov.io/bash) -f _build/test/covertool/binbo.covertool.xml
