@@ -29,15 +29,15 @@ jobs:
       run: curl -O https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
     - name: Install Stockfish
       run: |
-        rm -fr $HOME/stockfish-10-linux
-        rm -f $HOME/stockfish-10-linux.zip
-        curl https://stockfishchess.org/files/stockfish-10-linux.zip -o $HOME/stockfish-10-linux.zip
-        unzip $HOME/stockfish-10-linux.zip -d $HOME
-        chmod +x $HOME/stockfish-10-linux/Linux/stockfish_10_x64
+        rm -fr ${HOME}/stockfish-10-linux
+        rm -f ${HOME}/stockfish-10-linux.zip
+        curl https://stockfishchess.org/files/stockfish-10-linux.zip -o ${HOME}/stockfish-10-linux.zip
+        unzip ${HOME}/stockfish-10-linux.zip -d ${HOME}
+        chmod +x ${HOME}/stockfish-10-linux/Linux/stockfish_10_x64
     - name: Compile
       run: ./rebar3 compile
     - name: CT tests
-      run: ./rebar3 ct
+      run: UCI_ENGINE_PATH=${HOME}/stockfish-10-linux/Linux/stockfish_10_x64 ./rebar3 ct
     - name: Dialyzer
       run: ./rebar3 dialyzer
     - name: Code coverage
