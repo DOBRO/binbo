@@ -55,9 +55,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/rebar3/hex/hexpm/packages
-        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
+        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-otp-${{ matrix.otp_version }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
         restore-keys: |
-          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-
+          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-otp-${{ matrix.otp_version }}-hex-
     - name: Compile
       run: rebar3 compile
     - name: CT tests
