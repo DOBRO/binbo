@@ -56,9 +56,9 @@ jobs:
     - name: Compile
       run: rebar3 compile
     - name: CT tests
-      env:
-        UCI_ENGINE_PATH: ${{ github.home }}/stockfish-${{ env.STOCKFISH_VERSION }}-linux/Linux/stockfish_${{ env.STOCKFISH_VERSION }}_x64
-      run: rebar3 ct
+      run: |
+        export UCI_ENGINE_PATH=${HOME}/stockfish-${STOCKFISH_VERSION}-linux/Linux/stockfish_${STOCKFISH_VERSION}_x64
+        rebar3 ct
     - name: Dialyzer
       run: rebar3 dialyzer
     - name: Code coverage
