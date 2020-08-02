@@ -14,6 +14,9 @@ jobs:
   linux:
     name: Test on OTP ${{ matrix.otp_version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
 
     strategy:
       matrix:
@@ -41,7 +44,8 @@ jobs:
     - name: Dialyzer
       run: ./rebar3 dialyzer
     - name: Code coverage
-      run: |
-        ./rebar3 cover
-        ./rebar3 covertool generate
-        bash <(curl -s https://codecov.io/bash) -f _build/test/covertool/binbo.covertool.xml
+      run: ./rebar3 cover
+    - name: Generate coverage report
+      run: ./rebar3 covertool generate
+    - name: Upload coverage to Codecov
+      run: bash <(curl -s https://codecov.io/bash) -f _build/test/covertool/binbo.covertool.xml
