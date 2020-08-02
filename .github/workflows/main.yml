@@ -44,6 +44,13 @@ jobs:
         key: ${{ runner.os }}-dialyzer-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.config')) }}
         restore-keys: |
           ${{ runner.os }}-dialyzer-
+    - name: Cache Hex packages
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/rebar3/hex/hexpm/packages
+        key: ${{ runner.os }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
+        restore-keys: |
+          ${{ runner.os }}-hex-
     - name: Compile
       run: ./rebar3 compile
     - name: CT tests
