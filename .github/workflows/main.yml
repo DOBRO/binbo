@@ -27,7 +27,7 @@ jobs:
       image: erlang:${{ matrix.otp_version }}
 
     env:
-      STOCKFISH_VERSION: 10
+      STOCKFISH_VERSION: 11
 
     steps:
     - name: Checkout
