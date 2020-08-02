@@ -48,9 +48,9 @@ jobs:
         path: |
           ~/.cache/rebar3/rebar3_*_plt
           _build/default/rebar3_*_plt
-        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-dialyzer-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.config')) }}
+        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-otp-${{ matrix.otp_version }}-plt-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.config')) }}
         restore-keys: |
-          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-dialyzer-
+          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-otp-${{ matrix.otp_version }}-plt-
     - name: Cache Hex packages
       uses: actions/cache@v2
       with:
