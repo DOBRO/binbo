@@ -37,6 +37,13 @@ jobs:
         curl https://stockfishchess.org/files/stockfish-10-linux.zip -o ${HOME}/stockfish-10-linux.zip
         unzip ${HOME}/stockfish-10-linux.zip -d ${HOME}
         chmod +x ${HOME}/stockfish-10-linux/Linux/stockfish_10_x64
+    - name: Cache Dialyzer PLTs
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/rebar3/rebar3_*.plt
+        key: ${{ runner.os }}-dialyzer-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.config')) }}
+        restore-keys: |
+          ${{ runner.os }}-dialyzer-
     - name: Compile
       run: ./rebar3 compile
     - name: CT tests
