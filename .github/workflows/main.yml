@@ -32,6 +32,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+    - name: Extract branch name
+      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+      id: extract_branch
     - name: Install Stockfish
       run: |
         rm -fr ${HOME}/stockfish-${STOCKFISH_VERSION}-linux
@@ -45,16 +48,16 @@ jobs:
         path: |
           ~/.cache/rebar3/rebar3_*_plt
           _build/default/rebar3_*_plt
-        key: ${{ runner.os }}-dialyzer-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.config')) }}
+        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-dialyzer-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.config')) }}
         restore-keys: |
-          ${{ runner.os }}-dialyzer-
+          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-dialyzer-
     - name: Cache Hex packages
       uses: actions/cache@v2
       with:
         path: ~/.cache/rebar3/hex/hexpm/packages
-        key: ${{ runner.os }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
+        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
         restore-keys: |
-          ${{ runner.os }}-hex-
+          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-
     - name: Compile
       run: rebar3 compile
     - name: CT tests
