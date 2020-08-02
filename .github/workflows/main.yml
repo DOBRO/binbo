@@ -28,8 +28,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Download rebar3
-      run: curl -O https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
     - name: Install Stockfish
       run: |
         rm -fr ${HOME}/stockfish-10-linux
@@ -52,14 +50,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-hex-
     - name: Compile
-      run: ./rebar3 compile
+      run: rebar3 compile
     - name: CT tests
-      run: UCI_ENGINE_PATH=${HOME}/stockfish-10-linux/Linux/stockfish_10_x64 ./rebar3 ct
+      run: UCI_ENGINE_PATH=${HOME}/stockfish-10-linux/Linux/stockfish_10_x64 rebar3 ct
     - name: Dialyzer
-      run: ./rebar3 dialyzer
+      run: rebar3 dialyzer
     - name: Code coverage
-      run: ./rebar3 cover
+      run: rebar3 cover
     - name: Generate coverage report
-      run: ./rebar3 covertool generate
+      run: rebar3 covertool generate
     - name: Upload coverage to Codecov
       run: bash <(curl -s https://codecov.io/bash) -f _build/test/covertool/binbo.covertool.xml
