@@ -147,7 +147,7 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        $env:UCI_ENGINE_PATH = '~/stockfish-11-win/Windows/stockfish_20011801_x64.exe'
+        $env:UCI_ENGINE_PATH = 'C:/Users/runneradmin/stockfish-11-win/Windows/stockfish_20011801_x64.exe'
         rebar3 ct
     - name: Code coverage
       run: rebar3 cover
