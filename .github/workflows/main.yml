@@ -100,3 +100,5 @@ jobs:
       run: |
         export UCI_ENGINE_PATH=/usr/local/bin/stockfish
         rebar3 ct
+    - name: Code coverage
+      run: rebar3 cover
