@@ -131,6 +131,10 @@ jobs:
       run: choco install erlang -y
     - name: Install rebar3
       run: choco install rebar3 -y
+    - name: Install Stockfish
+      run: |
+        Invoke-WebRequest -Uri https://stockfishchess.org/files/stockfish-11-win.zip -OutFile ~/stockfish-11-win.zip
+        Expand-Archive -LiteralPath '~/stockfish-11-win.zip' -DestinationPath ~/
     - name: Cache Hex packages
       uses: actions/cache@v2
       with:
@@ -140,3 +144,9 @@ jobs:
           ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-
     - name: Compile
       run: rebar3 compile
+    - name: CT tests
+      run: |
+        $env:UCI_ENGINE_PATH = '~/stockfish-11-win/Windows/stockfish_20011801_x64.exe'
+        rebar3 ct
+    - name: Code coverage
+      run: rebar3 cover
