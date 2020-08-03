@@ -37,7 +37,13 @@ init_per_suite(Config) ->
 	DefaultServerOpts = #{
 		idle_timeout => infinity
 	},
-	[{extra_sleep_millis, 1}, {default_server_opts, DefaultServerOpts} | Config].
+	[
+		% 'extra_sleep_millis' - adds some extra (small) time to wait before checking that process is stopped.
+		% Occasionally, if this value is too small, tests not passed on some CI due to stripped-down resources of containers.
+		{extra_sleep_millis, 10},
+		{default_server_opts, DefaultServerOpts}
+		| Config
+	].
 
 
 %% end_per_suite/1
