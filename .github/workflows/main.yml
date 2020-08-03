@@ -72,3 +72,31 @@ jobs:
       run: rebar3 covertool generate
     - name: Upload coverage to Codecov
       run: bash <(curl -s https://codecov.io/bash) -f _build/test/covertool/binbo.covertool.xml
+
+
+  macos:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      matrix:
+        os: [macos-latest]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install Erlang
+      run: brew install erlang
+    - name: Install rebar3
+      run: brew install rebar3
+    - name: Install Stockfish
+      run: brew install stockfish
+    - name: Compile
+      run: rebar3 compile
+    - name: CT tests
+      run: |
+        export UCI_ENGINE_PATH=/usr/local/bin/stockfish
+        rebar3 ct
