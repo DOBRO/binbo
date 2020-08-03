@@ -131,5 +131,12 @@ jobs:
       run: choco install erlang -y
     - name: Install rebar3
       run: choco install rebar3 -y
+    - name: Cache Hex packages
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/rebar3/hex/hexpm/packages
+        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
+        restore-keys: |
+          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-
     - name: Compile
       run: rebar3 compile
