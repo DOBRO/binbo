@@ -117,6 +117,9 @@ jobs:
   windows:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: powershell
 
     strategy:
       matrix:
