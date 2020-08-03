@@ -112,3 +112,21 @@ jobs:
         rebar3 ct
     - name: Code coverage
       run: rebar3 cover
+
+
+  windows:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [windows-latest]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install Erlang
+      run: choco install erlang -y
+    - name: Install rebar3
+      run: choco install rebar3 -y
+    - name: Compile
+      run: rebar3 compile
