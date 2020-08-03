@@ -135,6 +135,7 @@ jobs:
       run: |
         Invoke-WebRequest -Uri https://stockfishchess.org/files/stockfish-11-win.zip -OutFile ~/stockfish-11-win.zip
         Expand-Archive -LiteralPath '~/stockfish-11-win.zip' -DestinationPath ~/
+        ls ~/stockfish-11-win/Windows
     - name: Cache Hex packages
       uses: actions/cache@v2
       with:
