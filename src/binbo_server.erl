@@ -40,8 +40,10 @@
 %%%------------------------------------------------------------------------------
 %%%   Types
 %%%------------------------------------------------------------------------------
+-type onterminate_callback() :: fun((pid(), Reason :: term(), Game :: game_state_ret(), Arg :: term()) -> term()).
 -type server_opts() :: #{
-	idle_timeout => timeout()
+	idle_timeout => timeout(),
+	onterminate  => undefined | {onterminate_callback(), Arg :: term()}
 }.
 -type stop_ret() :: ok | {error, {not_pid, term()}}.
 -type from() :: {pid(), reference()}.
@@ -162,9 +164,10 @@ handle_info(Msg, State) ->
 
 %% terminate/2
 -spec terminate(term(), state()) -> ok.
-terminate(_Reason, State) ->
+terminate(Reason, State) ->
 	#state{uci_port = Port} = State,
 	_ = maybe_close_uci_port(Port),
+	_ = maybe_call_onterminate_fun(Reason, State),
 	ok.
 
 %% code_change/3
@@ -598,14 +601,27 @@ update_server_opts(Opts, _State) ->
 do_update_server_opts([], State) ->
 	{ok, State};
 do_update_server_opts([{OptKey, OptVal} | OtherOpts], #state{server_opts = Opts} = State) ->
-	IsValid = case {OptKey, OptVal} of
-		{idle_timeout, Timeout} when is_integer(Timeout) andalso (Timeout > 0) -> true;
-		{idle_timeout, infinity} -> true;
-		_ -> false
+	Validity = case {OptKey, OptVal} of
+		{idle_timeout, Timeout} when is_integer(Timeout) andalso (Timeout > 0) ->
+			ok;
+		{idle_timeout, infinity} ->
+			ok;
+		{onterminate, {Fun, _Arg}} when is_function(Fun, 4) ->
+			ok;
+		{onterminate, {Fun, _Arg}} ->
+			{error, {onterminate, bad_function_arity, Fun}};
+		{onterminate, undefined} ->
+			ok;
+		_ ->
+			error
 	end,
-	case IsValid of
-		true  -> do_update_server_opts(OtherOpts, State#state{server_opts = Opts#{OptKey => OptVal}});
-		false -> {error, {bad_server_option, {OptKey, OptVal}}}
+	case Validity of
+		ok    ->
+			do_update_server_opts(OtherOpts, State#state{server_opts = Opts#{OptKey => OptVal}});
+		error ->
+			{error, {bad_server_option, {OptKey, OptVal}}};
+		{error, Reason} ->
+			{error, {bad_server_option, Reason}}
 	end.
 
 %% init_uci_game/2
@@ -723,3 +739,12 @@ uci_play_update(Pid, BestMove, Game0) ->
 uci_send_game_position(Pid, Game) ->
 	{ok, Fen} = binbo_game:get_fen(Game),
 	uci_command_cast(Pid, <<"position fen ", Fen/bits>>).
+
+%% maybe_call_onterminate_fun/2
+-spec maybe_call_onterminate_fun(Reason :: any(), state()) -> term().
+maybe_call_onterminate_fun(Reason, #state{server_opts = #{onterminate := {Fun, Arg}}} = State) ->
+	Pid = self(),
+	#state{game = Game} = State,
+	Fun(Pid, Reason, Game, Arg);
+maybe_call_onterminate_fun(_Reason, _State) ->
+	ok.
