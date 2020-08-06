@@ -38,6 +38,7 @@ init_per_suite(Config) ->
 
 %% end_per_suite/1
 end_per_suite(_Config) ->
+	ok = binbo:stop(),
 	ok.
 
 %% uci_test/1
