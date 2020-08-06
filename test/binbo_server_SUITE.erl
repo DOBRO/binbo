@@ -13,7 +13,12 @@
 	test_bad_server_options/1,
 	start_server_with_idle_timeout/1,
 	get_set_server_options/1,
-	test_idle_timeout/1
+	test_idle_timeout/1,
+	onterminate_stop_server_undefined_game/1,
+	onterminate_stop_server_initial_game/1,
+	onterminate_idle_timeout_initial_game/1,
+	onterminate_reset/1,
+	onterminate_bad_fun/1
 ]).
 
 %% all/0
@@ -28,11 +33,17 @@ groups() ->
 		test_bad_server_options,
 		start_server_with_idle_timeout,
 		get_set_server_options,
-		test_idle_timeout
+		test_idle_timeout,
+		onterminate_stop_server_undefined_game,
+		onterminate_stop_server_initial_game,
+		onterminate_idle_timeout_initial_game,
+		onterminate_reset,
+		onterminate_bad_fun
 	]}].
 
 %% init_per_suite/1
 init_per_suite(Config) ->
+	ok = binbo_test_lib:all_group_testcases_exported(?MODULE),
 	{ok, _} = binbo:start(),
 	DefaultServerOpts = #{
 		idle_timeout => infinity
@@ -164,4 +175,108 @@ test_idle_timeout(Config) ->
 	timer:sleep(NewIdleTimeout * 2),
 	true = erlang:is_process_alive(Pid2), % still alive!
 	ok = binbo:stop_server(Pid2),
+	ok.
+
+
+%% onterminate_stop_server_undefined_game/1
+onterminate_stop_server_undefined_game(_Config) ->
+	Parent = self(),
+	Ref = erlang:make_ref(),
+	{ok, GamePid} = binbo:new_server(#{
+		onterminate => {fun onterminate_callback/4, {Parent, Ref}}
+	}),
+	ok = binbo:stop_server(GamePid), % stop server
+	receive
+		{GamePid, Reason, Game, {Parent, Ref}} ->
+			normal = Reason,
+			undefined = Game,
+			ok
+	after
+		5000 ->
+			ct:fail(message_not_received)
+	end,
+	ok.
+
+%% onterminate_stop_server_initial_game/1
+onterminate_stop_server_initial_game(_Config) ->
+	Parent = self(),
+	Ref = erlang:make_ref(),
+	{ok, GamePid} = binbo:new_server(#{
+		onterminate => {fun onterminate_callback/4, {Parent, Ref}}
+	}),
+	{ok, continue} = binbo:new_game(GamePid),
+	{ok, Fen0} = binbo:get_fen(GamePid),
+	ok = binbo:stop_server(GamePid), % stop server
+	receive
+		{GamePid, Reason, Game, {Parent, Ref}} ->
+			normal = Reason,
+			true = erlang:is_map(Game),
+			{ok, Fen} = binbo_game:get_fen(Game),
+			true = (Fen0 =:= Fen),
+			ok
+	after
+		5000 ->
+			ct:fail(message_not_received)
+	end,
+	ok.
+
+%% onterminate_idle_timeout_initial_game/1
+onterminate_idle_timeout_initial_game(Config) ->
+	Parent = self(),
+	Ref = erlang:make_ref(),
+	IdleTimeout = 300,
+	{ok, GamePid} = binbo:new_server(#{
+		idle_timeout => IdleTimeout,
+		onterminate  => {fun onterminate_callback/4, {Parent, Ref}}
+	}),
+	{ok, continue} = binbo:new_game(GamePid),
+	timer:sleep(IdleTimeout + ?value(extra_sleep_millis, Config)),
+	false = erlang:is_process_alive(GamePid),
+	receive
+		{GamePid, Reason, _Game, {Parent, Ref}} ->
+			{shutdown, {idle_timeout_reached, IdleTimeout}} = Reason,
+			ok
+	after
+		5000 ->
+			ct:fail(message_not_received)
+	end,
+	ok.
+
+%% onterminate_reset/1
+onterminate_reset(_Config) ->
+	Parent = self(),
+	Ref = erlang:make_ref(),
+	{ok, GamePid} = binbo:new_server(#{
+		onterminate => {fun onterminate_callback/4, {Parent, Ref}}
+	}),
+	{ok, continue} = binbo:new_game(GamePid),
+	ok = binbo:set_server_options(GamePid, #{onterminate => undefined}),
+	ok = binbo:stop_server(GamePid), % stop server
+	receive
+		{GamePid, _Reason, _Game, {Parent, Ref}} ->
+			ct:fail(message_should_not_be_received)
+	after
+		2000 ->
+			ok
+	end,
+	ok.
+
+%% onterminate_bad_fun/1
+onterminate_bad_fun(_Config) ->
+	{error, _} = binbo:new_server(#{onterminate => not_fun}),
+	{ok, GamePid} = binbo:new_server(),
+	{error, _} = binbo:set_server_options(GamePid, #{
+		onterminate => not_fun
+	}),
+	ok = binbo:stop_server(GamePid),
+	ok.
+
+
+%%%------------------------------------------------------------------------------
+%%%   Internal helpers
+%%%------------------------------------------------------------------------------
+
+%% onterminate_callback/4
+onterminate_callback(GamePid, Reason, Game, {Parent, Ref}) ->
+	Parent ! {GamePid, Reason, Game, {Parent, Ref}},
 	ok.
