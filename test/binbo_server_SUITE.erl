@@ -65,7 +65,8 @@ init_per_suite(Config) ->
 	[
 		% 'extra_sleep_millis' - adds some extra (small) time to wait before checking that process is stopped.
 		% Occasionally, if this value is too small, tests not passed on some CI due to stripped-down resources of containers.
-		{extra_sleep_millis, 10},
+		% @todo: try to find a workaround
+		{extra_sleep_millis, 100},
 		{default_server_opts, DefaultServerOpts}
 		| Config
 	].
