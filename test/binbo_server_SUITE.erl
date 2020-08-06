@@ -77,6 +77,7 @@ end_per_testcase(_TestCase, _Config) ->
 %% start_server_without_options/1
 start_server_without_options(_Config) ->
 	{ok, Pid} = binbo:new_server(),
+	{error, {bad_game, undefined}} = binbo:print_board(Pid),
 	{ok, Opts} = binbo:get_server_options(Pid),
 	true = erlang:is_map(Opts),
 	0 = maps:size(Opts),
