@@ -71,6 +71,7 @@ jobs:
     - name: Generate coverage report
       run: rebar3 covertool generate
     - name: Upload coverage to Codecov
+      if: success() && ${{ matrix.otp_version }} == 23
       run: bash <(curl -s https://codecov.io/bash) -f _build/test/covertool/binbo.covertool.xml
 
 
