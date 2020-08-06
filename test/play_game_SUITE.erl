@@ -42,6 +42,7 @@ groups() ->
 
 %% init_per_suite/1
 init_per_suite(Config) ->
+	ok = binbo_test_lib:all_group_testcases_exported(?MODULE),
 	{ok, _} = binbo:start(),
 	Config.
 

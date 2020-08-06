@@ -30,6 +30,7 @@ groups() -> [{rnd, [{repeat_until_any_fail, 10}], [random_hash_test]}].
 
 %% init_per_suite/1
 init_per_suite(Config) ->
+	ok = binbo_test_lib:all_group_testcases_exported(?MODULE),
 	Config.
 
 %% end_per_suite/1

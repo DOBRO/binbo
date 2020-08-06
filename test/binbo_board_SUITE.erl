@@ -41,6 +41,7 @@ groups() -> [{all_tests, [parallel], [
 
 %% init_per_suite/1
 init_per_suite(Config) ->
+	ok = binbo_test_lib:all_group_testcases_exported(?MODULE),
 	[{white, 16#00}, {black, 16#10},
 	{a1,0}, {b2,9}, {c3,18}, {d4,27}, {e5,36}, {f6,45}, {g7,54}, {h8,63},
 	{a8,56}, {h1,7}, {d1,3}, {d8,59}, {f1,5},{f8,61}
