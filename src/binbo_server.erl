@@ -745,6 +745,10 @@ uci_send_game_position(Pid, Game) ->
 handle_onterminate(Reason, #state{server_opts = #{onterminate := {Fun, Arg}}} = State) ->
 	Pid = self(),
 	#state{game = Game} = State,
-	Fun(Pid, Reason, Game, Arg);
+	% Callback function may take a long time, longer than 'shutdown' value in the supervisor's child spec.
+	% That's why we have to spawn the other process executing it avoiding unexpected exit.
+	spawn(fun() ->
+		Fun(Pid, Reason, Game, Arg)
+	end);
 handle_onterminate(_Reason, _State) ->
 	ok.
