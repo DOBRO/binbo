@@ -202,14 +202,14 @@ onterminate_stop_server_undefined_game(_Config) ->
 		onterminate => {fun onterminate_callback/4, {Parent, Ref}}
 	}),
 	ok = binbo:stop_server(GamePid), % stop server
-	receive
+	ok = receive
 		{GamePid, Reason, Game, {Parent, Ref}} ->
 			normal = Reason,
 			undefined = Game,
 			ok
 	after
 		5000 ->
-			ct:fail(message_not_received)
+			{error, message_not_received}
 	end,
 	ok.
 
@@ -223,7 +223,7 @@ onterminate_stop_server_initial_game(_Config) ->
 	{ok, continue} = binbo:new_game(GamePid),
 	{ok, Fen0} = binbo:get_fen(GamePid),
 	ok = binbo:stop_server(GamePid), % stop server
-	receive
+	ok = receive
 		{GamePid, Reason, Game, {Parent, Ref}} ->
 			normal = Reason,
 			true = erlang:is_map(Game),
@@ -232,7 +232,7 @@ onterminate_stop_server_initial_game(_Config) ->
 			ok
 	after
 		5000 ->
-			ct:fail(message_not_received)
+			{error, message_not_received}
 	end,
 	ok.
 
@@ -248,13 +248,13 @@ onterminate_idle_timeout_initial_game(Config) ->
 	{ok, continue} = binbo:new_game(GamePid),
 	timer:sleep(IdleTimeout + ?value(extra_sleep_millis, Config)),
 	false = erlang:is_process_alive(GamePid),
-	receive
+	ok = receive
 		{GamePid, Reason, _Game, {Parent, Ref}} ->
 			{shutdown, {idle_timeout_reached, IdleTimeout}} = Reason,
 			ok
 	after
 		5000 ->
-			ct:fail(message_not_received)
+			{error, message_not_received}
 	end,
 	ok.
 
@@ -268,9 +268,9 @@ onterminate_reset(_Config) ->
 	{ok, continue} = binbo:new_game(GamePid),
 	ok = binbo:set_server_options(GamePid, #{onterminate => undefined}),
 	ok = binbo:stop_server(GamePid), % stop server
-	receive
+	ok = receive
 		{GamePid, _Reason, _Game, {Parent, Ref}} ->
-			ct:fail(message_should_not_be_received)
+			{error, message_should_not_be_received}
 	after
 		2000 ->
 			ok
