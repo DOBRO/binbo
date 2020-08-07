@@ -167,7 +167,7 @@ handle_info(Msg, State) ->
 terminate(Reason, State) ->
 	#state{uci_port = Port} = State,
 	_ = maybe_close_uci_port(Port),
-	_ = maybe_call_onterminate_fun(Reason, State),
+	_ = handle_onterminate(Reason, State),
 	ok.
 
 %% code_change/3
@@ -740,11 +740,11 @@ uci_send_game_position(Pid, Game) ->
 	{ok, Fen} = binbo_game:get_fen(Game),
 	uci_command_cast(Pid, <<"position fen ", Fen/bits>>).
 
-%% maybe_call_onterminate_fun/2
--spec maybe_call_onterminate_fun(Reason :: any(), state()) -> term().
-maybe_call_onterminate_fun(Reason, #state{server_opts = #{onterminate := {Fun, Arg}}} = State) ->
+%% handle_onterminate/2
+-spec handle_onterminate(Reason :: any(), state()) -> term().
+handle_onterminate(Reason, #state{server_opts = #{onterminate := {Fun, Arg}}} = State) ->
 	Pid = self(),
 	#state{game = Game} = State,
 	Fun(Pid, Reason, Game, Arg);
-maybe_call_onterminate_fun(_Reason, _State) ->
+handle_onterminate(_Reason, _State) ->
 	ok.
