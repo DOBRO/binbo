@@ -1197,7 +1197,7 @@ $ rebar3 edoc
 == Binbo and Magic Bitboards
 
 As mentioned above, Binbo uses https://www.chessprogramming.org/Magic_Bitboards[Magic Bitboards], the fastest solution for move generation of sliding pieces
-(rook, bishop, and queen). Good explanations of this aproach can also be found https://stackoverflow.com/questions/16925204/sliding-move-generation-using-magic-bitboard/30862064#30862064[here]
+(rook, bishop, and queen). Good explanations of this approach can also be found https://stackoverflow.com/questions/16925204/sliding-move-generation-using-magic-bitboard/30862064#30862064[here]
 and http://vicki-chess.blogspot.com/2013/04/magics.html[here].
 
 The main problem is to find the _index_ which is then used to lookup legal moves
@@ -1243,8 +1243,8 @@ move = moves_from[magic_index];
 
 The size of `moves_from` table depends on piece and square where it is placed on. For example:
 
-* for rook on `A1` the size of `moves_from` is `4096` (2^12 = 4096, 12 bits requred for the attack mask);
-* for bishop on `A1` it is `64` (2^6 = 64, 6 bits requred for the attack mask).
+* for rook on `A1` the size of `moves_from` is `4096` (2^12 = 4096, 12 bits required for the attack mask);
+* for bishop on `A1` it is `64` (2^6 = 64, 6 bits required for the attack mask).
 
 There are no two-dimensional arrays in Erlang, and no global variables which could help us
 to get the fast access to the move tables **from everywhere**.
@@ -1310,7 +1310,7 @@ MovesFromE4 = maps:get(MagicIndex, MovesMapE4).
 
 Next, no global variables? We make them global!
 
-How do we get the fastest access to the _move tables_ and to the _atack masks_ **from everywhere**?
+How do we get the fastest access to the _move tables_ and to the _attack masks_ **from everywhere**?
 
 http://erlang.org/doc/man/ets.html[ETS]? No! Using ETS as a storage for _static terms_ we get the overhead due to extra data copying during lookup.
 
