@@ -40,8 +40,11 @@ end_per_suite(_Config) ->
 %% random_hash_test/1
 random_hash_test(_Config) ->
 	Mods = binbo_hash:init(),
-	[_|_] = Mods,
-	ok = unload_mods(Mods).
+	[_, _, _, _] = Mods,
+	ok = unload_mods(Mods),
+	% Modules were unloaded, load them again. Required for further test suites.
+	_ = binbo_hash:init(),
+	ok.
 
 %% unload_mods/1
 unload_mods([]) -> ok;
