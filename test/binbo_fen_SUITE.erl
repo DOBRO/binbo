@@ -72,6 +72,8 @@ test_initial_fen(Config) ->
 	true = (InitialFen =:= binbo_fen:initial()),
 	{ok,continue} = binbo:new_game(Pid, initial),
 	{ok, InitialFen} = binbo:get_fen(Pid),
+	% Fullmove = 0
+	{ok,continue} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0">>),
 	ok.
 
 %% test_legal_string_fens/1
@@ -83,6 +85,8 @@ test_legal_string_fens(Config) ->
 %% test_bad_fens/1
 test_bad_fens(Config) ->
 	Pid = get_pid(Config),
+	% No game initialized yet
+	{error,{bad_game,undefined}} = binbo:get_fen(Pid),
 	% Emty FEN
 	{error,empty_fen} = binbo:new_game(Pid, <<>>),
 	{error,empty_fen} = binbo:new_game(Pid, []),
@@ -92,7 +96,55 @@ test_bad_fens(Config) ->
 	{error, invalid_fen_string} = binbo:new_game(Pid, [fen]),
 	% Wrong active color
 	{error, {invalid_active_color, <<"side">>}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR side KQkq - 0 1">>),
-	% @todo: add other possible wrong cases
+	% Invalid nunber of ranks
+	{error,{position,not_8_ranks}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP-RNBQKBNR w KQkq - 0 1">>),
+	% Wrong castling
+	{error,{castling,empty_castling}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w  - 0 1">>),
+	{error,{castling,{invalid_character,"N"}}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w N - 0 1">>),
+	% Wrong en-passant square
+	{error,{invalid_enpassant,<<"e0">>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq e0 0 1">>),
+	{error,{invalid_enpassant,<<"e4">>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq e4 0 1">>),
+	{error,{invalid_enpassant,<<"e5">>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq e5 0 1">>),
+	{error,{invalid_enpassant,<<"e8">>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq e8 0 1">>),
+	{error,{invalid_enpassant,<<"e34">>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq e34 0 1">>),
+	{error,bb_invalid_enpassant} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 1">>),
+	{error,bb_invalid_enpassant} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq e3 0 1">>),
+	% Wrong halfmove
+	{error,{invalid_halfmove,<<>>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq -  1">>),
+	{error,{invalid_halfmove,<<"h">>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq - h 1">>),
+	{error,{invalid_halfmove,<<"-1">>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq - -1 1">>),
+	% Wrong fullmove
+	{error,{invalid_fullmove,<<>>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq - 1 ">>),
+	{error,{invalid_fullmove,<<"f">>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 f">>),
+	{error,{invalid_fullmove,<<"-1">>}} = binbo:new_game(Pid, <<"rnbqkbnr/1pp1pppp/p7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq - 1 -1">>),
+	% Empty rank
+	{error,{position,empty_rank}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/ w KQkq - 0 1">>),
+	{error,{position,empty_rank}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8// w KQkq - 0 1">>),
+	% Wrong position
+	{error,{position,empty_position}} = binbo:new_game(Pid, <<" w KQkq - 0 1">>),
+	{error,{position,{invalid_character,"0"}}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/0/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>),
+	{error,{position,{too_many_pawns,black,9}}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/p7/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>),
+	{error,{position,{too_many_kings,white,2}}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKKNR w KQkq - 0 1">>),
+	{error,{position,{index_out_of_range,16,{rank,2}}}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPPP/RNBQKBNR w KQkq - 0 1">>),
+	{error,{position,{last_index_mismatch,15,{rank,2}}}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPP/RNBQKBNR w KQkq - 0 1">>),
+	{error,{position,{no_kings,white}}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RRNBQNRR w KQkq - 0 1">>),
+	{error,{position,{no_kings,black}}} = binbo:new_game(Pid, <<"rnbqbnrr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>),
+	{error,{position,{bad_totals,black,
+                             {total,17},
+                             {pawns,8},
+                             {knights,2},
+                             {bishops,2},
+                             {rooks,2},
+                             {queens,2},
+                             {kings,1}}}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/3q4/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>),
+	{error,{position,{bad_totals,white,
+                             {total,17},
+                             {pawns,8},
+                             {knights,2},
+                             {bishops,2},
+                             {rooks,2},
+                             {queens,2},
+                             {kings,1}}}} = binbo:new_game(Pid, <<"rnbqkbnr/pppppppp/8/8/3Q4/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>),
 	ok.
 
 
