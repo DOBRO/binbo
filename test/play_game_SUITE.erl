@@ -31,7 +31,8 @@
 	castling_black_after_rook_move/1,
 	castling_white_when_attacked/1,
 	castling_black_when_attacked/1,
-	enpassant_moves/1, simple_game/1
+	enpassant_moves/1, simple_game/1,
+	set_game_state/1
 ]).
 
 
@@ -51,7 +52,8 @@ groups() ->
 		castling_black_after_rook_move,
 		castling_white_when_attacked,
 		castling_black_when_attacked,
-		enpassant_moves, simple_game
+		enpassant_moves, simple_game,
+		set_game_state
 	]}].
 
 %% init_per_suite/1
@@ -75,22 +77,10 @@ end_per_testcase(_TestCase, Config) ->
 	ok = binbo:stop_server(Pid),
 	ok.
 
-%% get_pid/1
-get_pid(Config) ->
-	?value(pid, Config).
 
-%% make_legal_moves/1
-make_legal_moves(_Pid, []) ->
-	ok;
-make_legal_moves(Pid, [Move | Tail]) ->
-	case binbo:move(Pid, Move) of
-		{ok, continue} ->
-			make_legal_moves(Pid, Tail);
-		{error, Reason} ->
-			{error, Reason}
-	end.
-
-
+%%%------------------------------------------------------------------------------
+%%%   Testcases
+%%%------------------------------------------------------------------------------
 
 %% move_all_pieces/1
 move_all_pieces(Config) ->
@@ -421,6 +411,54 @@ simple_game(Config) ->
 	ok = binbo:print_board(Pid),
 	ok = binbo:print_board(Pid, [unicode, flip]),
 	ok.
+
+%% set_game_state/1
+set_game_state(Config) ->
+	Pid = get_pid(Config),
+	% Game is not initialized yet
+	undefined = binbo:game_state(Pid),
+	{error, {bad_game, undefined}} = binbo:game_status(Pid),
+	{error, {bad_game, undefined}} = binbo:set_game_state(Pid, undefined),
+	% Start new game
+	{ok, continue} = binbo:new_game(Pid),
+	{ok, continue} = binbo:game_status(Pid),
+	Game = binbo:game_state(Pid),
+	true = erlang:is_map(Game),
+	% Set undefined state
+	{error, {bad_game, undefined}} = binbo:set_game_state(Pid, undefined),
+	% Set normal game state
+	{ok, continue} = binbo:set_game_state(Pid, Game),
+	{ok, continue} = binbo:game_status(Pid),
+	% Set undefined state again
+	{error, {bad_game, undefined}} = binbo:set_game_state(Pid, undefined),
+	% Save game state as binary
+	BinGame = erlang:term_to_binary(Game),
+	% Convert from binary and set state
+	Game2 = erlang:binary_to_term(BinGame),
+	true = erlang:is_map(Game2),
+	{ok, continue} = binbo:set_game_state(Pid, Game2),
+	{ok, continue} = binbo:game_status(Pid),
+	ok.
+
+
+%%%------------------------------------------------------------------------------
+%%%   Internal helpers
+%%%------------------------------------------------------------------------------
+
+%% get_pid/1
+get_pid(Config) ->
+	?value(pid, Config).
+
+%% make_legal_moves/1
+make_legal_moves(_Pid, []) ->
+	ok;
+make_legal_moves(Pid, [Move | Tail]) ->
+	case binbo:move(Pid, Move) of
+		{ok, continue} ->
+			make_legal_moves(Pid, Tail);
+		{error, Reason} ->
+			{error, Reason}
+	end.
 
 %% check_int_movelist/1
 check_int_movelist([]) -> ok;
