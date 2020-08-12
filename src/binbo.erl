@@ -18,7 +18,7 @@
 -export([new_server/0, new_server/1]).
 -export([get_server_options/1, set_server_options/2]).
 -export([new_game/1, new_game/2]).
--export([game_state/1, game_status/1, side_to_move/1]).
+-export([game_state/1, set_game_state/2, game_status/1, side_to_move/1]).
 -export([move/2, san_move/2, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
 -export([game_draw/1, game_draw/2]).
@@ -137,6 +137,11 @@ load_pgn_file(Pid, Filename) ->
 -spec game_state(pid()) -> binbo_server:game_state_ret().
 game_state(Pid) ->
 	binbo_server:game_state(Pid).
+
+%% set_game_state/2
+-spec set_game_state(pid(), term()) -> binbo_server:game_status_ret().
+set_game_state(Pid, Game) ->
+	binbo_server:set_game_state(Pid, Game).
 
 %% game_status/1
 -spec game_status(pid()) -> binbo_server:game_status_ret().

@@ -20,7 +20,7 @@
 -export([stop/1]).
 -export([new_game/2, game_move/2, game_san_move/2, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
--export([game_state/1, game_status/1, game_draw/2]).
+-export([game_state/1, set_game_state/2, game_status/1, game_draw/2]).
 -export([all_legal_moves/2, side_to_move/1]).
 -export([new_uci_game/2]).
 -export([uci_command_call/2, uci_command_cast/2]).
@@ -213,6 +213,9 @@ do_handle_call({load_pgn, Type, Data}, _From, State) ->
 	{reply, Reply, NewState};
 do_handle_call(game_state, _From, #state{game = Game} = State) ->
 	{reply, Game, State};
+do_handle_call({set_game_state, Game}, _From, State) ->
+	Reply = binbo_game:status(Game),
+	{reply, Reply, State#state{game = Game}};
 do_handle_call(game_status, _From, #state{game = Game} = State) ->
 	Reply = binbo_game:status(Game),
 	{reply, Reply, State};
@@ -418,6 +421,11 @@ load_pgn_file(Pid, Filename) ->
 -spec game_state(pid()) -> game_state_ret().
 game_state(Pid) ->
 	call(Pid, game_state).
+
+%% set_game_state/2
+-spec set_game_state(pid(), term()) -> game_status_ret().
+set_game_state(Pid, Game) ->
+	call(Pid, {set_game_state, Game}).
 
 %% game_status/1
 -spec game_status(pid()) -> game_status_ret().
