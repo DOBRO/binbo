@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+- Added options for the game process at start (`binbo:new_server(Options)`). `Options` is a map now!
+- New function `binbo:set_server_options/2`.
+- New function `binbo:set_game_state/2`.
+
 ## [1.2.3] - 2020-01-22
 
 - Performance improvements.
