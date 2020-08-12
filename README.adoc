@@ -215,8 +215,13 @@ binbo:start().
 
 [source,erlang]
 ----
-binbo:new_server() -> {ok, pid()}.
+binbo:new_server() -> {ok, Pid} | {error, Reason}.
+binbo:new_server(Options) -> {ok, Pid} | {error, Reason}.
 ----
+
+.where:
+* `Pid` - pid of the created process;
+* `Options` - options for the game process (see link:#server-options[bellow]).
 
 So, to start one or more game processes:
 
@@ -226,6 +231,68 @@ So, to start one or more game processes:
 {ok, Pid2} = binbo:new_server(),
 {ok, Pid3} = binbo:new_server().
 ----
+
+[[server-options]]
+==== Options for the game process
+[source,erlang]
+----
+binbo:set_server_options(Pid, Options) -> ok | {error, Reason}.
+----
+
+`Pid` is the `pid` of the game process.
+
+.`Options`:
+[source,erlang]
+----
+#{
+  idle_timeout => timeout(),
+  onterminate  => {fun my_callback/4, Arg}
+}
+----
+
+.where:
+* `idle_timeout` - time in milliseconds with no messages received before the game process exits. Defaults to `infinity`.
+* `onterminate` - tuple where the first element is a callback function that performs when process exits. This function must be of *arity 4* with argumnents `Pid`, `Reason`, `GameState`, and `Arg` where:
+** `Pid` - pid of the game process;
+** `Reason` - the reason why the game process exited;
+** `GameState` - the whole link:#game-state[game state];
+** `Arg` - the argument you want to pass to the callback function.
+
+.Example:
+[source,erlang]
+----
+-module(on_terminate).
+
+-export([run/0]).
+
+run() ->
+    binbo:start(),
+    {ok, Pid} = binbo:new_server(),
+    binbo:new_game(Pid),
+    binbo:set_server_options(Pid, #{
+        idle_timeout => 1000,
+        onterminate => {fun onterminate_callback/4, "my argument"}
+    }),
+    % 'onterminate_callback/4' will be called after 1000 ms
+    ok.
+
+onterminate_callback(GamePid, Reason, Game, Arg) ->
+    io:format("GamePid: ~p~n", [GamePid]),
+    io:format("Reason: ~p~n", [Reason]),
+    io:format("Game: ~p~n", [Game]),
+    io:format("Arg: ~p~n", [Arg]),
+    ok.
+----
+
+To reset options, call:
+[source,erlang]
+----
+binbo:set_server_options(Pid, #{
+    idle_timeout => infinity,
+    onterminate => undefined
+})
+----
+
 
 [[initializing-new-game]]
 === Initializing new game
@@ -686,6 +753,47 @@ If White is to move, it returns `{ok, white}`. If Black is to move, it returns `
 > binbo:side_to_move(Pid). % Black is to move now
 {ok,black}
 ----
+
+[[game-state]]
+=== Game state
+
+[source,erlang]
+----
+binbo:game_state(Pid) -> GameState.
+binbo:set_game_state(Pid, GameState) -> {ok, GameStatus} | {error, Reason}.
+----
+
+.where:
+* `Pid` is the pid of the game process;
+* `GameState` is the whole game state.
+* `GameStatus` is the link:#game-status[game status].
+
+`binbo:game_state/1` returns a *raw* game state, it may be useful when you want to save it somehow (e.g. into a database) and then restore it in the future with `binbo:set_game_state(Pid, GameState)`. It's much faster than restoring game move by move incrementally.
+
+.Example:
+[source,erlang]
+----
+> {ok, Pid} = binbo:new_server().
+{ok,<0.194.0>}
+
+> binbo:new_game(Pid).
+{ok,continue}
+
+> GameState = binbo:game_state(Pid).
+#{12 => 1,4 => 6,38 => 0,16 => 0,53 => 17,46 => 0,28 => 0,
+  23 => 0,lastmovepc => 0,59 => 21,58 => 19,bbenpa => 0,
+  30 => 0,40 => 0,47 => 0,24 => 0,27 => 0,21 => 0,
+  bbwp => 65280,29 => 0,22 => 0,31 => 0,61 => 19,18 => 0,
+  54 => 17,5 => 3,14 => 1,51 => 17,57 => 18,...}
+
+> BinGame = erlang:term_to_binary(GameState).
+<<131,116,0,0,0,89,97,48,97,17,100,0,4,98,98,98,98,110,8,
+  0,0,0,0,0,0,0,0,36,100,...>>
+
+> binbo:set_game_state(Pid, erlang:binary_to_term(BinGame)).
+{ok,continue}
+----
+
 
 [[setting-a-draw]]
 === Setting a draw
