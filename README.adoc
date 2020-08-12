@@ -223,8 +223,7 @@ binbo:new_server(Options) -> {ok, Pid} | {error, Reason}.
 * `Pid` - pid of the created process;
 * `Options` - options for the game process (see link:#server-options[bellow]).
 
-So, to start one or more game processes:
-
+.So, to start one or more game processes:
 [source,erlang]
 ----
 {ok, Pid1} = binbo:new_server(),
@@ -284,7 +283,7 @@ onterminate_callback(GamePid, Reason, Game, Arg) ->
     ok.
 ----
 
-To reset options, call:
+.To reset options, call:
 [source,erlang]
 ----
 binbo:set_server_options(Pid, #{

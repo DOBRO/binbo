@@ -1,6 +1,6 @@
 {application, binbo, [
 	{description, "Full-featured Chess representation using Bitboards"},
-	{vsn, "1.2.3"},
+	{vsn, "2.0.0"},
 	{modules, []},
 	{registered, [binbo_sup]},
 	{applications, [kernel, stdlib, compiler, syntax_tools, uef]},
