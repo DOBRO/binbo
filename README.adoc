@@ -928,12 +928,12 @@ BestMoveOptions :: #{
 }.
 ----
 
-`binbo:uci_bestmove(Pid)` is the same as `binbo:uci_bestmove(Pid, #{})`, it sends command `go` to the engine.
+`binbo:uci_bestmove(Pid)` is the same as `binbo:uci_bestmove(Pid, #{movetime => 1000})`, it sends command `go` to the engine.
 `binbo:uci_bestmove(Pid, BestMoveOptions)` sends command `go ...` to the engine adding values associated with the keys of `BestMoveOptions`.
 
 For example, calling `binbo:uci_bestmove(Pid, #{movetime =&gt; 2000, depth =&gt; 10})` means sending command `go movetime 2000 depth 10` to the engine.
 
-**Note:** the very important option is `movetime`, it tells the engine how long (in milliseconds) to search for the best move.
+**Note:** the very important option is `movetime`, it tells the engine how long (in milliseconds) to search for the best move. Defaults to **1000 milliseconds**.
 
 Functions `binbo:uci_bestmove/2,3` do NOT change the position on the board, they return the bestmove as a hint. To make moves and play with engine, use functions link:#binbo-uci-play-docs[binbo:uci_play/2,3].
 
