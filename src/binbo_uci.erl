@@ -23,6 +23,12 @@
 -export([bestmove_search_time/1]).
 
 %%%------------------------------------------------------------------------------
+%%%   Macros
+%%%------------------------------------------------------------------------------
+
+-define(DEFAULT_UCI_MOVETIME, 1000).
+
+%%%------------------------------------------------------------------------------
 %%%   Types
 %%%------------------------------------------------------------------------------
 -type engine_path() :: binary() | string().
@@ -69,11 +75,14 @@ command_spec_uci() ->
 
 %% command_spec_bestmove/1
 -spec command_spec_bestmove(bestmove_opts(), pos_integer() | undefined) -> command_spec().
-command_spec_bestmove(Opts, Movetime) ->
-	Command = case is_integer(Movetime) of
-		true  -> get_bestmove_cmd(Opts#{movetime => Movetime});
-		false -> get_bestmove_cmd(Opts)
+command_spec_bestmove(Opts, Movetime0) ->
+	% The behaviour of searching best move changed since Stockfish 12.
+	% We have to set 'movetime' option explicitly to avoid infinite search.
+	Movetime = case is_integer(Movetime0) of
+		true  -> Movetime0;
+		false -> ?DEFAULT_UCI_MOVETIME
 	end,
+	Command = get_bestmove_cmd(Opts#{movetime => Movetime}),
 	{Command, <<"bestmove ">>, fun ?MODULE:bestmove_prefix_handler/3}.
 
 %% simple_prefix_handler/3
