@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+- `movetime` option for functions `binbo:uci_bestmove/1,2` and `binbo:uci_play/2,3` defaults to 1000 ms.
+
 ## [2.0.0] - 2020-08-12
 
 - Added options for the game process at start (`binbo:new_server(Options)`). `Options` is a map now!
