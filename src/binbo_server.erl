@@ -28,6 +28,7 @@
 -export([uci_play/2, uci_play/3]).
 -export([uci_set_position/2, uci_sync_position/1]).
 -export([set_uci_handler/2]).
+-export([get_pieces_list/2]).
 
 %%% gen_server export.
 -export([init/1]).
@@ -297,6 +298,9 @@ do_handle_call({set_server_options, Opts}, _From, State) ->
 	{reply, Reply, NewState};
 do_handle_call(get_server_options, _From, #state{server_opts = Opts} = State) ->
 	{reply, {ok, Opts}, State};
+do_handle_call({get_pieces_list, SquareType}, _From, #state{game = Game} = State) ->
+	Reply = binbo_game:get_pieces_list(Game, SquareType),
+	{reply, Reply, State};
 do_handle_call(_Msg, _From, State) ->
 	{reply, ignored, State}.
 
@@ -527,6 +531,11 @@ uci_set_position(Pid, Fen) ->
 -spec uci_sync_position(pid()) -> ok | {error, term()}.
 uci_sync_position(Pid) ->
 	uci_command_call(Pid, sync_position).
+
+%% get_pieces_list/2
+-spec get_pieces_list(pid(), index | notation) -> {ok, [binbo_position:sq_piece_tuple()]} | {error, term()}.
+get_pieces_list(Pid, SquareType) ->
+	call(Pid, {get_pieces_list, SquareType}).
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions

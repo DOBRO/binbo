@@ -261,6 +261,7 @@
 	?BK -> ?BLACK_KING
 end)).
 
+
 -define(PIECE_TO_CHAR(P), (case (P) of
 	?WHITE_PAWN   -> ?WP;
 	?WHITE_KNIGHT -> ?WN;
@@ -290,4 +291,20 @@ end)).
 	?BLACK_ROOK   -> 'BLACK_ROOK';
 	?BLACK_QUEEN  -> 'BLACK_QUEEN';
 	?BLACK_KING   -> 'BLACK_KING'
+end)).
+
+
+-define(PIECE_TO_TUPLE(P), (case (P) of
+	?WHITE_PAWN   -> {white, pawn};
+	?WHITE_KNIGHT -> {white, knight};
+	?WHITE_BISHOP -> {white, bishop};
+	?WHITE_ROOK   -> {white, rook};
+	?WHITE_QUEEN  -> {white, queen};
+	?WHITE_KING   -> {white, king};
+	?BLACK_PAWN   -> {black, pawn};
+	?BLACK_KNIGHT -> {black, knight};
+	?BLACK_BISHOP -> {black, bishop};
+	?BLACK_ROOK   -> {black, rook};
+	?BLACK_QUEEN  -> {black, queen};
+	?BLACK_KING   -> {black, king}
 end)).

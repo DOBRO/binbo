@@ -18,7 +18,7 @@
 -export([get_piece/2, get_sidetomove/1, plain_sidetomove/1]).
 -export([get_status/1, with_status/3, is_status_inprogress/1, manual_draw/2]).
 -export([make_move/2, finalize_move/2]).
--export([get_fen/1, pretty_board/2]).
+-export([get_fen/1, pretty_board/2, get_pieces_list/2]).
 -export([
 	pawn_moves_bb/3, pawn_moves_bb/4,
 	knight_moves_bb/3,
@@ -55,6 +55,7 @@
 -type pchar() :: binbo_fen:piece_char().
 -type uchar() :: binbo_board:unicode_char().
 -type sq_idx() :: binbo_board:square_index().
+-type sq_notation() :: binbo_board:square_notation().
 -type empty_sq() :: binbo_board:empty_square().
 -type castling() :: ?CASTLING_NONE .. ?CASTLING_ANY.
 -type side_bb() :: ?A1_BB .. ?ALL_SQUARES_BB.
@@ -80,6 +81,11 @@
 -type game_status() :: game_status_inprogress() | game_over_status().
 -type halfmove() :: binbo_fen:halfmove().
 -type fullmove() :: binbo_fen:fullmove().
+-type sq_piece_tuple() :: {
+	sq_idx() | sq_notation(),
+	binbo_board:atom_color(),
+	binbo_board:atom_piece_type()
+}.
 
 -type bb_game() :: #{
 	?GAME_KEY_WP := bb(), ?GAME_KEY_WN := bb(), ?GAME_KEY_WB := bb(),
@@ -135,6 +141,7 @@
 -export_type([bb_game/0, castling/0, pretty_board_opts/0]).
 -export_type([bb_game_error/0, make_move_error/0]).
 -export_type([game_status/0, game_over_status/0]).
+-export_type([sq_piece_tuple/0]).
 
 %%%------------------------------------------------------------------------------
 %%%   API
@@ -314,6 +321,10 @@ piece_moves_bb(FromIdx, Ptype, Pcolor, Game) ->
 		?KING   -> binbo_position:king_moves_bb(FromIdx, Pcolor, Game)
 	end.
 
+%% get_pieces_list/2
+-spec get_pieces_list(bb_game(), index | notation) -> [sq_piece_tuple()].
+get_pieces_list(Game, SquareType) ->
+	get_pieces_list(all_pieces_bb(Game), Game, SquareType, []).
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
@@ -831,6 +842,23 @@ maybe_draw(Game) ->
 					end
 			end
 	end.
+
+%% get_pieces_list/4
+-spec get_pieces_list(bb(), bb_game(), index | notation, [sq_piece_tuple()]) -> [sq_piece_tuple()].
+get_pieces_list(0, _Game, _SquareType, List) ->
+	List;
+get_pieces_list(BB, Game, SquareType, List) ->
+	Idx = binbo_bb:to_index(BB band (-BB)), % the index of the least significant bit (LSB)
+	BB2 = BB band (BB - 1), % reset LSB
+	Square = case SquareType of
+		index -> Idx;
+		notation -> binbo_board:index_to_notation(Idx)
+	end,
+	Piece = get_piece(Idx, Game),
+	{AtomColor, AtomPiece} = ?PIECE_TO_TUPLE(Piece),
+	PieceTuple = {Square, AtomColor, AtomPiece},
+	get_pieces_list(BB2, Game, SquareType, [PieceTuple | List]).
+
 
 %%%------------------------------------------------------------------------------
 %%%   Load parsed FEN and validate position according to the Chess rules

@@ -31,6 +31,7 @@
 -export([uci_play/2, uci_play/3]).
 -export([uci_set_position/2, uci_sync_position/1]).
 -export([set_uci_handler/2]).
+-export([get_pieces_list/2]).
 
 -define(APPLICATION, ?MODULE).
 
@@ -250,3 +251,8 @@ uci_set_position(Pid, Fen) ->
 -spec uci_sync_position(pid()) -> ok | {error, term()}.
 uci_sync_position(Pid) ->
 	binbo_server:uci_sync_position(Pid).
+
+%% get_pieces_list/2
+-spec get_pieces_list(pid(), index | notation) -> {ok, [binbo_position:sq_piece_tuple()]} | {error, term()}.
+get_pieces_list(Pid, SquareType) ->
+	binbo_server:get_pieces_list(Pid, SquareType).

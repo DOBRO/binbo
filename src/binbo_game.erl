@@ -20,6 +20,7 @@
 -export([pretty_board/2, get_fen/1]).
 -export([all_legal_moves/2]).
 -export([side_to_move/1]).
+-export([get_pieces_list/2]).
 
 %%%------------------------------------------------------------------------------
 %%%   Includes
@@ -165,6 +166,13 @@ side_to_move(Game) ->
 		false -> {error, {bad_game, Game}}
 	end.
 
+%% get_pieces_list/1
+-spec get_pieces_list(game(), index | notation) -> {ok, [binbo_position:sq_piece_tuple()]} | {error, bad_game_term()}.
+get_pieces_list(Game, SquareType) ->
+	case erlang:is_map(Game) of
+		true  -> {ok, binbo_position:get_pieces_list(Game, SquareType)};
+		false -> {error, {bad_game, Game}}
+	end.
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions

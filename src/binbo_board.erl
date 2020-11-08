@@ -46,6 +46,7 @@
 -type piece() :: ?WHITE_PAWN | ?WHITE_KNIGHT | ?WHITE_BISHOP | ?WHITE_ROOK | ?WHITE_QUEEN | ?WHITE_KING
                | ?BLACK_PAWN | ?BLACK_KNIGHT | ?BLACK_BISHOP | ?BLACK_ROOK | ?BLACK_QUEEN | ?BLACK_KING.
 -type piece_type() :: ?PAWN | ?KNIGHT | ?BISHOP | ?ROOK | ?QUEEN | ?KING.
+-type atom_piece_type() :: pawn | knight | bishop | rook | queen | king.
 -type empty_square() :: ?EMPTY_SQUARE.
 -type unicode_char() :: 9817|9816|9815|9814|9813|9812|9823|9822|9821|9820|9819|9818.
 -type distance() :: 0..7.
@@ -53,7 +54,7 @@
 -type side_castling() :: ?CASTLING_W_OO | ?CASTLING_W_OOO | ?CASTLING_B_OO | ?CASTLING_B_OOO.
 
 -export_type([rank/0, file/0, rank_number/0]).
--export_type([color/0, atom_color/0, piece/0, piece_type/0, empty_square/0]).
+-export_type([color/0, atom_color/0, piece/0, piece_type/0, atom_piece_type/0, empty_square/0]).
 -export_type([square_index/0, square_notation/0]).
 -export_type([side_castling/0, unicode_char/0]).
 
