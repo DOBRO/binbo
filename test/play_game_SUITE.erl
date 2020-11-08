@@ -32,7 +32,8 @@
 	castling_white_when_attacked/1,
 	castling_black_when_attacked/1,
 	enpassant_moves/1, simple_game/1,
-	set_game_state/1
+	set_game_state/1,
+	get_pieces_list/1
 ]).
 
 
@@ -53,7 +54,8 @@ groups() ->
 		castling_white_when_attacked,
 		castling_black_when_attacked,
 		enpassant_moves, simple_game,
-		set_game_state
+		set_game_state,
+		get_pieces_list
 	]}].
 
 %% init_per_suite/1
@@ -440,6 +442,23 @@ set_game_state(Config) ->
 	{ok, continue} = binbo:game_status(Pid),
 	ok.
 
+%% get_pieces_list/1
+get_pieces_list(Config) ->
+	Pid = get_pid(Config),
+	{error, {bad_game, undefined}} = binbo:get_pieces_list(Pid, index),
+	{error, {bad_game, undefined}} = binbo:get_pieces_list(Pid, notation),
+	% Init game from initial position
+	{ok, continue} = binbo:new_game(Pid),
+	{ok, List1} = binbo:get_pieces_list(Pid, index),
+	{ok, List2} = binbo:get_pieces_list(Pid, notation),
+	true = erlang:is_list(List1),
+	true = erlang:is_list(List2),
+	32 = erlang:length(List1),
+	32 = erlang:length(List2),
+	_ = test_pieces_list_with_square_index(List1),
+	_ = test_pieces_list_with_square_notation(List2),
+	ok.
+
 
 %%%------------------------------------------------------------------------------
 %%%   Internal helpers
@@ -484,3 +503,85 @@ check_str_movelist([{From,To}|Tail]) ->
 	true = (erlang:is_list(To) andalso (erlang:length(To) =:= 2)),
 	true = (From =/= To),
 	check_str_movelist(Tail).
+
+
+%% test_pieces_list_with_square_index/1
+test_pieces_list_with_square_index(List) ->
+	% a1 - h1
+	true = lists:member({0,  white, rook}, List),
+	true = lists:member({1,  white, knight}, List),
+	true = lists:member({2,  white, bishop}, List),
+	true = lists:member({3,  white, queen}, List),
+	true = lists:member({4,  white, king}, List),
+	true = lists:member({5,  white, bishop}, List),
+	true = lists:member({6,  white, knight}, List),
+	true = lists:member({7,  white, rook}, List),
+	% a2 - h2
+	true = lists:member({8,  white, pawn}, List),
+	true = lists:member({9,  white, pawn}, List),
+	true = lists:member({10, white, pawn}, List),
+	true = lists:member({11, white, pawn}, List),
+	true = lists:member({12, white, pawn}, List),
+	true = lists:member({13, white, pawn}, List),
+	true = lists:member({14, white, pawn}, List),
+	true = lists:member({15, white, pawn}, List),
+	% a8 - h8
+	true = lists:member({56, black, rook}, List),
+	true = lists:member({57, black, knight}, List),
+	true = lists:member({58, black, bishop}, List),
+	true = lists:member({59, black, queen}, List),
+	true = lists:member({60, black, king}, List),
+	true = lists:member({61, black, bishop}, List),
+	true = lists:member({62, black, knight}, List),
+	true = lists:member({63, black, rook}, List),
+	% a7 - h7
+	true = lists:member({48, black, pawn}, List),
+	true = lists:member({49, black, pawn}, List),
+	true = lists:member({50, black, pawn}, List),
+	true = lists:member({51, black, pawn}, List),
+	true = lists:member({52, black, pawn}, List),
+	true = lists:member({53, black, pawn}, List),
+	true = lists:member({54, black, pawn}, List),
+	true = lists:member({55, black, pawn}, List),
+	ok.
+
+
+%% test_pieces_list_with_square_notation/1
+test_pieces_list_with_square_notation(List) ->
+	% a1 - h1
+	true = lists:member({<<"a1">>, white, rook}, List),
+	true = lists:member({<<"b1">>, white, knight}, List),
+	true = lists:member({<<"c1">>, white, bishop}, List),
+	true = lists:member({<<"d1">>, white, queen}, List),
+	true = lists:member({<<"e1">>, white, king}, List),
+	true = lists:member({<<"f1">>, white, bishop}, List),
+	true = lists:member({<<"g1">>, white, knight}, List),
+	true = lists:member({<<"h1">>, white, rook}, List),
+	% a2 - h2
+	true = lists:member({<<"a2">>, white, pawn}, List),
+	true = lists:member({<<"b2">>, white, pawn}, List),
+	true = lists:member({<<"c2">>, white, pawn}, List),
+	true = lists:member({<<"d2">>, white, pawn}, List),
+	true = lists:member({<<"e2">>, white, pawn}, List),
+	true = lists:member({<<"f2">>, white, pawn}, List),
+	true = lists:member({<<"g2">>, white, pawn}, List),
+	true = lists:member({<<"h2">>, white, pawn}, List),
+	% a8 - h8
+	true = lists:member({<<"a8">>, black, rook}, List),
+	true = lists:member({<<"b8">>, black, knight}, List),
+	true = lists:member({<<"c8">>, black, bishop}, List),
+	true = lists:member({<<"d8">>, black, queen}, List),
+	true = lists:member({<<"e8">>, black, king}, List),
+	true = lists:member({<<"f8">>, black, bishop}, List),
+	true = lists:member({<<"g8">>, black, knight}, List),
+	true = lists:member({<<"h8">>, black, rook}, List),
+	% a7 - h7
+	true = lists:member({<<"a7">>, black, pawn}, List),
+	true = lists:member({<<"b7">>, black, pawn}, List),
+	true = lists:member({<<"c7">>, black, pawn}, List),
+	true = lists:member({<<"d7">>, black, pawn}, List),
+	true = lists:member({<<"e7">>, black, pawn}, List),
+	true = lists:member({<<"f7">>, black, pawn}, List),
+	true = lists:member({<<"g7">>, black, pawn}, List),
+	true = lists:member({<<"h7">>, black, pawn}, List),
+	ok.
