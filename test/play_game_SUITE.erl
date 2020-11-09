@@ -33,7 +33,8 @@
 	castling_black_when_attacked/1,
 	enpassant_moves/1, simple_game/1,
 	set_game_state/1,
-	get_pieces_list/1
+	get_pieces_list/1,
+	index_moves/1
 ]).
 
 
@@ -55,7 +56,8 @@ groups() ->
 		castling_black_when_attacked,
 		enpassant_moves, simple_game,
 		set_game_state,
-		get_pieces_list
+		get_pieces_list,
+		index_moves
 	]}].
 
 %% init_per_suite/1
@@ -459,6 +461,37 @@ get_pieces_list(Config) ->
 	_ = test_pieces_list_with_square_notation(List2),
 	ok.
 
+%% index_moves/1
+index_moves(Config) ->
+	Pid = get_pid(Config),
+	% Initial game
+	{ok, continue} = binbo:new_game(Pid),
+	% e2-e4
+	{ok, continue} = binbo:index_move(Pid, 12, 20),
+	% e7-e5
+	{ok, continue} = binbo:index_move(Pid, 52, 36),
+
+	% Initial game
+	{ok, continue} = binbo:new_game(Pid),
+	% e2-e4
+	{ok, continue} = binbo:index_move(Pid, 12, 20, q),
+	% e7-e5
+	{ok, continue} = binbo:index_move(Pid, 52, 36, r),
+	% a2-a3
+	{ok, continue} = binbo:index_move(Pid, 8, 16, b),
+	% a7-a6
+	{ok, continue} = binbo:index_move(Pid, 48, 40, n),
+
+	% invalid moves
+	{error, _} = binbo:index_move(Pid, 9, 17, 'Q'),
+	{error, _} = binbo:index_move(Pid, -1, 2),
+	{error, _} = binbo:index_move(Pid, 1, -1),
+	{error, _} = binbo:index_move(Pid, -1, 2, q),
+	{error, _} = binbo:index_move(Pid, 1, -1, q),
+	{error, _} = binbo:index_move(Pid, 1, -1, q),
+	{error, _} = binbo:index_move(Pid, -1, 64, q),
+
+	ok.
 
 %%%------------------------------------------------------------------------------
 %%%   Internal helpers

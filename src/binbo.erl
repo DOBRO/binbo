@@ -19,7 +19,7 @@
 -export([get_server_options/1, set_server_options/2]).
 -export([new_game/1, new_game/2]).
 -export([game_state/1, set_game_state/2, game_status/1, side_to_move/1]).
--export([move/2, san_move/2, get_fen/1]).
+-export([move/2, san_move/2, index_move/3, index_move/4, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
 -export([game_draw/1, game_draw/2]).
 -export([print_board/1, print_board/2]).
@@ -123,6 +123,16 @@ move(Pid, Move) ->
 -spec san_move(pid(), binbo_move:sq_move()) -> binbo_server:game_move_ret().
 san_move(Pid, SanMove) ->
 	binbo_server:game_san_move(Pid, SanMove).
+
+%% index_move/3
+-spec index_move(pid(), binbo_board:square_index(), binbo_board:square_index()) -> binbo_server:game_move_ret().
+index_move(Pid, FromIdx, ToIdx) ->
+	index_move(Pid, FromIdx, ToIdx, q).
+
+%% index_move/4
+-spec index_move(pid(), binbo_board:square_index(), binbo_board:square_index(), q | r | b | n) -> binbo_server:game_move_ret().
+index_move(Pid, FromIdx, ToIdx, PromoType) ->
+	binbo_server:game_index_move(Pid, FromIdx, ToIdx, PromoType).
 
 %% load_pgn/2
 -spec load_pgn(pid(), binbo_pgn:pgn()) -> binbo_server:load_pgn_ret().

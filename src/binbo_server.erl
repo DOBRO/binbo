@@ -18,7 +18,7 @@
 -export([start_link/1]).
 -export([get_server_options/1, set_server_options/2]).
 -export([stop/1]).
--export([new_game/2, game_move/2, game_san_move/2, get_fen/1]).
+-export([new_game/2, game_move/2, game_san_move/2, game_index_move/4, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
 -export([game_state/1, set_game_state/2, game_status/1, game_draw/2]).
 -export([all_legal_moves/2, side_to_move/1]).
@@ -410,6 +410,11 @@ game_move(Pid, Move) ->
 -spec game_san_move(pid(), sq_move()) -> game_move_ret().
 game_san_move(Pid, Move) ->
 	call(Pid, {game_move, san, Move}).
+
+%% game_index_move/4
+-spec game_index_move(pid(), binbo_board:square_index(), binbo_board:square_index(), q | r | b | n) -> game_move_ret().
+game_index_move(Pid, FromIdx, ToIdx, PromoType) ->
+	call(Pid, {game_move, idx, {FromIdx, ToIdx, PromoType}}).
 
 %% load_pgn/2
 -spec load_pgn(pid(), binbo_pgn:pgn()) -> load_pgn_ret().
