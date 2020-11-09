@@ -48,7 +48,7 @@
 -type piece_type() :: binbo_board:piece_type().
 -type color() :: binbo_board:color().
 -type sq_move() :: binary() | string().
--type idx_move() :: {sq_idx(), sq_idx()} | {sq_idx(), sq_idx(), q | r | b | n}.
+-type idx_move() :: {sq_idx(), sq_idx(), q | r | b | n}.
 -type bb_game() :: binbo_position:bb_game().
 -type sq_idx() :: binbo_board:square_index().
 -type sq_notation() :: binbo_board:square_notation().
@@ -69,6 +69,9 @@
 -type chess_error() :: same_square | king_capture | own_piece_capture
 					| {invalid_move, pname()}
 					| binbo_position:make_move_error().
+-type idx_move_error() :: {invalid_promotion_type, term()}
+						| {invalid_square_index, term()}
+						| {invalid_move_datatype, term()}.
 -type move_overall_error() :: game_status_error() | piece_error() | chess_error().
 -type move_error() :: {parse, parse_error() | parse_san_error()} | move_overall_error().
 
@@ -98,18 +101,26 @@ validate_san_move(San, Game) ->
 			{error, {parse, Reason}}
 	end.
 
-%% validate_idx_move/1
--spec validate_idx_move(idx_move(), bb_game()) -> {ok, move_info(), bb_game()} | {error, move_overall_error()}.
-validate_idx_move({FromIdx, ToIdx}, Game) ->
-	validate_move_overall(Game, FromIdx, ToIdx, ?QUEEN);
-validate_idx_move({FromIdx, ToIdx, Promo}, Game) ->
-	PromoType = case Promo of
-		q -> ?QUEEN;
-		r -> ?ROOK;
-		b -> ?BISHOP;
-		n -> ?KNIGHT
+%% validate_idx_move/2
+-spec validate_idx_move(idx_move(), bb_game()) -> {ok, move_info(), bb_game()} | {error, idx_move_error()} | {error, move_overall_error()}.
+validate_idx_move({FromIdx, ToIdx, Promo}, Game) when (?IS_VALID_INDEX(FromIdx) andalso ?IS_VALID_INDEX(ToIdx)) ->
+	CheckPromo = case Promo of
+		q -> {ok, ?QUEEN};
+		r -> {ok, ?ROOK};
+		b -> {ok, ?BISHOP};
+		n -> {ok, ?KNIGHT};
+		_ -> error
 	end,
-	validate_move_overall(Game, FromIdx, ToIdx, PromoType).
+	case CheckPromo of
+		{ok, PromoType} -> validate_move_overall(Game, FromIdx, ToIdx, PromoType);
+		error -> {error, {invalid_promotion_type, Promo}}
+	end;
+validate_idx_move({FromIdx, _ToIdx, _Promo}, _Game) when (not ?IS_VALID_INDEX(FromIdx)) ->
+	{error, {invalid_square_index, FromIdx}};
+validate_idx_move({_FromIdx, ToIdx, _Promo}, _Game) when (not ?IS_VALID_INDEX(ToIdx)) ->
+	{error, {invalid_square_index, ToIdx}};
+validate_idx_move(Move, _Game) ->
+	{error, {invalid_move_datatype, Move}}.
 
 %% validate_int_move/2
 -spec validate_int_move(non_neg_integer(), bb_game()) -> {ok, move_info(), bb_game()} | {error, move_overall_error()}.

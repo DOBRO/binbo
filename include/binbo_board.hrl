@@ -238,7 +238,7 @@
 -define(SWITCH_COLOR(Color), ((Color) bxor 16#10)).
 -define(TYPE_TO_PIECE(Ptype, Pcolor), ((Ptype) bor (Pcolor))).
 
--define(IS_VALID_INDEX(Idx), (((Idx) >= ?A1_IDX) andalso ((Idx) =< ?H8_IDX))).
+-define(IS_VALID_INDEX(Idx), (erlang:is_integer(Idx) andalso ((Idx) >= ?A1_IDX) andalso ((Idx) =< ?H8_IDX))).
 
 -define(SQUARE_BB(Idx),  (1 bsl (Idx))).
 
