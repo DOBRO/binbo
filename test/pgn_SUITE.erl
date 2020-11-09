@@ -21,7 +21,15 @@
 -export([groups/0]).
 -export([init_per_suite/1, end_per_suite/1]).
 -export([init_per_testcase/2, end_per_testcase/2]).
--export([load_pgn_nightmare/1, load_pgn_empty/1, load_pgn_not_binary/1, load_pgn_no_moves/1, load_pgn_no_result/1, load_pgn_from_file/1]).
+-export([
+    load_pgn_nightmare/1,
+    load_pgn_empty/1,
+    load_pgn_not_binary/1,
+    load_pgn_no_moves/1,
+    load_pgn_no_result/1,
+    load_pgn_from_file/1,
+    load_pgn_with_queen_castling/1
+    ]).
 
 %% all/0
 all() -> [{group, pgn_loading}].
@@ -34,7 +42,8 @@ groups() ->
 		load_pgn_not_binary,
 		load_pgn_no_moves,
 		load_pgn_no_result,
-		load_pgn_from_file
+		load_pgn_from_file,
+        load_pgn_with_queen_castling
 	]}].
 
 %% init_per_suite/1
@@ -115,6 +124,12 @@ load_pgn_from_file(Config) ->
 	{ok, _} = binbo:load_pgn_file(Pid, Filename),
 	ok.
 
+%% load_pgn_with_queen_castling/1
+load_pgn_with_queen_castling(Config) ->
+	Pid = get_pid(Config),
+	Pgn = pgn_with_queen_castling(),
+	{ok, continue} = binbo:load_pgn(Pid, Pgn),
+	ok.
 
 %%%------------------------------------------------------------------------------
 %%%   PGNs
@@ -402,4 +417,16 @@ Re4+
 Rd8#
     { 2 }
 0-1
+">>.
+
+
+pgn_with_queen_castling() ->
+<<"
+1. d4 Nf6 2. c4 Nc6 3. Nc3 e5 4. d5 Ne7 5. e4 Ng6 6. Be3 Bb4 7. f3 Qe7 8. Bd3
+c6 9. Nge2 cxd5 10. cxd5 Nh5 11. g3 O-O 12. a3 Bc5 13. Bxc5 Qxc5 14. b4 Qe3 15.
+Qd2 Qxf3 16. O-O-O d6 17. Rdf1 Qg4 18. Nb5 Qd7 19. Qg5 Nf6 20. Rxf6 gxf6 21.
+Qxf6 Rd8 22. h4 Qe7 23. Qf3 Bd7 24. Nbc3 a5 25. b5 Rac8 26. Kb2 Rf8 27. g4 f6
+28. Ng3 Nf4 29. Nf5 Bxf5 30. exf5 Kh8 31. Re1 Qg7 32. Rg1 Rc5 33. Ne4 Rxd5 34.
+Bc4 Rd4 35. Ba2 Qc7 36. g5 fxg5 37. hxg5 Rxf5 38. Qb3 d5 39. Nf6 Nd3+ 40. Kb1
+Rf2 41. Nxd5 Rxd5 42. Qxd5 Qc2+ 0-1
 ">>.
