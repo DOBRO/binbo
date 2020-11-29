@@ -344,6 +344,10 @@ binbo:new_game(Pid, Fen3).
 binbo:move(Pid, Move) -> {ok, GameStatus} | {error, Reason}.
 
 binbo:san_move(Pid, Move) -> {ok, GameStatus} | {error, Reason}.
+
+binbo:index_move(Pid, FromIndex, ToIndex) -> {ok, GameStatus} | {error, Reason}.
+
+binbo:index_move(Pid, FromIndex, ToIndex, PromotionType) -> {ok, GameStatus} | {error, Reason}.
 ----
 
 where:
@@ -351,10 +355,15 @@ where:
 * `Pid` is the pid of the game process;
 * `Move` is of `binary()` or `string()` type;
 * `GameStatus` is the link:#game-status[game status].
+* `FromIndex` - index of square a piece moves from.
+* `ToIndex` - index of square a piece moves to.
+* `PromotionType` - piece that a pawn should be promoted to, one of the atoms: `q`, `r`, `b`, `n` (_queen_, _rook_, _bishop_, _knight_). Defaults to `q` (_queen_).
 
 Function `binbo:move/2` supports only _strict square notation_ with respect to argument `Move`, for example: `<<"e2e4">>`, `<<"e7e5">>`, etc.
 
 Function `binbo:san_move/2` is intended to handle various formats of argument `Move` including https://en.wikipedia.org/wiki/Algebraic_notation_(chess)[_standard algebraic notation_] (*SAN*), for example: `<<"e4">>`, `<<"Nf3">>`, `<<"Qxd5">>`, `<<"a8=Q">>`, `<<"Rdf8">>`, `<<"R1a3">>`, `<<"O-O">>`, `<<"O-O-O">>`, `<<"e1e8">>`, etc.
+
+Function `binbo:index_move/3,4` takes only square indices for the second and third parameter. For example, `binbo:index_move(Pid, 12, 28)` is the same as `binbo:move(Pid, <<"e2e4">>)`.
 
 .Examples for `binbo:move/2`:
 [source,erlang]
@@ -424,6 +433,25 @@ Function `binbo:san_move/2` is intended to handle various formats of argument `M
 % Checkmate!
 > binbo:san_move(Pid, <<"Qf7#">>).
 {ok,checkmate}
+----
+
+.Examples for `binbo:index_move/3`:
+[source,erlang]
+----
+%% In the Erlang shell.
+
+% New game from the starting position:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.190.0>}
+> binbo:new_game(Pid).
+{ok,continue}
+
+% Start making moves
+> binbo:index_move(Pid, 12, 28). % e2-e4
+{ok,continue}
+
+> binbo:index_move(Pid, 52, 36). % e7-e5
+{ok,continue}
 ----
 
 ==== Castling
