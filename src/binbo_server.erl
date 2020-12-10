@@ -57,7 +57,7 @@
 -type game_move_ret() :: {ok, game_status()} | {error, binbo_game:move_error()}.
 -type game_state_ret() :: undefined | bb_game().
 -type game_status_ret() :: binbo_game:status_ret().
--type game_draw_ret() :: ok | {error, binbo_game:draw_error()}.
+-type game_draw_ret() :: ok | {error, binbo_game:gameover_status_error()}.
 -type get_fen_ret() :: binbo_game:get_fen_ret().
 -type load_pgn_ret() :: {ok, game_status()} | {error, binbo_game:load_pgn_error()}.
 -type load_pgn_file_ret() :: {ok, game_status()} | {error, any()}.

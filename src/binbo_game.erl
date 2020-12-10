@@ -45,7 +45,7 @@
 -type bad_game_term() :: {bad_game, term()}.
 -type init_error() :: binbo_fen:fen_error() | bb_game_error().
 -type move_error() :: bad_game_term() | binbo_move:move_error().
--type draw_error() :: {already_has_status, binbo_position:game_over_status()} | bad_game_term().
+-type gameover_status_error() :: {already_has_status, binbo_position:game_over_status()} | bad_game_term().
 -type load_pgn_error() :: move_error() | binbo_pgn:pgn_error().
 -type pretty_board_error() :: bad_game_term() | {bad_options, term()}.
 -type status_ret() :: {ok, game_status()} | {error, bad_game_term()}.
@@ -56,7 +56,7 @@
 -export_type([game/0, game_fen/0, filename/0]).
 -export_type([game_status/0, status_ret/0, get_fen_ret/0]).
 -export_type([all_legal_moves_ret/0, side_to_move_ret/0]).
--export_type([init_error/0, move_error/0, draw_error/0]).
+-export_type([init_error/0, move_error/0, gameover_status_error/0]).
 -export_type([load_pgn_error/0, pretty_board_error/0]).
 
 %%%------------------------------------------------------------------------------
@@ -132,7 +132,7 @@ status(Game) ->
 	end.
 
 %% draw/2
--spec draw(term(), game()) ->  {ok, bb_game()} | {error, draw_error()}.
+-spec draw(term(), game()) ->  {ok, bb_game()} | {error, gameover_status_error()}.
 draw(Reason, Game) when is_map(Game) ->
 	Status = binbo_position:get_status(Game),
 	case binbo_position:is_status_inprogress(Status) of
