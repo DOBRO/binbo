@@ -20,7 +20,7 @@
 -export([stop/1]).
 -export([new_game/2, game_move/2, game_san_move/2, game_index_move/4, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
--export([game_state/1, set_game_state/2, game_status/1, game_draw/2]).
+-export([game_state/1, set_game_state/2, game_status/1, game_draw/2, game_winner/3]).
 -export([all_legal_moves/2, side_to_move/1]).
 -export([new_uci_game/2]).
 -export([uci_command_call/2, uci_command_cast/2]).
@@ -58,6 +58,7 @@
 -type game_state_ret() :: undefined | bb_game().
 -type game_status_ret() :: binbo_game:status_ret().
 -type game_draw_ret() :: ok | {error, binbo_game:gameover_status_error()}.
+-type game_winner_ret() :: ok | {error, binbo_game:gameover_status_error()}.
 -type get_fen_ret() :: binbo_game:get_fen_ret().
 -type load_pgn_ret() :: {ok, game_status()} | {error, binbo_game:load_pgn_error()}.
 -type load_pgn_file_ret() :: {ok, game_status()} | {error, any()}.
@@ -93,7 +94,7 @@
 -export_type([server_opts/0]).
 -export_type([new_game_ret/0, game_move_ret/0, get_fen_ret/0]).
 -export_type([load_pgn_ret/0, load_pgn_file_ret/0]).
--export_type([game_state_ret/0, game_status_ret/0, game_draw_ret/0]).
+-export_type([game_state_ret/0, game_status_ret/0, game_draw_ret/0, game_winner_ret/0]).
 -export_type([all_legal_moves_ret/0]).
 -export_type([stop_ret/0]).
 -export_type([new_uci_game_ret/0, uci_bestmove_ret/0, uci_play_ret/0]).
@@ -231,6 +232,14 @@ do_handle_call(side_to_move, _From, #state{game = Game} = State) ->
 	{reply, Reply, State};
 do_handle_call({game_draw, Reason}, _From, #state{game = Game0} = State0) ->
 	{Reply, NewState} = case binbo_game:draw(Reason, Game0) of
+		{ok, Game} ->
+			{ok, State0#state{game = Game}};
+		{error, _} = Error ->
+			{Error, State0}
+	end,
+	{reply, Reply, NewState};
+do_handle_call({game_winner, Winner, Reason}, _From, #state{game = Game0} = State0) ->
+	{Reply, NewState} = case binbo_game:winner(Game0, Winner, Reason) of
 		{ok, Game} ->
 			{ok, State0#state{game = Game}};
 		{error, _} = Error ->
@@ -445,6 +454,11 @@ game_status(Pid) ->
 -spec game_draw(pid(), term()) -> game_draw_ret().
 game_draw(Pid, Reason) ->
 	call(Pid, {game_draw, Reason}).
+
+%% game_winner/2
+-spec game_winner(pid(), binbo_game:winner(), term()) -> game_winner_ret().
+game_winner(Pid, Winner, Reason) ->
+	call(Pid, {game_winner, Winner, Reason}).
 
 %% get_fen/2
 -spec get_fen(pid()) -> get_fen_ret().

@@ -21,7 +21,7 @@
 -export([game_state/1, set_game_state/2, game_status/1, side_to_move/1]).
 -export([move/2, san_move/2, index_move/3, index_move/4, get_fen/1]).
 -export([load_pgn/2, load_pgn_file/2]).
--export([game_draw/1, game_draw/2]).
+-export([game_draw/1, game_draw/2, game_winner/2, game_winner/3]).
 -export([print_board/1, print_board/2]).
 -export([all_legal_moves/1, all_legal_moves/2]).
 -export([stop_server/1]).
@@ -168,6 +168,16 @@ game_draw(Pid) ->
 -spec game_draw(pid(), Reason :: term()) -> binbo_server:game_draw_ret().
 game_draw(Pid, Reason) ->
 	binbo_server:game_draw(Pid, Reason).
+
+%% game_winner/2
+-spec game_winner(pid(), binbo_game:winner()) -> binbo_server:game_winner_ret().
+game_winner(Pid, Winner) ->
+	game_winner(Pid, Winner, undefined).
+
+%% game_winner/3
+-spec game_winner(pid(), binbo_game:winner(), Reason :: term()) -> binbo_server:game_winner_ret().
+game_winner(Pid, Winner, Reason) ->
+	binbo_server:game_winner(Pid, Winner, Reason).
 
 %% print_board/1
 -spec print_board(pid()) -> ok | {error, binbo_game:pretty_board_error()}.

@@ -16,7 +16,7 @@
 
 -export([init_bb_game/1, validate_loaded_fen/1]).
 -export([get_piece/2, get_sidetomove/1, plain_sidetomove/1]).
--export([get_status/1, with_status/3, is_status_inprogress/1, manual_draw/2]).
+-export([get_status/1, with_status/3, is_status_inprogress/1, manual_draw/2, manual_winner/3]).
 -export([make_move/2, finalize_move/2]).
 -export([get_fen/1, pretty_board/2, get_pieces_list/2]).
 -export([
@@ -76,8 +76,10 @@
 				| game_draw_material()
 				| game_draw_repetition()
 				| {manual, term()}.
+-type why_winner() :: {manual, term()}.
 -type game_status_draw() :: {draw, why_draw()}.
--type game_over_status() :: game_status_checkmate() | game_status_draw().
+-type game_status_winner() :: {winner, binbo_game:winner(), why_winner()}.
+-type game_over_status() :: game_status_checkmate() | game_status_draw() | game_status_winner().
 -type game_status() :: game_status_inprogress() | game_over_status().
 -type halfmove() :: binbo_fen:halfmove().
 -type fullmove() :: binbo_fen:fullmove().
@@ -225,10 +227,14 @@ is_status_inprogress(Status) ->
 	end.
 
 %% manual_draw/2
--spec manual_draw(bb_game(), term()) -> bb_game().
+-spec manual_draw(term(), bb_game()) -> bb_game().
 manual_draw(Reason, Game) ->
 	set_status_draw({manual, Reason}, Game).
 
+%% manual_winner/3
+-spec manual_winner(binbo_game:winner(), term(), bb_game()) -> bb_game().
+manual_winner(Winner, Reason, Game) ->
+	set_status_winner(Winner, {manual, Reason}, Game).
 
 %% get_piece_indexes/2
 -spec get_piece_indexes(piece(), bb_game()) -> [sq_idx()].
@@ -683,6 +689,11 @@ set_status_stalemate(Game) ->
 -spec set_status_draw(why_draw(), bb_game()) -> bb_game().
 set_status_draw(Reason, Game) ->
 	set_status({draw, Reason}, Game).
+
+%% set_status_winner/2
+-spec set_status_winner(binbo_game:winner(), why_winner(), bb_game()) -> bb_game().
+set_status_winner(Winner, Reason, Game) ->
+	set_status({winner, Winner, Reason}, Game).
 
 %% get_halfmove/1
 -spec get_halfmove(bb_game()) -> halfmove().

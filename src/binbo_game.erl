@@ -16,7 +16,7 @@
 
 -export([new/1]).
 -export([move/3, load_pgn/1, load_pgn_file/1]).
--export([status/1, draw/2]).
+-export([status/1, draw/2, winner/3]).
 -export([pretty_board/2, get_fen/1]).
 -export([all_legal_moves/2]).
 -export([side_to_move/1]).
@@ -52,8 +52,9 @@
 -type get_fen_ret() :: {ok, binary()} | {error, bad_game_term()}.
 -type all_legal_moves_ret() :: {ok, legal_moves()} | {error, bad_game_term()}.
 -type side_to_move_ret() :: {ok, binbo_board:atom_color()} | {error, bad_game_term()}.
+-type winner() :: term().
 
--export_type([game/0, game_fen/0, filename/0]).
+-export_type([game/0, game_fen/0, filename/0, winner/0]).
 -export_type([game_status/0, status_ret/0, get_fen_ret/0]).
 -export_type([all_legal_moves_ret/0, side_to_move_ret/0]).
 -export_type([init_error/0, move_error/0, gameover_status_error/0]).
@@ -140,6 +141,17 @@ draw(Reason, Game) when is_map(Game) ->
 		false -> {error, {already_has_status, Status}}
 	end;
 draw(_Reason, Game) ->
+	{error, {bad_game, Game}}.
+
+%% winner/3
+-spec winner(game(), winner(), term()) ->  {ok, bb_game()} | {error, gameover_status_error()}.
+winner(Game, Winner, Reason) when is_map(Game) ->
+	Status = binbo_position:get_status(Game),
+	case binbo_position:is_status_inprogress(Status) of
+		true  -> {ok, binbo_position:manual_winner(Winner, Reason, Game)};
+		false -> {error, {already_has_status, Status}}
+	end;
+winner(Game, _Winner, _Reason) ->
 	{error, {bad_game, Game}}.
 
 %% get_fen/1
