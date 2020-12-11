@@ -16,7 +16,7 @@
 
 -export([init_bb_game/1, validate_loaded_fen/1]).
 -export([get_piece/2, get_sidetomove/1, plain_sidetomove/1]).
--export([get_status/1, with_status/3, is_status_inprogress/1, manual_draw/2, manual_winner/3]).
+-export([get_status/1, with_status/3, is_status_inprogress/1, manual_draw/2, set_manual_winner/3]).
 -export([make_move/2, finalize_move/2]).
 -export([get_fen/1, pretty_board/2, get_pieces_list/2]).
 -export([
@@ -231,9 +231,9 @@ is_status_inprogress(Status) ->
 manual_draw(Reason, Game) ->
 	set_status_draw({manual, Reason}, Game).
 
-%% manual_winner/3
--spec manual_winner(binbo_game:winner(), term(), bb_game()) -> bb_game().
-manual_winner(Winner, Reason, Game) ->
+%% set_manual_winner/3
+-spec set_manual_winner(binbo_game:winner(), term(), bb_game()) -> bb_game().
+set_manual_winner(Winner, Reason, Game) ->
 	set_status_winner(Winner, {manual, Reason}, Game).
 
 %% get_piece_indexes/2

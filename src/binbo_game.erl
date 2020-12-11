@@ -16,7 +16,7 @@
 
 -export([new/1]).
 -export([move/3, load_pgn/1, load_pgn_file/1]).
--export([status/1, draw/2, winner/3]).
+-export([status/1, draw/2, set_winner/3]).
 -export([pretty_board/2, get_fen/1]).
 -export([all_legal_moves/2]).
 -export([side_to_move/1]).
@@ -143,15 +143,15 @@ draw(Reason, Game) when is_map(Game) ->
 draw(_Reason, Game) ->
 	{error, {bad_game, Game}}.
 
-%% winner/3
--spec winner(game(), winner(), term()) ->  {ok, bb_game()} | {error, gameover_status_error()}.
-winner(Game, Winner, Reason) when is_map(Game) ->
+%% set_winner/3
+-spec set_winner(game(), winner(), term()) ->  {ok, bb_game()} | {error, gameover_status_error()}.
+set_winner(Game, Winner, Reason) when is_map(Game) ->
 	Status = binbo_position:get_status(Game),
 	case binbo_position:is_status_inprogress(Status) of
-		true  -> {ok, binbo_position:manual_winner(Winner, Reason, Game)};
+		true  -> {ok, binbo_position:set_manual_winner(Winner, Reason, Game)};
 		false -> {error, {already_has_status, Status}}
 	end;
-winner(Game, _Winner, _Reason) ->
+set_winner(Game, _Winner, _Reason) ->
 	{error, {bad_game, Game}}.
 
 %% get_fen/1
