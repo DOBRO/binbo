@@ -7,7 +7,8 @@ All notable changes to this project will be documented in this file.
 - `movetime` option for functions `binbo:uci_bestmove/1,2` and `binbo:uci_play/2,3` defaults to 1000 ms.
 - New functions:
   - `binbo:get_pieces_list/2`;
-  - `binbo:index_move/3,4`.
+  - `binbo:index_move/3,4`;
+  - `binbo:set_game_winner/2,3`.
 
 ## [2.0.0] - 2020-08-12
 
