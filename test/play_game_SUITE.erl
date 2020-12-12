@@ -369,6 +369,15 @@ enpassant_moves(Config) ->
 %% simple_game/1
 simple_game(Config) ->
 	Pid = get_pid(Config),
+	{error, {bad_game, undefined}} = binbo:move(Pid, <<"e2e4">>),
+	{error, {bad_game, undefined}} = binbo:san_move(Pid, <<"e4">>),
+	{error, {bad_game, undefined}} = binbo:side_to_move(Pid),
+	{error, {bad_game, undefined}} = binbo:game_draw(Pid),
+	{error, {bad_game, undefined}} = binbo:game_draw(Pid, test_draw),
+	{error, {bad_game, undefined}} = binbo:all_legal_moves(Pid),
+	{error, {bad_game, undefined}} = binbo:all_legal_moves(Pid, int),
+	{error, {bad_game, undefined}} = binbo:all_legal_moves(Pid, bin),
+	{error, {bad_game, undefined}} = binbo:all_legal_moves(Pid, str),
 	InitialFen = <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>,
 	InitialFen = binbo_fen:initial(),
 	{ok, continue} = binbo:new_game(Pid),
@@ -466,6 +475,7 @@ get_pieces_list(Config) ->
 %% index_moves/1
 index_moves(Config) ->
 	Pid = get_pid(Config),
+	{error, {bad_game, undefined}} = binbo:index_move(Pid, 12, 20),
 	% Initial game
 	{ok, continue} = binbo:new_game(Pid),
 	% e2-e4
