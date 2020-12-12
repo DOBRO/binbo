@@ -513,12 +513,31 @@ set_game_winner(Config) ->
 	ok = binbo:set_game_winner(Pid, winner1),
 	{ok,{winner,winner1,{manual,undefined}}} = binbo:game_status(Pid),
 	{error,{already_has_status,{winner,winner1,{manual,undefined}}}} = binbo:set_game_winner(Pid, winner1),
-
 	% winner2
 	{ok, continue} = binbo:new_game(Pid),
 	ok = binbo:set_game_winner(Pid, winner2, test_reason2),
 	{ok,{winner,winner2,{manual,test_reason2}}} = binbo:game_status(Pid),
 	{error,{already_has_status,{winner,winner2,{manual,test_reason2}}}} = binbo:set_game_winner(Pid, winner2),
+	% after manual draw
+	{ok, continue} = binbo:new_game(Pid),
+	ok = binbo:game_draw(Pid, test_draw),
+	{error,{already_has_status,{draw,{manual,test_draw}}}} = binbo:set_game_winner(Pid, winner3),
+	% after checkmate
+	{ok, continue} = binbo:new_game(Pid, <<"rnbqkbnr/3ppppp/ppp5/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq -">>),
+	{ok, <<"rnbqkbnr/3ppppp/ppp5/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1">>} = binbo:get_fen(Pid),
+	{ok, checkmate} = binbo:move(Pid, <<"c4f7">>),
+	{ok,checkmate} = binbo:game_status(Pid),
+	{error,{already_has_status,checkmate}} = binbo:set_game_winner(Pid, winner3, test_reason3),
+	% after stalemate
+	{ok, continue} = binbo:new_game(Pid, <<"k7/8/8/8/7Q/8/3K4/1R6 w - -">>),
+	{ok, <<"k7/8/8/8/7Q/8/3K4/1R6 w - - 0 1">>} = binbo:get_fen(Pid),
+	{ok, {draw,stalemate}} = binbo:move(Pid, <<"h4h7">>),
+	{ok, {draw,stalemate}} = binbo:game_status(Pid),
+	{error,{already_has_status,{draw,stalemate}}} = binbo:set_game_winner(Pid, winner3, test_reason3),
+	% move after the winner is set
+	{ok, continue} = binbo:new_game(Pid),
+	ok = binbo:set_game_winner(Pid, winner2, test_reason2),
+	{error,{{game_over,{winner,winner2,{manual,test_reason2}}}, <<"e2e4">>}} = binbo:move(Pid, <<"e2e4">>),
 
 	ok.
 
