@@ -34,7 +34,8 @@
 	enpassant_moves/1, simple_game/1,
 	set_game_state/1,
 	get_pieces_list/1,
-	index_moves/1
+	index_moves/1,
+	set_game_winner/1
 ]).
 
 
@@ -57,7 +58,8 @@ groups() ->
 		enpassant_moves, simple_game,
 		set_game_state,
 		get_pieces_list,
-		index_moves
+		index_moves,
+		set_game_winner
 	]}].
 
 %% init_per_suite/1
@@ -490,6 +492,23 @@ index_moves(Config) ->
 	{error, _} = binbo:index_move(Pid, 1, -1, q),
 	{error, _} = binbo:index_move(Pid, 1, -1, q),
 	{error, _} = binbo:index_move(Pid, -1, 64, q),
+
+	ok.
+
+set_game_winner(Config) ->
+	Pid = get_pid(Config),
+	% winner1
+	{error,{bad_game,undefined}} = binbo:set_game_winner(Pid, winner1),
+	{ok, continue} = binbo:new_game(Pid),
+	ok = binbo:set_game_winner(Pid, winner1),
+	{ok,{winner,winner1,{manual,undefined}}} = binbo:game_status(Pid),
+	{error,{already_has_status,{winner,winner1,{manual,undefined}}}} = binbo:set_game_winner(Pid, winner1),
+
+	% winner2
+	{ok, continue} = binbo:new_game(Pid),
+	ok = binbo:set_game_winner(Pid, winner2, test_reason2),
+	{ok,{winner,winner2,{manual,test_reason2}}} = binbo:game_status(Pid),
+	{error,{already_has_status,{winner,winner2,{manual,test_reason2}}}} = binbo:set_game_winner(Pid, winner2),
 
 	ok.
 
