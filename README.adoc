@@ -618,6 +618,8 @@ binbo:game_status(Pid) -> {ok, GameStatus} | {error, Reason}.
 * `{draw, insufficient_material}` - draw because of insufficient material;
 * `{draw, threefold_repetition}` - draw according to the threefold repetition rule;
 * `{draw, {manual, WhyDraw}}` - draw was set link:#setting-a-draw[manually] for the reason of `WhyDraw`.
+* `{winner, Winner, {manual, Reason}}` - winner `Winner` was set link:#setting-game-winner[manually] for the reason of `Reason`.
+
 
 === List of legal moves
 
@@ -850,6 +852,41 @@ ok
 > binbo:game_draw(Pid, other_reason).
 {error,{already_has_status,{draw,{manual,by_agreement}}}}
 ----
+
+
+[[setting-game-winner]]
+=== Setting game winner
+
+[source,erlang]
+----
+binbo:set_game_winner(Pid, Winner) -> ok | {error, Reason}.
+binbo:set_game_winner(Pid, Winner, WinnerReason) -> ok | {error, Reason}.
+----
+
+.where:
+* `Pid` is the pid of the game process;
+* `Winner` is the winner, it can be any Erlang term (`white`, `black`, `'Bobby Fischer'`, etc.);
+* `WinnerReason` is the reason why winner is to be set.
+
+Calling `binbo:set_game_winner(Pid, Winner)` is the same as: `binbo:set_game_winner(Pid, Winner, undefined)`.
+
+.Example:
+[source,erlang]
+----
+% Black resigned
+> binbo:set_game_winner(Pid, white, black_resigned).
+ok
+
+% Now the status of the game is: {winner,white,{manual,black_resigned}}
+> binbo:game_status(Pid).
+{ok,{winner,white,{manual,black_resigned}}}
+
+% Trying to set the winner right after that (impossible):
+> binbo:set_game_winner(Pid, white, black_lost_on_time).
+{error,{already_has_status,{winner,white,
+                                   {manual,black_resigned}}}}
+----
+
 
 === Stopping game process
 
