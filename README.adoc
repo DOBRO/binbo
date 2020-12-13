@@ -618,7 +618,7 @@ binbo:game_status(Pid) -> {ok, GameStatus} | {error, Reason}.
 * `{draw, insufficient_material}` - draw because of insufficient material;
 * `{draw, threefold_repetition}` - draw according to the threefold repetition rule;
 * `{draw, {manual, WhyDraw}}` - draw was set link:#setting-a-draw[manually] for the reason of `WhyDraw`.
-* `{winner, Winner, {manual, Reason}}` - winner `Winner` was set link:#setting-game-winner[manually] for the reason of `Reason`.
+* `{winner, Winner, {manual, WinnerReason}}` - winner `Winner` was set link:#setting-game-winner[manually] for the reason of `WinnerReason`.
 
 
 === List of legal moves
