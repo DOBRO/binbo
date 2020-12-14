@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [2.1.0] - 2020-12-14
 
 - `movetime` option for functions `binbo:uci_bestmove/1,2` and `binbo:uci_play/2,3` defaults to 1000 ms.
 - New functions:
