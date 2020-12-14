@@ -1312,7 +1312,7 @@ binbo:get_pieces_list(Pid, SquareType) -> {ok, PiecesList} | {error, Reason}.
 * `PiecesList` - list of tuples `{Square, Color, PieceType}`:
 ** `Square` - square index (`0 .. 63`) or notation (`binary`: `<<"a1">>`, ..., `<<"h8">>`) depending on `SquareType`;
 ** `Color` - `white` | `black`;
-** `PieceType` - `pawn` | `knight` | `bishop` | `rook` | `queen` | `king`;
+** `PieceType` - `pawn` | `knight` | `bishop` | `rook` | `queen` | `king`.
 
 .Example:
 [source,erlang]
