@@ -1103,7 +1103,7 @@ binbo:uci_sync_position(Pid) -> ok | {error, Reason}.
 ----
 
 .where:
-* `Pid` - `pid` of the game process;
+* `Pid` - `pid` of the game process.
 
 It can be useful to call this function when the position of the game process was changed somehow and the engine wasn't notified about that.
 
@@ -1294,6 +1294,86 @@ ok
 % Now turn the message handler off:
 > binbo:set_uci_handler(Pid, undefined).
 ok
+----
+
+
+=== Other helper functions
+
+==== binbo:get_pieces_list/2
+
+[source,erlang]
+----
+binbo:get_pieces_list(Pid, SquareType) -> {ok, PiecesList} | {error, Reason}.
+----
+
+.where:
+* `Pid` - `pid` of the game process;
+* `SquareType` is one of the atoms: `index` or `notation`;
+* `PiecesList` - list of tuples `{Square, Color, PieceType}`:
+** `Square` - square index (`0 .. 63`) or notation (`binary`: `<<"a1">>`, ..., `<<"h8">>`) depending on `SquareType`;
+** `Color` - `white` | `black`;
+** `PieceType` - `pawn` | `knight` | `bishop` | `rook` | `queen` | `king`;
+
+.Example:
+[source,erlang]
+----
+> binbo:get_pieces_list(Pid, index).
+{ok,[{63,black,rook},
+     {62,black,knight},
+     {61,black,bishop},
+     {60,black,king},
+     {59,black,queen},
+     {58,black,bishop},
+     {57,black,knight},
+     {56,black,rook},
+     {55,black,pawn},
+     {54,black,pawn},
+     {53,black,pawn},
+     {52,black,pawn},
+     {51,black,pawn},
+     {50,black,pawn},
+     {49,black,pawn},
+     {48,black,pawn},
+     {15,white,pawn},
+     {14,white,pawn},
+     {13,white,pawn},
+     {12,white,pawn},
+     {11,white,pawn},
+     {10,white,pawn},
+     {9,white,pawn},
+     {8,white,pawn},
+     {7,white,...},
+     {6,...},
+     {...}|...]}
+
+> binbo:get_pieces_list(Pid, notation).
+{ok,[{<<"h8">>,black,rook},
+     {<<"g8">>,black,knight},
+     {<<"f8">>,black,bishop},
+     {<<"e8">>,black,king},
+     {<<"d8">>,black,queen},
+     {<<"c8">>,black,bishop},
+     {<<"b8">>,black,knight},
+     {<<"a8">>,black,rook},
+     {<<"h7">>,black,pawn},
+     {<<"g7">>,black,pawn},
+     {<<"f7">>,black,pawn},
+     {<<"e7">>,black,pawn},
+     {<<"d7">>,black,pawn},
+     {<<"c7">>,black,pawn},
+     {<<"b7">>,black,pawn},
+     {<<"a7">>,black,pawn},
+     {<<"h2">>,white,pawn},
+     {<<"g2">>,white,pawn},
+     {<<"f2">>,white,pawn},
+     {<<"e2">>,white,pawn},
+     {<<"d2">>,white,pawn},
+     {<<"c2">>,white,pawn},
+     {<<"b2">>,white,pawn},
+     {<<"a2">>,white,pawn},
+     {<<"h1">>,white,...},
+     {<<...>>,...},
+     {...}|...]}
 ----
 
 
