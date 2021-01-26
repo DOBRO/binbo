@@ -22,7 +22,7 @@ We use GitHub issues to track bugs. Report a bug by opening a new issue.
 
 ## Questions and discussions
 
-If you have any question, feel free to open a new issue on GitHub.
+If you have any question, feel free to start a new discussion on GitHub.
 
 ## Feature requests
 
