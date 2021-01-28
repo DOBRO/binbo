@@ -122,8 +122,8 @@ checkmate_white(Config) ->
 	Pid = get_pid(Config),
 	{ok, continue} = binbo:new_game(Pid, <<"rnbqkbnr/3ppppp/ppp5/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq -">>),
 	{ok, <<"rnbqkbnr/3ppppp/ppp5/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1">>} = binbo:get_fen(Pid),
-	{ok, checkmate} = binbo:move(Pid, <<"c4f7">>),
-	{ok,checkmate} = binbo:game_status(Pid),
+	{ok, {checkmate, white_wins}} = binbo:move(Pid, <<"c4f7">>),
+	{ok,{checkmate, white_wins}} = binbo:game_status(Pid),
 	ok.
 
 %% checkmate_black/1
@@ -131,8 +131,8 @@ checkmate_black(Config) ->
 	Pid = get_pid(Config),
 	{ok, continue} = binbo:new_game(Pid, <<"rnb1k1nr/pppp1ppp/8/2b1p3/P6q/NP6/2PPPPPP/R1BQKBNR b KQkq -">>),
 	{ok, <<"rnb1k1nr/pppp1ppp/8/2b1p3/P6q/NP6/2PPPPPP/R1BQKBNR b KQkq - 0 1">>} = binbo:get_fen(Pid),
-	{ok, checkmate} = binbo:move(Pid, <<"h4f2">>),
-	{ok, checkmate} = binbo:game_status(Pid),
+	{ok, {checkmate, black_wins}} = binbo:move(Pid, <<"h4f2">>),
+	{ok, {checkmate, black_wins}} = binbo:game_status(Pid),
 	ok.
 
 %% stalemate_white/1
@@ -525,9 +525,9 @@ set_game_winner(Config) ->
 	% after checkmate
 	{ok, continue} = binbo:new_game(Pid, <<"rnbqkbnr/3ppppp/ppp5/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq -">>),
 	{ok, <<"rnbqkbnr/3ppppp/ppp5/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1">>} = binbo:get_fen(Pid),
-	{ok, checkmate} = binbo:move(Pid, <<"c4f7">>),
-	{ok,checkmate} = binbo:game_status(Pid),
-	{error,{already_has_status,checkmate}} = binbo:set_game_winner(Pid, winner3, test_reason3),
+	{ok, {checkmate, white_wins}} = binbo:move(Pid, <<"c4f7">>),
+	{ok,{checkmate, white_wins}} = binbo:game_status(Pid),
+	{error,{already_has_status,{checkmate, white_wins}}} = binbo:set_game_winner(Pid, winner3, test_reason3),
 	% after stalemate
 	{ok, continue} = binbo:new_game(Pid, <<"k7/8/8/8/7Q/8/3K4/1R6 w - -">>),
 	{ok, <<"k7/8/8/8/7Q/8/3K4/1R6 w - - 0 1">>} = binbo:get_fen(Pid),

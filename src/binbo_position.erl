@@ -66,7 +66,7 @@
 -type hash() :: binbo_hash:hash().
 -type hashmap() :: #{hash() => pos_integer()}.
 -type game_status_inprogress() :: ?GAME_STATUS_INPROGRESS.
--type game_status_checkmate() :: ?GAME_STATUS_CHECKMATE.
+-type game_status_checkmate() :: {?GAME_STATUS_CHECKMATE, white_wins | black_wins}.
 -type game_draw_stalemate() :: ?GAME_STATUS_DRAW_STALEMATE.
 -type game_draw_rule50() :: ?GAME_STATUS_DRAW_RULE50.
 -type game_draw_material() :: ?GAME_STATUS_DRAW_MATERIAL.
@@ -678,7 +678,11 @@ set_status(Status, Game) ->
 %% set_status_checkmate/1
 -spec set_status_checkmate(bb_game()) -> bb_game().
 set_status_checkmate(Game) ->
-	set_status(?GAME_STATUS_CHECKMATE, Game).
+	WhoWins = case get_sidetomove(Game) of
+		?WHITE -> black_wins;
+		?BLACK -> white_wins
+	end,
+	set_status({?GAME_STATUS_CHECKMATE, WhoWins}, Game).
 
 %% set_status_stalemate/1
 -spec set_status_stalemate(bb_game()) -> bb_game().

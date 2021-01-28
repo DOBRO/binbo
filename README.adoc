@@ -397,7 +397,7 @@ Function `binbo:index_move/3,4` takes only square indices for the second and thi
 
 % And here is checkmate!
 > binbo:move(Pid, <<"f3f7">>). % Qf7#
-{ok,checkmate}
+{ok,{checkmate,white_wins}}
 ----
 
 .Examples for `binbo:san_move/2`:
@@ -432,7 +432,7 @@ Function `binbo:index_move/3,4` takes only square indices for the second and thi
 
 % Checkmate!
 > binbo:san_move(Pid, <<"Qf7#">>).
-{ok,checkmate}
+{ok,{checkmate,white_wins}}
 ----
 
 .Examples for `binbo:index_move/3`:
@@ -612,7 +612,8 @@ binbo:game_status(Pid) -> {ok, GameStatus} | {error, Reason}.
 
 .The value of `GameStatus`:
 * `continue` - game in progress;
-* `checkmate` - one of the sides (White or Black) checkmated;
+* `{checkmate, white_wins}` - White wins, Black checkmated;
+* `{checkmate, black_wins}` - Black wins, White checkmated;
 * `{draw, stalemate}` - draw because of stalemate;
 * `{draw, rule50}` - draw according to the fifty-move rule;
 * `{draw, insufficient_material}` - draw because of insufficient material;

@@ -113,7 +113,7 @@ load_pgn_no_result(Config) ->
 load_pgn_nightmare(Config) ->
 	Pid = get_pid(Config),
 	Pgn = pgn_nightmare(),
-	{ok, checkmate} = binbo:load_pgn(Pid, Pgn),
+	{ok, {checkmate, black_wins}} = binbo:load_pgn(Pid, Pgn),
 	ok.
 
 %% load_pgn_from_file/1
