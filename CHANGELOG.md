@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+- In case of **checkmate** the functions listed bellow now return `{ok, {checkmate, white_wins}}` or `{ok, {checkmate, black_wins}}`:
+  - `binbo:game_status/1`;
+  - `binbo:new_game/2`;
+  - `binbo:move/2`;
+  - `binbo:san_move/2`;
+  - `binbo:index_move/3,4`;
+  - `binbo:set_game_state/2`;
+  - `binbo:load_pgn/2`;
+  - `binbo:load_pgn_file/2`;
+  - `binbo:new_uci_game/2`;
+  - `binbo:uci_play/2,3`;
+  - `binbo:uci_set_position/2`.
+
 ## [2.1.0] - 2020-12-14
 
 - `movetime` option for functions `binbo:uci_bestmove/1,2` and `binbo:uci_play/2,3` defaults to 1000 ms.
