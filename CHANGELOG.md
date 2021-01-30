@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [3.0.0] - 2021-01-30
 
 - In case of **checkmate** the functions listed bellow now return `{ok, {checkmate, white_wins}}` or `{ok, {checkmate, black_wins}}`:
   - `binbo:game_status/1`;
