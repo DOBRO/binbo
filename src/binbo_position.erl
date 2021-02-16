@@ -319,12 +319,12 @@ is_in_check(Color, Game) ->
 -spec piece_moves_bb(sq_idx(), piece_type(), color(), bb_game()) -> bb().
 piece_moves_bb(FromIdx, Ptype, Pcolor, Game) ->
 	case Ptype of
-		?PAWN   -> binbo_position:pawn_moves_bb(FromIdx, Pcolor, Game);
-		?KNIGHT -> binbo_position:knight_moves_bb(FromIdx, Pcolor, Game);
-		?BISHOP -> binbo_position:bishop_moves_bb(FromIdx, Game);
-		?ROOK   -> binbo_position:rook_moves_bb(FromIdx, Game);
-		?QUEEN  -> binbo_position:queen_moves_bb(FromIdx, Game);
-		?KING   -> binbo_position:king_moves_bb(FromIdx, Pcolor, Game)
+		?PAWN   -> pawn_moves_bb(FromIdx, Pcolor, Game);
+		?KNIGHT -> knight_moves_bb(FromIdx, Pcolor, Game);
+		?BISHOP -> bishop_moves_bb(FromIdx, Game);
+		?ROOK   -> rook_moves_bb(FromIdx, Game);
+		?QUEEN  -> queen_moves_bb(FromIdx, Game);
+		?KING   -> king_moves_bb(FromIdx, Pcolor, Game)
 	end.
 
 %% get_pieces_list/2
