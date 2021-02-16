@@ -198,6 +198,7 @@ own_side_bb(Color, Game) ->
 	SideBB.
 
 %% get_side_indexes/2
+-spec get_side_indexes(color(), bb_game()) -> [sq_idx()].
 get_side_indexes(Color, Game) ->
 	SideBB = own_side_bb(Color, Game),
 	binbo_bb:to_index_list(SideBB).
