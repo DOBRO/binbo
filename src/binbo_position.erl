@@ -1195,6 +1195,7 @@ make_rook_move(MoveInfo, Game) ->
 	set_piece(ToIdx, Rook, Game).
 
 %% maybe_move_to_corner/2
+-spec maybe_move_to_corner(sq_bb(), bb_game()) -> bb_game().
 maybe_move_to_corner(ToBB, Game) when ?IS_AND(ToBB, ?A1A8H1H8_BB) ->
 	UnsetFlag = case ToBB of
 		?A1_BB -> ?CASTLING_W_OOO;
