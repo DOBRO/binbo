@@ -1,5 +1,4 @@
 _build
-rebar.lock
 doc/*
 !doc/overview.edoc
 # macOS annoying file
