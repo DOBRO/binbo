@@ -173,6 +173,7 @@ terminate(Reason, State) ->
 	ok.
 
 %% code_change/3
+-spec code_change(term(), state(), term()) -> {ok, state()}.
 code_change(_OldVsn, State, _Extra) ->
 	{ok, State}.
 
