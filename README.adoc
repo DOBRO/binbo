@@ -56,6 +56,32 @@ toc::[]
 ** https://www.erlang.org/[Erlang/OTP] 20.0 or higher.
 ** https://www.rebar3.org/[rebar3]
 
+== Installation
+
+=== For Erlang projects
+
+Add Binbo as a dependency to your `rebar.config` file:
+
+[source,erlang]
+----
+{deps, [
+  {binbo, "3.0.0"}
+]}.
+----
+
+=== For Elixir projects
+
+Add Binbo as a dependency to your `mix.exs` file:
+
+[source,elixir]
+----
+defp deps do
+  [
+    {:binbo, "~> 3.0.0"}
+  ]
+end
+----
+
 == Quick start
 
 Clone repository, change directory to `binbo` and run `rebar3 shell` (or `make shell`):
