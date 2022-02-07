@@ -32,7 +32,7 @@ Feature requests are always welcome. Open a new issue on GitHub and describe wha
 
 We actively welcome your pull requests.
 
-The `master` branch corresponds to the current release. The `develop` branch is used for development of new features that will end up in the next release. If you fix a bug open a pull request on `master`, if it's a new feature - on `develop`.
+The `master` branch corresponds to the current release. The `devel` branch is used for development of new features that will end up in the next release. If you fix a bug open a pull request on `master`, if it's a new feature - on `devel`.
 
 **Note**:
 
