@@ -39,7 +39,7 @@ The `master` branch corresponds to the current release. The `develop` branch is 
 * If you have added code, add tests.
 * If you have changed API, update [README.adoc](README.adoc) file with details of changes to the interface and examples.
 * Ensure the test suite passes on your local computer.
-* Ensure the build and test suite passes on travis.
+* Ensure the build and test suite passes with GitHub Actions.
 
 ## Coding Style
 
