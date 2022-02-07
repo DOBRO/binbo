@@ -24,28 +24,28 @@
 %% start_link/0
 -spec start_link() -> {ok, pid()}.
 start_link() ->
-	supervisor:start_link({local, ?SUPERVISOR}, ?MODULE, []).
+    supervisor:start_link({local, ?SUPERVISOR}, ?MODULE, []).
 
 %% init/1
 -spec init(Args :: term()) -> {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}}.
 init(_Args) ->
-	SupFlags = #{
-		strategy	=> simple_one_for_one,
-		intensity	=> 0,
-		period		=> 1
-	},
-	ChildSpec = #{
-		id => binbo_server,
-		start => {binbo_server, start_link, []},
-		restart => temporary,
-		shutdown => 2000,
-		type => worker,
-		modules => [binbo_server]
-	},
-	{ok,{SupFlags, [ChildSpec]}}.
+    SupFlags = #{
+        strategy    => simple_one_for_one,
+        intensity   => 0,
+        period      => 1
+    },
+    ChildSpec = #{
+        id => binbo_server,
+        start => {binbo_server, start_link, []},
+        restart => temporary,
+        shutdown => 2000,
+        type => worker,
+        modules => [binbo_server]
+    },
+    {ok,{SupFlags, [ChildSpec]}}.
 
 
 %% start_child/1
 -spec start_child(Opts :: binbo_server:server_opts()) -> {ok, pid()} | {error, term()}.
 start_child(Opts) ->
-	supervisor:start_child(?SUPERVISOR, [Opts]).
+    supervisor:start_child(?SUPERVISOR, [Opts]).

@@ -16,12 +16,12 @@
 
 -export([init/0]).
 -export([
-	pawn_attacks_bb/2,
-	knight_attacks_bb/1,
-	bishop_attacks_bb/2,
-	rook_attacks_bb/2,
-	queen_attacks_bb/2,
-	king_attacks_bb/1
+    pawn_attacks_bb/2,
+    knight_attacks_bb/1,
+    bishop_attacks_bb/2,
+    rook_attacks_bb/2,
+    queen_attacks_bb/2,
+    king_attacks_bb/1
 ]).
 
 %%%------------------------------------------------------------------------------
@@ -48,48 +48,48 @@
 %% init/0
 -spec init() -> [module()].
 init() ->
-	% Pawn attacks
-	WPmod = init_pawn_attacks(?WHITE),
-	BPmod = init_pawn_attacks(?BLACK),
-	% Knight attacks
-	Nmod = init_knight_attacks(),
-	% Bishop, Rook and, hence, Queen attacks
-	{Bmod1, Bmod2} = binbo_magic:init_bishop_attacks(),
-	{Rmod1, Rmod2} = binbo_magic:init_rook_attacks(),
-	% King attacks
-	Kmod = init_king_attacks(),
-	[Bmod1, Bmod2, Rmod1, Rmod2, Nmod, Kmod, WPmod, BPmod].
+    % Pawn attacks
+    WPmod = init_pawn_attacks(?WHITE),
+    BPmod = init_pawn_attacks(?BLACK),
+    % Knight attacks
+    Nmod = init_knight_attacks(),
+    % Bishop, Rook and, hence, Queen attacks
+    {Bmod1, Bmod2} = binbo_magic:init_bishop_attacks(),
+    {Rmod1, Rmod2} = binbo_magic:init_rook_attacks(),
+    % King attacks
+    Kmod = init_king_attacks(),
+    [Bmod1, Bmod2, Rmod1, Rmod2, Nmod, Kmod, WPmod, BPmod].
 
 %% pawn_attacks_bb/2
 -spec pawn_attacks_bb(sq_idx(), color()) -> bb().
 pawn_attacks_bb(FromIdx, Color) ->
-	Mod = pawn_static_module(Color),
-	persistent_attacks_bb(FromIdx, Mod).
+    Mod = pawn_static_module(Color),
+    persistent_attacks_bb(FromIdx, Mod).
 
 %% knight_attacks_bb/1
 -spec knight_attacks_bb(sq_idx()) -> bb().
 knight_attacks_bb(FromIdx) ->
-	persistent_attacks_bb(FromIdx, ?GLOBAL_ATTACKS_KNIGHT_MOD).
+    persistent_attacks_bb(FromIdx, ?GLOBAL_ATTACKS_KNIGHT_MOD).
 
 %% bishop_attacks_bb/2
 -spec bishop_attacks_bb(sq_idx(), occupied()) -> bb().
 bishop_attacks_bb(FromIdx, Occupied) ->
-	binbo_magic:bishop_attacks_bb(FromIdx, Occupied).
+    binbo_magic:bishop_attacks_bb(FromIdx, Occupied).
 
 %% rook_attacks_bb/2
 -spec rook_attacks_bb(sq_idx(), occupied()) -> bb().
 rook_attacks_bb(FromIdx, Occupied) ->
-	binbo_magic:rook_attacks_bb(FromIdx, Occupied).
+    binbo_magic:rook_attacks_bb(FromIdx, Occupied).
 
 %% queen_attacks_bb/2
 -spec queen_attacks_bb(sq_idx(), occupied()) -> bb().
 queen_attacks_bb(FromIdx, Occupied) ->
-	binbo_magic:queen_attacks_bb(FromIdx, Occupied).
+    binbo_magic:queen_attacks_bb(FromIdx, Occupied).
 
 %% king_attacks_bb/1
 -spec king_attacks_bb(sq_idx()) -> bb().
 king_attacks_bb(FromIdx) ->
-	persistent_attacks_bb(FromIdx, ?GLOBAL_ATTACKS_KING_MOD).
+    persistent_attacks_bb(FromIdx, ?GLOBAL_ATTACKS_KING_MOD).
 
 
 %%%------------------------------------------------------------------------------
@@ -99,41 +99,41 @@ king_attacks_bb(FromIdx) ->
 %% init_knight_attacks/0
 -spec init_knight_attacks() -> module().
 init_knight_attacks() ->
-	init_kn_attacks(?KNIGHT).
+    init_kn_attacks(?KNIGHT).
 
 %% init_king_attacks/0
 -spec init_king_attacks() -> module().
 init_king_attacks() ->
-	init_kn_attacks(?KING).
+    init_kn_attacks(?KING).
 
 
 %% init_kn_attacks/1
 -spec init_kn_attacks(?KNIGHT | ?KING) -> module().
 init_kn_attacks(Ptype) ->
-	{AttacksKey, AttackFun} = case Ptype of
-		?KING   -> {?GLOBAL_ATTACKS_KING_MOD,   fun binbo_bb:king_attacks_bb/1};
-		?KNIGHT -> {?GLOBAL_ATTACKS_KNIGHT_MOD, fun binbo_bb:knight_attacks_bb/1}
-	end,
-	AttacksTuple = lists:foldl(fun(SqIdx, Tuple) ->
-		SqBB = ?SQUARE_BB(SqIdx),
-		AttacksBB = AttackFun(SqBB),
-		erlang:setelement(SqIdx + 1, Tuple, AttacksBB)
-	end, binbo_board:board_tuple(0), binbo_board:index_list()),
-	ok = binbo_global:put(AttacksKey, AttacksTuple),
-	AttacksKey.
+    {AttacksKey, AttackFun} = case Ptype of
+        ?KING   -> {?GLOBAL_ATTACKS_KING_MOD,   fun binbo_bb:king_attacks_bb/1};
+        ?KNIGHT -> {?GLOBAL_ATTACKS_KNIGHT_MOD, fun binbo_bb:knight_attacks_bb/1}
+    end,
+    AttacksTuple = lists:foldl(fun(SqIdx, Tuple) ->
+        SqBB = ?SQUARE_BB(SqIdx),
+        AttacksBB = AttackFun(SqBB),
+        erlang:setelement(SqIdx + 1, Tuple, AttacksBB)
+    end, binbo_board:board_tuple(0), binbo_board:index_list()),
+    ok = binbo_global:put(AttacksKey, AttacksTuple),
+    AttacksKey.
 
 
 %% init_pawn_attacks/1
 -spec init_pawn_attacks(color()) -> module().
 init_pawn_attacks(Color) ->
-	AttacksKey = pawn_static_module(Color),
-	AttacksTuple = lists:foldl(fun(SqIdx, Tuple) ->
-		SqBB = ?SQUARE_BB(SqIdx),
-		AttacksBB = binbo_bb:pawn_attacks_bb(Color, SqBB),
-		erlang:setelement(SqIdx + 1, Tuple, AttacksBB)
-	end, binbo_board:board_tuple(0), binbo_board:index_list()),
-	ok = binbo_global:put(AttacksKey, AttacksTuple),
-	AttacksKey.
+    AttacksKey = pawn_static_module(Color),
+    AttacksTuple = lists:foldl(fun(SqIdx, Tuple) ->
+        SqBB = ?SQUARE_BB(SqIdx),
+        AttacksBB = binbo_bb:pawn_attacks_bb(Color, SqBB),
+        erlang:setelement(SqIdx + 1, Tuple, AttacksBB)
+    end, binbo_board:board_tuple(0), binbo_board:index_list()),
+    ok = binbo_global:put(AttacksKey, AttacksTuple),
+    AttacksKey.
 
 
 %% pawn_static_module/1
@@ -145,4 +145,4 @@ pawn_static_module(?BLACK) -> ?GLOBAL_ATTACKS_BLACK_PAWN_MOD.
 %% persistent_attacks_bb/2
 -spec persistent_attacks_bb(sq_idx(), module()) -> bb().
 persistent_attacks_bb(SqIdx, PersistentKey) ->
-	erlang:element(SqIdx + 1, binbo_global:get(PersistentKey)).
+    erlang:element(SqIdx + 1, binbo_global:get(PersistentKey)).

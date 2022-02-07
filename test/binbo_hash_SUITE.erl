@@ -30,26 +30,26 @@ groups() -> [{rnd, [{repeat_until_any_fail, 10}], [random_hash_test]}].
 
 %% init_per_suite/1
 init_per_suite(Config) ->
-	ok = binbo_test_lib:all_group_testcases_exported(?MODULE),
-	Config.
+    ok = binbo_test_lib:all_group_testcases_exported(?MODULE),
+    Config.
 
 %% end_per_suite/1
 end_per_suite(_Config) ->
-	ok.
+    ok.
 
 %% random_hash_test/1
 random_hash_test(_Config) ->
-	Mods = binbo_hash:init(),
-	[_, _, _, _] = Mods,
-	ok = unload_mods(Mods),
-	% Modules were unloaded, load them again. Required for further test suites.
-	_ = binbo_hash:init(),
-	ok.
+    Mods = binbo_hash:init(),
+    [_, _, _, _] = Mods,
+    ok = unload_mods(Mods),
+    % Modules were unloaded, load them again. Required for further test suites.
+    _ = binbo_hash:init(),
+    ok.
 
 %% unload_mods/1
 unload_mods([]) -> ok;
 unload_mods([Mod|Tail]) ->
-	true = erlang:is_atom(Mod),
-	Bool = binbo_global:delete(Mod),
-	true = erlang:is_boolean(Bool),
-	unload_mods(Tail).
+    true = erlang:is_atom(Mod),
+    Bool = binbo_global:delete(Mod),
+    true = erlang:is_boolean(Bool),
+    unload_mods(Tail).

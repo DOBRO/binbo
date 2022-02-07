@@ -19,9 +19,9 @@
 
 %% all_group_testcases_exported
 all_group_testcases_exported(Mod) ->
-	Exports = Mod:module_info(exports),
-	Groups = Mod:groups(),
-	all_group_testcases_exported(Groups, Exports).
+    Exports = Mod:module_info(exports),
+    Groups = Mod:groups(),
+    all_group_testcases_exported(Groups, Exports).
 
 
 %%%------------------------------------------------------------------------------
@@ -30,23 +30,23 @@ all_group_testcases_exported(Mod) ->
 
 %% all_group_testcases_exported/2
 all_group_testcases_exported([], _Exports) ->
-	ok;
+    ok;
 all_group_testcases_exported([{GroupName, _Opts, TestCases} | Tail], Exports) ->
-	case group_testcases_exported(TestCases, Exports) of
-		ok ->
-			all_group_testcases_exported(Tail, Exports);
-		{error, Fun} ->
-			{error, {not_exported, GroupName, Fun}}
-	end.
+    case group_testcases_exported(TestCases, Exports) of
+        ok ->
+            all_group_testcases_exported(Tail, Exports);
+        {error, Fun} ->
+            {error, {not_exported, GroupName, Fun}}
+    end.
 
 
 %% group_testcases_exported/2
 group_testcases_exported([], _Exports) ->
-	ok;
+    ok;
 group_testcases_exported([Fun | Tail], Exports) ->
-	case lists:keyfind(Fun, 1, Exports) of
-		{Fun, 1} ->
-			group_testcases_exported(Tail, Exports);
-		false ->
-			{error, Fun}
-	end.
+    case lists:keyfind(Fun, 1, Exports) of
+        {Fun, 1} ->
+            group_testcases_exported(Tail, Exports);
+        false ->
+            {error, Fun}
+    end.

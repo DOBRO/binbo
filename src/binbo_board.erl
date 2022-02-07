@@ -65,119 +65,119 @@
 %% rank_of_index/1
 -spec rank_of_index(square_index()) -> rank().
 rank_of_index(Idx) ->
-	(Idx bsr 3).
+    (Idx bsr 3).
 
 %% file_of_index/1
 -spec file_of_index(square_index()) -> file().
 file_of_index(Idx) ->
-	(Idx band 7).
+    (Idx band 7).
 
 %% sq_distance/2
 -spec sq_distance(square_index(), square_index()) -> distance().
 sq_distance(Idx1, Idx2) ->
-	erlang:max(file_distance(Idx1, Idx2), rank_distance(Idx1, Idx2)).
+    erlang:max(file_distance(Idx1, Idx2), rank_distance(Idx1, Idx2)).
 
 %% rank_number/1
 -spec rank_number(square_index()) -> rank_number().
 rank_number(Idx) ->
-	rank_of_index(Idx) + 1.
+    rank_of_index(Idx) + 1.
 
 %% is_valid_square_notation/1
 -spec is_valid_square_notation(binary()) -> boolean().
 is_valid_square_notation(Sq) ->
-	case Sq of
-		<<F:8, R:8>> when (F >= $a) andalso (F =< $h) andalso (R >= $1) andalso (R =< $8) ->
-			true;
-		_ ->
-			false
-	end.
+    case Sq of
+        <<F:8, R:8>> when (F >= $a) andalso (F =< $h) andalso (R >= $1) andalso (R =< $8) ->
+            true;
+        _ ->
+            false
+    end.
 
 %% notation_to_index/1
 -spec notation_to_index(square_notation()) -> square_index().
 notation_to_index(<<F:8, R:8>>) ->
-	notation_to_index(F, R).
+    notation_to_index(F, R).
 
 %% notation_to_index/2
 -spec notation_to_index($a..$h, $1..$8) -> square_index().
 notation_to_index(F, R) ->
-	Rank = R - $1, % 0..7
-	File = F - $a, % 0..7
-	(Rank bsl 3) + File.
+    Rank = R - $1, % 0..7
+    File = F - $a, % 0..7
+    (Rank bsl 3) + File.
 
 
 %% index_to_notation/1
 -spec index_to_notation(square_index()) -> square_notation().
 index_to_notation(Idx) ->
-	Rank = rank_number(Idx) + $0,
-	File = file_of_index(Idx) + $a,
-	<<File, Rank>>.
+    Rank = rank_number(Idx) + $0,
+    File = file_of_index(Idx) + $a,
+    <<File, Rank>>.
 
 %% index_list/0
 -spec index_list() -> [square_index()].
 index_list() ->
-	lists:seq(?A1_IDX, ?H8_IDX, 1).
+    lists:seq(?A1_IDX, ?H8_IDX, 1).
 
 %% file_list/0
 -spec file_list() -> [file()].
 file_list() ->
-	[0,1,2,3,4,5,6,7].
+    [0,1,2,3,4,5,6,7].
 
 %% castling_list/0
 -spec castling_list() -> [binbo_position:castling()].
 castling_list() ->
-	lists:seq(?CASTLING_NONE, ?CASTLING_ANY, 1).
+    lists:seq(?CASTLING_NONE, ?CASTLING_ANY, 1).
 
 %% side_list/0
 -spec side_list() -> [color()].
 side_list() ->
-	[?WHITE, ?BLACK].
+    [?WHITE, ?BLACK].
 
 %% enemy_color/1
 -spec enemy_color(?WHITE) -> ?BLACK; (?BLACK) -> ?WHITE.
 enemy_color(Color) ->
-	?SWITCH_COLOR(Color).
+    ?SWITCH_COLOR(Color).
 
 
 %% board_tuple/0
 -spec board_tuple(term()) -> tuple().
 board_tuple(Value) ->
-	erlang:make_tuple(?H8_IDX + 1, Value).
+    erlang:make_tuple(?H8_IDX + 1, Value).
 
 %% castling_rook_squares/1
 -spec castling_rook_squares(side_castling()) -> castling_rook_squares().
 castling_rook_squares(CastlingFlag) ->
-	case CastlingFlag of
-		?CASTLING_W_OO  -> {?H1_IDX, ?F1_IDX};
-		?CASTLING_B_OO  -> {?H8_IDX, ?F8_IDX};
-		?CASTLING_W_OOO -> {?A1_IDX, ?D1_IDX};
-		?CASTLING_B_OOO -> {?A8_IDX, ?D8_IDX}
-	end.
+    case CastlingFlag of
+        ?CASTLING_W_OO  -> {?H1_IDX, ?F1_IDX};
+        ?CASTLING_B_OO  -> {?H8_IDX, ?F8_IDX};
+        ?CASTLING_W_OOO -> {?A1_IDX, ?D1_IDX};
+        ?CASTLING_B_OOO -> {?A8_IDX, ?D8_IDX}
+    end.
 
 %% pieces/0
 -spec pieces() -> [piece()].
 pieces() ->
-	[?WHITE_PAWN, ?WHITE_KNIGHT, ?WHITE_BISHOP, ?WHITE_ROOK, ?WHITE_QUEEN, ?WHITE_KING,
-	 ?BLACK_PAWN, ?BLACK_KNIGHT, ?BLACK_BISHOP, ?BLACK_ROOK, ?BLACK_QUEEN, ?BLACK_KING].
+    [?WHITE_PAWN, ?WHITE_KNIGHT, ?WHITE_BISHOP, ?WHITE_ROOK, ?WHITE_QUEEN, ?WHITE_KING,
+     ?BLACK_PAWN, ?BLACK_KNIGHT, ?BLACK_BISHOP, ?BLACK_ROOK, ?BLACK_QUEEN, ?BLACK_KING].
 
 %% int_move/2
 -spec int_move(square_index(), square_index()) -> non_neg_integer().
 int_move(FromIdx, ToIdx) ->
-	(FromIdx bsl 6) + ToIdx.
+    (FromIdx bsl 6) + ToIdx.
 
 %% int_move/3
 -spec int_move(square_index(), square_index(), ?KNIGHT | ?BISHOP | ?ROOK | ?QUEEN) -> non_neg_integer().
 int_move(FromIdx, ToIdx, PromoType) ->
-	16384 + ((PromoType - ?KNIGHT) bsl 12) + (FromIdx bsl 6) + ToIdx.
+    16384 + ((PromoType - ?KNIGHT) bsl 12) + (FromIdx bsl 6) + ToIdx.
 
 %% int_move_from/1
 -spec int_move_from(non_neg_integer()) -> square_index().
 int_move_from(Move) ->
-	(Move bsr 6) band 16#3F.
+    (Move bsr 6) band 16#3F.
 
 %% int_move_to/1
 -spec int_move_to(non_neg_integer()) -> square_index().
 int_move_to(Move) ->
-	Move band 16#3F.
+    Move band 16#3F.
 
 
 %%%------------------------------------------------------------------------------
@@ -187,9 +187,9 @@ int_move_to(Move) ->
 %% file_distance/2
 -spec file_distance(square_index(), square_index()) -> distance().
 file_distance(Idx1, Idx2) ->
-	erlang:abs(file_of_index(Idx1) - file_of_index(Idx2)).
+    erlang:abs(file_of_index(Idx1) - file_of_index(Idx2)).
 
 %% rank_distance/2
 -spec rank_distance(square_index(), square_index()) -> distance().
 rank_distance(Idx1, Idx2) ->
-	erlang:abs(rank_of_index(Idx1) - rank_of_index(Idx2)).
+    erlang:abs(rank_of_index(Idx1) - rank_of_index(Idx2)).

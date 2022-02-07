@@ -68,43 +68,43 @@
 %%%------------------------------------------------------------------------------
 
 -define(OWN_SIDE_KEY(Color), (case (Color) of
-	?WHITE -> ?GAME_KEY_WHITE;
-	?BLACK -> ?GAME_KEY_BLACK
+    ?WHITE -> ?GAME_KEY_WHITE;
+    ?BLACK -> ?GAME_KEY_BLACK
 end)).
 
 -define(ENEMY_SIDE_KEY(Color), (case (Color) of
-	?WHITE -> ?GAME_KEY_BLACK;
-	?BLACK -> ?GAME_KEY_WHITE
+    ?WHITE -> ?GAME_KEY_BLACK;
+    ?BLACK -> ?GAME_KEY_WHITE
 end)).
 
 -define(PIECE_GAME_KEY(P), (case (P) of
-	?WHITE_PAWN   -> ?GAME_KEY_WP;
-	?WHITE_KNIGHT -> ?GAME_KEY_WN;
-	?WHITE_BISHOP -> ?GAME_KEY_WB;
-	?WHITE_ROOK   -> ?GAME_KEY_WR;
-	?WHITE_QUEEN  -> ?GAME_KEY_WQ;
-	?WHITE_KING   -> ?GAME_KEY_WK;
-	?BLACK_PAWN   -> ?GAME_KEY_BP;
-	?BLACK_KNIGHT -> ?GAME_KEY_BN;
-	?BLACK_BISHOP -> ?GAME_KEY_BB;
-	?BLACK_ROOK   -> ?GAME_KEY_BR;
-	?BLACK_QUEEN  -> ?GAME_KEY_BQ;
-	?BLACK_KING   -> ?GAME_KEY_BK
+    ?WHITE_PAWN   -> ?GAME_KEY_WP;
+    ?WHITE_KNIGHT -> ?GAME_KEY_WN;
+    ?WHITE_BISHOP -> ?GAME_KEY_WB;
+    ?WHITE_ROOK   -> ?GAME_KEY_WR;
+    ?WHITE_QUEEN  -> ?GAME_KEY_WQ;
+    ?WHITE_KING   -> ?GAME_KEY_WK;
+    ?BLACK_PAWN   -> ?GAME_KEY_BP;
+    ?BLACK_KNIGHT -> ?GAME_KEY_BN;
+    ?BLACK_BISHOP -> ?GAME_KEY_BB;
+    ?BLACK_ROOK   -> ?GAME_KEY_BR;
+    ?BLACK_QUEEN  -> ?GAME_KEY_BQ;
+    ?BLACK_KING   -> ?GAME_KEY_BK
 end)).
 
 
 %% Chess symbols in Unicode: https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode
 -define(PIECE_TO_UNICODE(P), (case (P) of
-	?WHITE_PAWN   -> 9817;
-	?WHITE_KNIGHT -> 9816;
-	?WHITE_BISHOP -> 9815;
-	?WHITE_ROOK   -> 9814;
-	?WHITE_QUEEN  -> 9813;
-	?WHITE_KING   -> 9812;
-	?BLACK_PAWN   -> 9823;
-	?BLACK_KNIGHT -> 9822;
-	?BLACK_BISHOP -> 9821;
-	?BLACK_ROOK   -> 9820;
-	?BLACK_QUEEN  -> 9819;
-	?BLACK_KING   -> 9818
+    ?WHITE_PAWN   -> 9817;
+    ?WHITE_KNIGHT -> 9816;
+    ?WHITE_BISHOP -> 9815;
+    ?WHITE_ROOK   -> 9814;
+    ?WHITE_QUEEN  -> 9813;
+    ?WHITE_KING   -> 9812;
+    ?BLACK_PAWN   -> 9823;
+    ?BLACK_KNIGHT -> 9822;
+    ?BLACK_BISHOP -> 9821;
+    ?BLACK_ROOK   -> 9820;
+    ?BLACK_QUEEN  -> 9819;
+    ?BLACK_KING   -> 9818
 end)).

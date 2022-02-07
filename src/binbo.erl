@@ -51,7 +51,7 @@
 %% Call to start application.
 %% @end
 start() ->
-	application:ensure_all_started(?APPLICATION).
+    application:ensure_all_started(?APPLICATION).
 
 %% stop/0
 -spec stop() -> ok.
@@ -59,7 +59,7 @@ start() ->
 %% Call to stop application.
 %% @end
 stop() ->
-	application:stop(?APPLICATION).
+    application:stop(?APPLICATION).
 
 
 %%%------------------------------------------------------------------------------
@@ -70,7 +70,7 @@ stop() ->
 -spec new_server() -> {ok, pid()} | {error, term()}.
 %% @equiv new_server(#{})
 new_server() ->
-	new_server(#{}).
+    new_server(#{}).
 
 %% new_server/1
 -spec new_server(Opts :: binbo_server:server_opts()) -> {ok, pid()} | {error, term()}.
@@ -78,7 +78,7 @@ new_server() ->
 %% Call to start new game process.
 %% @end
 new_server(Opts) ->
-	binbo_sup:start_child(Opts).
+    binbo_sup:start_child(Opts).
 
 %% stop_server/1
 -spec stop_server(pid()) -> binbo_server:stop_ret().
@@ -86,17 +86,17 @@ new_server(Opts) ->
 %% Call to stop the game process.
 %% @end
 stop_server(Pid) ->
-	binbo_server:stop(Pid).
+    binbo_server:stop(Pid).
 
 %% get_server_options/1
 -spec get_server_options(pid()) -> {ok, binbo_server:server_opts()}.
 get_server_options(Pid) ->
-	binbo_server:get_server_options(Pid).
+    binbo_server:get_server_options(Pid).
 
 %% set_server_options/2
 -spec set_server_options(pid(), binbo_server:server_opts()) -> ok | {error, term()}.
 set_server_options(Pid, Opts) ->
-	binbo_server:set_server_options(Pid, Opts).
+    binbo_server:set_server_options(Pid, Opts).
 
 
 %%%------------------------------------------------------------------------------
@@ -107,172 +107,172 @@ set_server_options(Pid, Opts) ->
 -spec new_game(pid()) -> binbo_server:new_game_ret().
 %% @equiv new_game(Pid, initial)
 new_game(Pid) ->
-	new_game(Pid, initial).
+    new_game(Pid, initial).
 
 %% new_game/2
 -spec new_game(pid(), initial | binbo_fen:fen()) -> binbo_server:new_game_ret().
 new_game(Pid, Fen) ->
-	binbo_server:new_game(Pid, Fen).
+    binbo_server:new_game(Pid, Fen).
 
 %% move/2
 -spec move(pid(), binbo_move:sq_move()) -> binbo_server:game_move_ret().
 move(Pid, Move) ->
-	binbo_server:game_move(Pid, Move).
+    binbo_server:game_move(Pid, Move).
 
 %% san_move/2
 -spec san_move(pid(), binbo_move:sq_move()) -> binbo_server:game_move_ret().
 san_move(Pid, SanMove) ->
-	binbo_server:game_san_move(Pid, SanMove).
+    binbo_server:game_san_move(Pid, SanMove).
 
 %% index_move/3
 -spec index_move(pid(), binbo_board:square_index(), binbo_board:square_index()) -> binbo_server:game_move_ret().
 index_move(Pid, FromIdx, ToIdx) ->
-	index_move(Pid, FromIdx, ToIdx, q).
+    index_move(Pid, FromIdx, ToIdx, q).
 
 %% index_move/4
 -spec index_move(pid(), binbo_board:square_index(), binbo_board:square_index(), q | r | b | n) -> binbo_server:game_move_ret().
 index_move(Pid, FromIdx, ToIdx, PromoType) ->
-	binbo_server:game_index_move(Pid, FromIdx, ToIdx, PromoType).
+    binbo_server:game_index_move(Pid, FromIdx, ToIdx, PromoType).
 
 %% load_pgn/2
 -spec load_pgn(pid(), binbo_pgn:pgn()) -> binbo_server:load_pgn_ret().
 load_pgn(Pid, Pgn) ->
-	binbo_server:load_pgn(Pid, Pgn).
+    binbo_server:load_pgn(Pid, Pgn).
 
 %% load_pgn_file/2
 -spec load_pgn_file(pid(), binbo_game:filename()) -> binbo_server:load_pgn_file_ret().
 load_pgn_file(Pid, Filename) ->
-	binbo_server:load_pgn_file(Pid, Filename).
+    binbo_server:load_pgn_file(Pid, Filename).
 
 %% game_state/1
 -spec game_state(pid()) -> binbo_server:game_state_ret().
 game_state(Pid) ->
-	binbo_server:game_state(Pid).
+    binbo_server:game_state(Pid).
 
 %% set_game_state/2
 -spec set_game_state(pid(), term()) -> binbo_server:game_status_ret().
 set_game_state(Pid, Game) ->
-	binbo_server:set_game_state(Pid, Game).
+    binbo_server:set_game_state(Pid, Game).
 
 %% game_status/1
 -spec game_status(pid()) -> binbo_server:game_status_ret().
 game_status(Pid) ->
-	binbo_server:game_status(Pid).
+    binbo_server:game_status(Pid).
 
 %% game_draw/1
 -spec game_draw(pid()) -> binbo_server:game_draw_ret().
 game_draw(Pid) ->
-	game_draw(Pid, undefined).
+    game_draw(Pid, undefined).
 
 %% game_draw/2
 -spec game_draw(pid(), Reason :: term()) -> binbo_server:game_draw_ret().
 game_draw(Pid, Reason) ->
-	binbo_server:game_draw(Pid, Reason).
+    binbo_server:game_draw(Pid, Reason).
 
 %% set_game_winner/2
 -spec set_game_winner(pid(), binbo_game:winner()) -> binbo_server:set_game_winner_ret().
 set_game_winner(Pid, Winner) ->
-	set_game_winner(Pid, Winner, undefined).
+    set_game_winner(Pid, Winner, undefined).
 
 %% set_game_winner/3
 -spec set_game_winner(pid(), binbo_game:winner(), Reason :: term()) -> binbo_server:set_game_winner_ret().
 set_game_winner(Pid, Winner, Reason) ->
-	binbo_server:set_game_winner(Pid, Winner, Reason).
+    binbo_server:set_game_winner(Pid, Winner, Reason).
 
 %% print_board/1
 -spec print_board(pid()) -> ok | {error, binbo_game:pretty_board_error()}.
 print_board(Pid) ->
-	print_board(Pid, []).
+    print_board(Pid, []).
 
 %% print_board/1
 -spec print_board(pid(), binbo_position:pretty_board_opts()) -> ok | {error, binbo_game:pretty_board_error()}.
 print_board(Pid, Opts) ->
-	Game = game_state(Pid),
-	% Here we call 'binbo_game:pretty_board/2' directly
-	% avoiding sending large 'PrettyBoard' between processes
-	case binbo_game:pretty_board(Game, Opts) of
-		{ok, {PrettyBoard, GameStatus}} ->
-			io:format("~n~ts~n  Status: ~w~n~n", [PrettyBoard, GameStatus]);
-		Error ->
-			Error
-	end.
+    Game = game_state(Pid),
+    % Here we call 'binbo_game:pretty_board/2' directly
+    % avoiding sending large 'PrettyBoard' between processes
+    case binbo_game:pretty_board(Game, Opts) of
+        {ok, {PrettyBoard, GameStatus}} ->
+            io:format("~n~ts~n  Status: ~w~n~n", [PrettyBoard, GameStatus]);
+        Error ->
+            Error
+    end.
 
 %% get_fen/1
 -spec get_fen(pid()) -> binbo_server:get_fen_ret().
 get_fen(Pid) ->
-	binbo_server:get_fen(Pid).
+    binbo_server:get_fen(Pid).
 
 %% all_legal_moves/1
 -spec all_legal_moves(pid()) -> binbo_server:all_legal_moves_ret().
 all_legal_moves(Pid) ->
-	all_legal_moves(Pid, int).
+    all_legal_moves(Pid, int).
 
 %% all_legal_moves/2
 -spec all_legal_moves(pid(), int | bin | str) -> binbo_server:all_legal_moves_ret().
 all_legal_moves(Pid, MoveType) ->
-	binbo_server:all_legal_moves(Pid, MoveType).
+    binbo_server:all_legal_moves(Pid, MoveType).
 
 %% side_to_move/1
 -spec side_to_move(pid()) -> binbo_game:side_to_move_ret().
 side_to_move(Pid) ->
-	binbo_server:side_to_move(Pid).
+    binbo_server:side_to_move(Pid).
 
 %% new_uci_game/2
 -spec new_uci_game(pid(), binbo_server:uci_game_opts()) -> binbo_server:new_uci_game_ret().
 new_uci_game(Pid, Opts) ->
-	binbo_server:new_uci_game(Pid, Opts).
+    binbo_server:new_uci_game(Pid, Opts).
 
 %% uci_command_call/2
 -spec uci_command_call(pid(), iodata()) -> ok | {error, term()}.
 uci_command_call(Pid, Command) ->
-	binbo_server:uci_command_call(Pid, Command).
+    binbo_server:uci_command_call(Pid, Command).
 
 %% uci_command_cast/2
 -spec uci_command_cast(pid(), iodata()) -> ok.
 uci_command_cast(Pid, Command) ->
-	binbo_server:uci_command_cast(Pid, Command).
+    binbo_server:uci_command_cast(Pid, Command).
 
 %% uci_mode/1
 -spec uci_mode(pid()) -> ok | {error, term()}.
 uci_mode(Pid) ->
-	binbo_server:uci_mode(Pid).
+    binbo_server:uci_mode(Pid).
 
 %% uci_bestmove/1
 -spec uci_bestmove(pid()) -> binbo_server:uci_bestmove_ret().
 uci_bestmove(Pid) ->
-	binbo_server:uci_bestmove(Pid, #{}).
+    binbo_server:uci_bestmove(Pid, #{}).
 
 %% uci_bestmove/2
 -spec uci_bestmove(pid(), binbo_uci:bestmove_opts()) -> binbo_server:uci_bestmove_ret().
 uci_bestmove(Pid, Opts) ->
-	binbo_server:uci_bestmove(Pid, Opts).
+    binbo_server:uci_bestmove(Pid, Opts).
 
 %% set_uci_handler/2
 -spec set_uci_handler(pid(), binbo_server:uci_handler()) -> ok.
 set_uci_handler(Pid, Handler) ->
-	binbo_server:set_uci_handler(Pid, Handler).
+    binbo_server:set_uci_handler(Pid, Handler).
 
 %% uci_play/2
 -spec uci_play(pid(), binbo_uci:bestmove_opts()) -> binbo_server:uci_play_ret().
 uci_play(Pid, BestMoveOpts) ->
-	binbo_server:uci_play(Pid, BestMoveOpts).
+    binbo_server:uci_play(Pid, BestMoveOpts).
 
 %% uci_play/3
 -spec uci_play(pid(), binbo_uci:bestmove_opts(), binbo_move:sq_move()) -> binbo_server:uci_play_ret().
 uci_play(Pid, BestMoveOpts, Move) ->
-	binbo_server:uci_play(Pid, BestMoveOpts, Move).
+    binbo_server:uci_play(Pid, BestMoveOpts, Move).
 
 %% uci_set_position/2
 -spec uci_set_position(pid(), binbo_fen:fen()) -> {ok, binbo_game:game_status()} | {error, term()}.
 uci_set_position(Pid, Fen) ->
-	binbo_server:uci_set_position(Pid, Fen).
+    binbo_server:uci_set_position(Pid, Fen).
 
 %% uci_sync_position/1
 -spec uci_sync_position(pid()) -> ok | {error, term()}.
 uci_sync_position(Pid) ->
-	binbo_server:uci_sync_position(Pid).
+    binbo_server:uci_sync_position(Pid).
 
 %% get_pieces_list/2
 -spec get_pieces_list(pid(), index | notation) -> {ok, [binbo_position:sq_piece_tuple()]} | {error, term()}.
 get_pieces_list(Pid, SquareType) ->
-	binbo_server:get_pieces_list(Pid, SquareType).
+    binbo_server:get_pieces_list(Pid, SquareType).

@@ -13,21 +13,21 @@
 %% limitations under the License.
 
 -record(move_info, {
-	from_idx = undefined :: undefined | binbo_board:square_index(),
-	to_idx = undefined :: undefined | binbo_board:square_index(),
-	from_bb = undefined :: undefined | binbo_bb:sq_bb(),
-	to_bb = undefined :: undefined | binbo_bb:sq_bb(),
-	piece = undefined :: undefined | binbo_board:piece(), % moving piece
-	pcolor = undefined :: undefined | binbo_board:color(), % color of moving piece
-	ptype = undefined :: undefined | binbo_board:piece_type(), % type of moving piece
-	captured = 0 :: binbo_board:empty_square() | binbo_board:piece(), % captured piece
-	% 'captured_idx' is the index of square where piece has been captured.
-	% It may differ from the index of target square due to en-passant capture.
-	captured_idx = undefined :: undefined | binbo_board:square_index(),
-	promo = undefined :: undefined | binbo_move:promo_type(),
-	castling = 0 :: binbo_move:castling_flag(),
-	% 'is_check' is 'true' when the opposite king is in check after move
-	is_check = false :: boolean(),
-	% 'has_valid_moves' is 'false' when the opposite side has no valid moves (checkmate or stalemate).
-	has_valid_moves = undefined :: undefined | boolean()
+    from_idx = undefined :: undefined | binbo_board:square_index(),
+    to_idx = undefined :: undefined | binbo_board:square_index(),
+    from_bb = undefined :: undefined | binbo_bb:sq_bb(),
+    to_bb = undefined :: undefined | binbo_bb:sq_bb(),
+    piece = undefined :: undefined | binbo_board:piece(), % moving piece
+    pcolor = undefined :: undefined | binbo_board:color(), % color of moving piece
+    ptype = undefined :: undefined | binbo_board:piece_type(), % type of moving piece
+    captured = 0 :: binbo_board:empty_square() | binbo_board:piece(), % captured piece
+    % 'captured_idx' is the index of square where piece has been captured.
+    % It may differ from the index of target square due to en-passant capture.
+    captured_idx = undefined :: undefined | binbo_board:square_index(),
+    promo = undefined :: undefined | binbo_move:promo_type(),
+    castling = 0 :: binbo_move:castling_flag(),
+    % 'is_check' is 'true' when the opposite king is in check after move
+    is_check = false :: boolean(),
+    % 'has_valid_moves' is 'false' when the opposite side has no valid moves (checkmate or stalemate).
+    has_valid_moves = undefined :: undefined | boolean()
 }).

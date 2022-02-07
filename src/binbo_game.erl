@@ -67,124 +67,124 @@
 %% new/1
 -spec new(game_fen()) -> {ok, {bb_game(), game_status()}} | {error, init_error()}.
 new(initial) ->
-	new(binbo_fen:initial());
+    new(binbo_fen:initial());
 new(Fen) ->
-	case binbo_fen:parse(Fen) of
-		{ok, ParsedFen} ->
-			init_game(ParsedFen);
-		Error ->
-			Error
-	end.
+    case binbo_fen:parse(Fen) of
+        {ok, ParsedFen} ->
+            init_game(ParsedFen);
+        Error ->
+            Error
+    end.
 
 %% move/3
 -spec move(sq | san | idx | int, sq_move(), game()) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
 move(MoveNotation, Move, Game) when is_map(Game) ->
-	Result = case MoveNotation of
-		int -> binbo_move:validate_int_move(Move, Game);
-		idx -> binbo_move:validate_idx_move(Move, Game);
-		sq  -> binbo_move:validate_sq_move(Move, Game);
-		san -> binbo_move:validate_san_move(Move, Game)
-	end,
-	case Result of
-		{ok, MoveInfo, Game2} ->
-			{ok, finalize_move(MoveInfo, Game2)};
-		{error, Reason} ->
-			{error, {Reason, Move}}
-	end;
+    Result = case MoveNotation of
+        int -> binbo_move:validate_int_move(Move, Game);
+        idx -> binbo_move:validate_idx_move(Move, Game);
+        sq  -> binbo_move:validate_sq_move(Move, Game);
+        san -> binbo_move:validate_san_move(Move, Game)
+    end,
+    case Result of
+        {ok, MoveInfo, Game2} ->
+            {ok, finalize_move(MoveInfo, Game2)};
+        {error, Reason} ->
+            {error, {Reason, Move}}
+    end;
 move(_MoveNotation, _Move, Game) ->
-	{error, {bad_game, Game}}.
+    {error, {bad_game, Game}}.
 
 
 %% load_pgn/1
 -spec load_pgn(binbo_pgn:pgn()) -> {ok, {bb_game(), game_status()}} | {error, load_pgn_error()}.
 load_pgn(Pgn) ->
-	case binbo_pgn:get_moves(Pgn) of
-		{ok, Movelist} ->
-			load_san_moves(Movelist);
-		{error, _} = Error ->
-			Error
-	end.
+    case binbo_pgn:get_moves(Pgn) of
+        {ok, Movelist} ->
+            load_san_moves(Movelist);
+        {error, _} = Error ->
+            Error
+    end.
 
 %% load_pgn_file/1
 -spec load_pgn_file(filename()) -> {ok, {bb_game(), game_status()}} | {error, any()}.
 load_pgn_file(Filename) ->
-	case uef_file:read_file_fast(Filename) of
-		{ok, Pgn} ->
-			load_pgn(Pgn);
-		{error, _} = Error ->
-			Error
-	end.
+    case uef_file:read_file_fast(Filename) of
+        {ok, Pgn} ->
+            load_pgn(Pgn);
+        {error, _} = Error ->
+            Error
+    end.
 
 %% pretty_board/2
 -spec pretty_board(game(), binbo_position:pretty_board_opts()) -> {ok, {iolist(), binbo_position:game_status()}} | {error, pretty_board_error()}.
 pretty_board(Game, Opts) when is_map(Game), is_list(Opts) ->
-	{ok, binbo_position:pretty_board(Game, Opts)};
+    {ok, binbo_position:pretty_board(Game, Opts)};
 pretty_board(Game, Opts) when is_list(Opts) ->
-	{error, {bad_game, Game}};
+    {error, {bad_game, Game}};
 pretty_board(_, Opts) ->
-	{error, {bad_options, Opts}}.
+    {error, {bad_options, Opts}}.
 
 %% status/1
 -spec status(game()) -> status_ret().
 status(Game) ->
-	case erlang:is_map(Game) of
-		true  -> {ok, binbo_position:get_status(Game)};
-		false -> {error, {bad_game, Game}}
-	end.
+    case erlang:is_map(Game) of
+        true  -> {ok, binbo_position:get_status(Game)};
+        false -> {error, {bad_game, Game}}
+    end.
 
 %% draw/2
 -spec draw(term(), game()) ->  {ok, bb_game()} | {error, gameover_status_error()}.
 draw(Reason, Game) when is_map(Game) ->
-	Status = binbo_position:get_status(Game),
-	case binbo_position:is_status_inprogress(Status) of
-		true  -> {ok, binbo_position:manual_draw(Reason, Game)};
-		false -> {error, {already_has_status, Status}}
-	end;
+    Status = binbo_position:get_status(Game),
+    case binbo_position:is_status_inprogress(Status) of
+        true  -> {ok, binbo_position:manual_draw(Reason, Game)};
+        false -> {error, {already_has_status, Status}}
+    end;
 draw(_Reason, Game) ->
-	{error, {bad_game, Game}}.
+    {error, {bad_game, Game}}.
 
 %% set_winner/3
 -spec set_winner(game(), winner(), term()) ->  {ok, bb_game()} | {error, gameover_status_error()}.
 set_winner(Game, Winner, Reason) when is_map(Game) ->
-	Status = binbo_position:get_status(Game),
-	case binbo_position:is_status_inprogress(Status) of
-		true  -> {ok, binbo_position:set_manual_winner(Winner, Reason, Game)};
-		false -> {error, {already_has_status, Status}}
-	end;
+    Status = binbo_position:get_status(Game),
+    case binbo_position:is_status_inprogress(Status) of
+        true  -> {ok, binbo_position:set_manual_winner(Winner, Reason, Game)};
+        false -> {error, {already_has_status, Status}}
+    end;
 set_winner(Game, _Winner, _Reason) ->
-	{error, {bad_game, Game}}.
+    {error, {bad_game, Game}}.
 
 %% get_fen/1
 -spec get_fen(game()) -> get_fen_ret().
 get_fen(Game) ->
-	case erlang:is_map(Game) of
-		true  -> {ok, binbo_position:get_fen(Game)};
-		false -> {error, {bad_game, Game}}
-	end.
+    case erlang:is_map(Game) of
+        true  -> {ok, binbo_position:get_fen(Game)};
+        false -> {error, {bad_game, Game}}
+    end.
 
 %% all_legal_moves/2
 -spec all_legal_moves(game(), int | bin | str) -> all_legal_moves_ret().
 all_legal_moves(Game, MoveType) ->
-	case erlang:is_map(Game) of
-		true  -> {ok, binbo_movegen:all_valid_moves(Game, MoveType)};
-		false -> {error, {bad_game, Game}}
-	end.
+    case erlang:is_map(Game) of
+        true  -> {ok, binbo_movegen:all_valid_moves(Game, MoveType)};
+        false -> {error, {bad_game, Game}}
+    end.
 
 %% side_to_move/1
 -spec side_to_move(game()) -> side_to_move_ret().
 side_to_move(Game) ->
-	case erlang:is_map(Game) of
-		true  -> {ok, binbo_position:plain_sidetomove(Game)};
-		false -> {error, {bad_game, Game}}
-	end.
+    case erlang:is_map(Game) of
+        true  -> {ok, binbo_position:plain_sidetomove(Game)};
+        false -> {error, {bad_game, Game}}
+    end.
 
 %% get_pieces_list/1
 -spec get_pieces_list(game(), index | notation) -> {ok, [binbo_position:sq_piece_tuple()]} | {error, bad_game_term()}.
 get_pieces_list(Game, SquareType) ->
-	case erlang:is_map(Game) of
-		true  -> {ok, binbo_position:get_pieces_list(Game, SquareType)};
-		false -> {error, {bad_game, Game}}
-	end.
+    case erlang:is_map(Game) of
+        true  -> {ok, binbo_position:get_pieces_list(Game, SquareType)};
+        false -> {error, {bad_game, Game}}
+    end.
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
@@ -193,58 +193,58 @@ get_pieces_list(Game, SquareType) ->
 %% init_game/1
 -spec init_game(parsed_fen()) -> {ok, {bb_game(), game_status()}} | {error, bb_game_error()}.
 init_game(ParsedFen) ->
-	Game = binbo_position:init_bb_game(ParsedFen),
-	case binbo_position:validate_loaded_fen(Game) of
-		ok ->
-			{ok, finalize_fen(Game)};
-		{error, _} = Error ->
-			Error
-	end.
+    Game = binbo_position:init_bb_game(ParsedFen),
+    case binbo_position:validate_loaded_fen(Game) of
+        ok ->
+            {ok, finalize_fen(Game)};
+        {error, _} = Error ->
+            Error
+    end.
 
 %% finalize_fen/1
 -spec finalize_fen(bb_game()) -> {bb_game(), game_status()}.
 finalize_fen(Game0) ->
-	SideToMove = binbo_position:get_sidetomove(Game0),
-	HasValidMoves = binbo_movegen:has_valid_moves(SideToMove, Game0),
-	IsCheck = binbo_position:is_in_check(SideToMove, Game0),
-	Game = binbo_position:with_status(Game0, HasValidMoves, IsCheck),
-	Status = binbo_position:get_status(Game),
-	{Game, Status}.
+    SideToMove = binbo_position:get_sidetomove(Game0),
+    HasValidMoves = binbo_movegen:has_valid_moves(SideToMove, Game0),
+    IsCheck = binbo_position:is_in_check(SideToMove, Game0),
+    Game = binbo_position:with_status(Game0, HasValidMoves, IsCheck),
+    Status = binbo_position:get_status(Game),
+    {Game, Status}.
 
 %% finalize_move/2
 -spec finalize_move(move_info(), bb_game()) -> {bb_game(), game_status()}.
 finalize_move(MoveInfo, Game0) ->
-	EnemyColor = binbo_move:enemy_color(MoveInfo),
-	HasValidMoves = binbo_movegen:has_valid_moves(EnemyColor, Game0),
-	IsCheck = binbo_position:is_in_check(EnemyColor, Game0),
-	MoveInfo2 = MoveInfo#move_info{
-		is_check = IsCheck,
-		has_valid_moves = HasValidMoves
-	},
-	Game = binbo_position:finalize_move(MoveInfo2, Game0),
-	Status = binbo_position:get_status(Game),
-	{Game, Status}.
+    EnemyColor = binbo_move:enemy_color(MoveInfo),
+    HasValidMoves = binbo_movegen:has_valid_moves(EnemyColor, Game0),
+    IsCheck = binbo_position:is_in_check(EnemyColor, Game0),
+    MoveInfo2 = MoveInfo#move_info{
+        is_check = IsCheck,
+        has_valid_moves = HasValidMoves
+    },
+    Game = binbo_position:finalize_move(MoveInfo2, Game0),
+    Status = binbo_position:get_status(Game),
+    {Game, Status}.
 
 
 %% load_san_moves
 -spec load_san_moves([sq_move()]) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
 load_san_moves(Movelist) ->
-	load_moves(Movelist, san).
+    load_moves(Movelist, san).
 
 %% load_moves/2
 -spec load_moves([sq_move()], san | sq) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
 load_moves(Movelist, MoveNotation) ->
-	{ok, {Game, Status}} = new(initial),
-	load_moves(Movelist, MoveNotation, Game, Status).
+    {ok, {Game, Status}} = new(initial),
+    load_moves(Movelist, MoveNotation, Game, Status).
 
 %% load_moves/4
 -spec load_moves([sq_move()], san | sq, bb_game(), game_status()) -> {ok, {bb_game(), game_status()}} | {error, move_error()}.
 load_moves([], _MoveNotation, Game, Status) ->
-	{ok, {Game, Status}};
+    {ok, {Game, Status}};
 load_moves([Move|Tail], MoveNotation, Game0, _Status0) ->
-	case move(MoveNotation, Move, Game0) of
-		{ok, {Game, Status}} ->
-			load_moves(Tail, MoveNotation, Game, Status);
-		{error, _} = Error ->
-			Error
-	end.
+    case move(MoveNotation, Move, Game0) of
+        {ok, {Game, Status}} ->
+            load_moves(Tail, MoveNotation, Game, Status);
+        {error, _} = Error ->
+            Error
+    end.

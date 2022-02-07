@@ -36,100 +36,100 @@ all() -> [{group, pgn_loading}].
 
 %% groups/0
 groups() ->
-	[{pgn_loading, [parallel], [
-		load_pgn_nightmare,
-		load_pgn_empty,
-		load_pgn_not_binary,
-		load_pgn_no_moves,
-		load_pgn_no_result,
-		load_pgn_from_file,
+    [{pgn_loading, [parallel], [
+        load_pgn_nightmare,
+        load_pgn_empty,
+        load_pgn_not_binary,
+        load_pgn_no_moves,
+        load_pgn_no_result,
+        load_pgn_from_file,
         load_pgn_with_queen_castling
-	]}].
+    ]}].
 
 %% init_per_suite/1
 init_per_suite(Config) ->
-	ok = binbo_test_lib:all_group_testcases_exported(?MODULE),
-	{ok, _} = binbo:start(),
-	Config.
+    ok = binbo_test_lib:all_group_testcases_exported(?MODULE),
+    {ok, _} = binbo:start(),
+    Config.
 
 %% end_per_suite/1
 end_per_suite(_Config) ->
-	ok.
+    ok.
 
 %% init_per_testcase/2
 init_per_testcase(_TestCase, Config) ->
-	{ok, Pid} = binbo:new_server(),
-	[{pid, Pid} | Config].
+    {ok, Pid} = binbo:new_server(),
+    [{pid, Pid} | Config].
 
 %% end_per_testcase/2
 end_per_testcase(_TestCase, Config) ->
-	Pid = get_pid(Config),
-	ok = binbo:stop_server(Pid),
-	ok.
+    Pid = get_pid(Config),
+    ok = binbo:stop_server(Pid),
+    ok.
 
 %% get_pid/1
 get_pid(Config) ->
-	?value(pid, Config).
+    ?value(pid, Config).
 
 %% load_pgn_empty/1
 load_pgn_empty(Config) ->
-	Pid = get_pid(Config),
-	Pgn = <<>>,
-	{error,empty_pgn} = binbo:load_pgn(Pid, Pgn),
-	ok.
+    Pid = get_pid(Config),
+    Pgn = <<>>,
+    {error,empty_pgn} = binbo:load_pgn(Pid, Pgn),
+    ok.
 
 %% load_pgn_not_binary/1
 load_pgn_not_binary(Config) ->
-	Pid = get_pid(Config),
-	Pgn = " not binary PGN ",
-	{error,invalid_pgn_datatype} = binbo:load_pgn(Pid, Pgn),
-	ok.
+    Pid = get_pid(Config),
+    Pgn = " not binary PGN ",
+    {error,invalid_pgn_datatype} = binbo:load_pgn(Pid, Pgn),
+    ok.
 
 %% load_pgn_no_moves/1
 load_pgn_no_moves(Config) ->
-	Pid = get_pid(Config),
-	Pgn1 = <<"     ">>,
-	Pgn2 = <<
-	"[Event \"Sicilian Schev. (90m+30s)/40+(15m+30s)\"]\n",
-	"[Black \"White\"]\n",
-	"[Date \"2017.7.13\"]\n",
-	"[Result \"0-1\"]\n",
-	"[White \"Rated game\"]\n"
-	>>,
-	Pgn3 = <<"*">>,
-	{ok, continue} = binbo:load_pgn(Pid, Pgn1),
-	{ok, continue} = binbo:load_pgn(Pid, Pgn2),
-	{ok, continue} = binbo:load_pgn(Pid, Pgn3),
-	ok.
+    Pid = get_pid(Config),
+    Pgn1 = <<"     ">>,
+    Pgn2 = <<
+    "[Event \"Sicilian Schev. (90m+30s)/40+(15m+30s)\"]\n",
+    "[Black \"White\"]\n",
+    "[Date \"2017.7.13\"]\n",
+    "[Result \"0-1\"]\n",
+    "[White \"Rated game\"]\n"
+    >>,
+    Pgn3 = <<"*">>,
+    {ok, continue} = binbo:load_pgn(Pid, Pgn1),
+    {ok, continue} = binbo:load_pgn(Pid, Pgn2),
+    {ok, continue} = binbo:load_pgn(Pid, Pgn3),
+    ok.
 
 %% load_pgn_no_result/1
 load_pgn_no_result(Config) ->
-	Pid = get_pid(Config),
-	Pgn = pgn_no_result(),
-	{ok,continue} = binbo:load_pgn(Pid, Pgn),
-	ok.
+    Pid = get_pid(Config),
+    Pgn = pgn_no_result(),
+    {ok,continue} = binbo:load_pgn(Pid, Pgn),
+    ok.
 
 %% load_pgn_nightmare/1
 load_pgn_nightmare(Config) ->
-	Pid = get_pid(Config),
-	Pgn = pgn_nightmare(),
-	{ok, {checkmate, black_wins}} = binbo:load_pgn(Pid, Pgn),
-	ok.
+    Pid = get_pid(Config),
+    Pgn = pgn_nightmare(),
+    {ok, {checkmate, black_wins}} = binbo:load_pgn(Pid, Pgn),
+    ok.
 
 %% load_pgn_from_file/1
 load_pgn_from_file(Config) ->
-	Pid = get_pid(Config),
-	DataDir = ?value(data_dir, Config), % ./pgn_SUITE_data/
-	Filename = filename:join(DataDir, "simple.pgn"),
-	{ok, _} = binbo:load_pgn_file(Pid, Filename),
-	ok.
+    Pid = get_pid(Config),
+    DataDir = ?value(data_dir, Config), % ./pgn_SUITE_data/
+    Filename = filename:join(DataDir, "simple.pgn"),
+    {ok, _} = binbo:load_pgn_file(Pid, Filename),
+    ok.
 
 %% load_pgn_with_queen_castling/1
 load_pgn_with_queen_castling(Config) ->
-	Pid = get_pid(Config),
-	Pgn = pgn_with_queen_castling(),
-	{ok, continue} = binbo:load_pgn(Pid, Pgn),
-	ok.
+    Pid = get_pid(Config),
+    Pgn = pgn_with_queen_castling(),
+    {ok, continue} = binbo:load_pgn(Pid, Pgn),
+    ok.
 
 %%%------------------------------------------------------------------------------
 %%%   PGNs

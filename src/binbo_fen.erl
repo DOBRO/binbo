@@ -31,8 +31,8 @@
 -define(INITIAL_FEN, <<"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">>).
 
 -define(NO_PIECES_MAP, #{
-	?WP => 0, ?WN => 0, ?WB => 0, ?WR => 0, ?WQ => 0, ?WK => 0,
-	?BP => 0, ?BN => 0, ?BB => 0, ?BR => 0, ?BQ => 0, ?BK => 0
+    ?WP => 0, ?WN => 0, ?WB => 0, ?WR => 0, ?WQ => 0, ?WK => 0,
+    ?BP => 0, ?BN => 0, ?BB => 0, ?BR => 0, ?BQ => 0, ?BK => 0
 }).
 
 %%%------------------------------------------------------------------------------
@@ -54,26 +54,26 @@
 -type atom_color() :: binbo_board:atom_color().
 -type qty() :: non_neg_integer().
 -type pieces_totals() :: #{
-	?WP := qty(), ?WN := qty(), ?WB := qty(), ?WR := qty(), ?WQ := qty(), ?WK := qty(),
-	?BP := qty(), ?BN := qty(), ?BB := qty(), ?BR := qty(), ?BQ := qty(), ?BK := qty()
+    ?WP := qty(), ?WN := qty(), ?WB := qty(), ?WR := qty(), ?WQ := qty(), ?WK := qty(),
+    ?BP := qty(), ?BN := qty(), ?BB := qty(), ?BR := qty(), ?BQ := qty(), ?BK := qty()
 }.
 -type position() :: [{sq_idx(), piece()}].
 -type rank_error() :: {last_index_mismatch | index_out_of_range, pos_integer(), {rank, rank_number()}}
                       | {invalid_character, [non_neg_integer(),...]}.
 -type pieces_totals_error() :: {no_kings, atom_color()} | {too_many_kings | too_many_pawns, atom_color(), pos_integer()}
-		| {bad_totals, atom_color(), {total, qty()},
-			{pawns, qty()}, {knights, qty()}, {bishops, qty()},
-			{rooks, qty()}, {queens, qty()}, {kings, qty()}
-		}.
+        | {bad_totals, atom_color(), {total, qty()},
+            {pawns, qty()}, {knights, qty()}, {bishops, qty()},
+            {rooks, qty()}, {queens, qty()}, {kings, qty()}
+        }.
 -type position_error() :: empty_position | not_8_ranks | empty_rank | rank_error() | pieces_totals_error().
 -type castlig_error() :: empty_castling | {invalid_character, [byte()]}.
 -type fen_error() :: empty_fen | invalid_fen_string | bad_data_type | too_few_parts
-					| {position, position_error()}
-					| {invalid_active_color, binary()}
-					| {castling, castlig_error()}
-					| {invalid_enpassant, binary()}
-					| {invalid_halfmove, binary()}
-					| {invalid_fullmove, binary()}.
+                    | {position, position_error()}
+                    | {invalid_active_color, binary()}
+                    | {castling, castlig_error()}
+                    | {invalid_enpassant, binary()}
+                    | {invalid_halfmove, binary()}
+                    | {invalid_fullmove, binary()}.
 
 -type parsed_fen() :: #parsed_fen{}.
 
@@ -88,27 +88,27 @@
 %% parse/1
 -spec parse(fen()) -> {ok, parsed_fen()} | {error, fen_error()}.
 parse(<<>>) ->
-	fen_error(empty_fen);
+    fen_error(empty_fen);
 parse(Fen) when is_binary(Fen) ->
-	case split_fen(Fen) of
-		{ok, Parts} ->
-			parse(Parts, #parsed_fen{});
-		error ->
-			fen_error(too_few_parts)
-	end;
+    case split_fen(Fen) of
+        {ok, Parts} ->
+            parse(Parts, #parsed_fen{});
+        error ->
+            fen_error(too_few_parts)
+    end;
 parse(Fen) when is_list(Fen) ->
-	try erlang:list_to_binary(Fen) of
-		Bin -> parse(Bin)
-	catch
-		_:_ -> fen_error(invalid_fen_string)
-	end;
+    try erlang:list_to_binary(Fen) of
+        Bin -> parse(Bin)
+    catch
+        _:_ -> fen_error(invalid_fen_string)
+    end;
 parse(_) ->
-	fen_error(bad_data_type).
+    fen_error(bad_data_type).
 
 %% initial/0
 -spec initial() -> initial_fen().
 initial() ->
-	?INITIAL_FEN.
+    ?INITIAL_FEN.
 
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
@@ -117,218 +117,218 @@ initial() ->
 %% fen_error/1
 -spec fen_error(Reason) -> {error, Reason} when Reason :: fen_error().
 fen_error(Reason) ->
-	{error, Reason}.
+    {error, Reason}.
 
 
 %% split_fen/1
 -spec split_fen(binary()) -> {ok, fen_part_tuples()} | error.
 split_fen(Fen) ->
-	case uef_bin:split(Fen, <<$\s>>) of
-		[Position, SideToMove, Castling, Enpassant, Halfmove, Fullmove] -> % six parts
-			{ok, [{position, Position}, {sidetomove, SideToMove}, {castling, Castling}, {enpassant, Enpassant}, {halfmove, Halfmove}, {fullmove, Fullmove}]};
-		[Position, SideToMove, Castling, Enpassant] -> % four parts
-			{ok, [{position, Position}, {sidetomove, SideToMove}, {castling, Castling}, {enpassant, Enpassant}, {halfmove, <<"0">>}, {fullmove, <<"1">>}]};
-		_ ->
-			error
-	end.
+    case uef_bin:split(Fen, <<$\s>>) of
+        [Position, SideToMove, Castling, Enpassant, Halfmove, Fullmove] -> % six parts
+            {ok, [{position, Position}, {sidetomove, SideToMove}, {castling, Castling}, {enpassant, Enpassant}, {halfmove, Halfmove}, {fullmove, Fullmove}]};
+        [Position, SideToMove, Castling, Enpassant] -> % four parts
+            {ok, [{position, Position}, {sidetomove, SideToMove}, {castling, Castling}, {enpassant, Enpassant}, {halfmove, <<"0">>}, {fullmove, <<"1">>}]};
+        _ ->
+            error
+    end.
 
 %% split_fen_position/1
 -spec split_fen_position(binary()) -> {ok, [fen_rank_idx(),...]} | error.
 split_fen_position(Pos) ->
-	case uef_bin:split(Pos, <<"/">>) of
-		[R8, R7, R6, R5, R4, R3, R2, R1] ->
-			{ok, [{R8,?A8_IDX}, {R7,?A7_IDX}, {R6,?A6_IDX}, {R5,?A5_IDX}, {R4,?A4_IDX}, {R3,?A3_IDX}, {R2,?A2_IDX}, {R1,?A1_IDX}]};
-		_ ->
-			error
-	end.
+    case uef_bin:split(Pos, <<"/">>) of
+        [R8, R7, R6, R5, R4, R3, R2, R1] ->
+            {ok, [{R8,?A8_IDX}, {R7,?A7_IDX}, {R6,?A6_IDX}, {R5,?A5_IDX}, {R4,?A4_IDX}, {R3,?A3_IDX}, {R2,?A2_IDX}, {R1,?A1_IDX}]};
+        _ ->
+            error
+    end.
 
 %% parse/2
 -spec parse([fen_part_tuple()], parsed_fen()) -> {ok, parsed_fen()} | {error, fen_error()}.
 parse([], ParsedFen) ->
-	{ok, ParsedFen};
+    {ok, ParsedFen};
 parse([{position, FenPosition} | Tail], ParsedFen) -> % 1. Piece placement
-	case parse_position(FenPosition) of
-		{ok, Position} ->
-			parse(Tail, ParsedFen#parsed_fen{position = Position});
-		{error, Reason} ->
-			fen_error({position, Reason})
-	end;
+    case parse_position(FenPosition) of
+        {ok, Position} ->
+            parse(Tail, ParsedFen#parsed_fen{position = Position});
+        {error, Reason} ->
+            fen_error({position, Reason})
+    end;
 parse([{sidetomove, SideToMove} | Tail], ParsedFen) -> % 2. Active color
-	case SideToMove of
-		<<"w">> -> parse(Tail, ParsedFen#parsed_fen{sidetomove = $w});
-		<<"b">> -> parse(Tail, ParsedFen#parsed_fen{sidetomove = ?BB});
-		_       -> fen_error({invalid_active_color, SideToMove})
-	end;
+    case SideToMove of
+        <<"w">> -> parse(Tail, ParsedFen#parsed_fen{sidetomove = $w});
+        <<"b">> -> parse(Tail, ParsedFen#parsed_fen{sidetomove = ?BB});
+        _       -> fen_error({invalid_active_color, SideToMove})
+    end;
 parse([{castling, Castling} | Tail], ParsedFen) -> % 3. Castling availability
-	case parse_castling(Castling, ParsedFen) of
-		{castling, ParsedFen2} -> parse(Tail, ParsedFen2);
-		{error, Reason} -> fen_error({castling, Reason})
-	end;
+    case parse_castling(Castling, ParsedFen) of
+        {castling, ParsedFen2} -> parse(Tail, ParsedFen2);
+        {error, Reason} -> fen_error({castling, Reason})
+    end;
 parse([{enpassant, Enpassant} | Tail], ParsedFen) -> % 4. En passant target square in algebraic notation
-	case parse_enpassant(Enpassant) of
-		{ok, Enp} -> parse(Tail, ParsedFen#parsed_fen{enpassant = Enp});
-		error -> fen_error({invalid_enpassant, Enpassant})
-	end;
+    case parse_enpassant(Enpassant) of
+        {ok, Enp} -> parse(Tail, ParsedFen#parsed_fen{enpassant = Enp});
+        error -> fen_error({invalid_enpassant, Enpassant})
+    end;
 parse([{halfmove, Halfmove} | Tail], ParsedFen) -> % 5. Halfmove clock
-	case parse_halfmove(Halfmove) of
-		{ok, Num} -> parse(Tail, ParsedFen#parsed_fen{halfmove = Num});
-		error -> fen_error({invalid_halfmove, Halfmove})
-	end;
+    case parse_halfmove(Halfmove) of
+        {ok, Num} -> parse(Tail, ParsedFen#parsed_fen{halfmove = Num});
+        error -> fen_error({invalid_halfmove, Halfmove})
+    end;
 parse([{fullmove, Fullmove} | Tail], ParsedFen) -> % 5. Halfmove clock
-	case parse_fullmove(Fullmove) of
-		{ok, Num} -> parse(Tail, ParsedFen#parsed_fen{fullmove = Num});
-		error -> fen_error({invalid_fullmove, Fullmove})
-	end;
+    case parse_fullmove(Fullmove) of
+        {ok, Num} -> parse(Tail, ParsedFen#parsed_fen{fullmove = Num});
+        error -> fen_error({invalid_fullmove, Fullmove})
+    end;
 parse([_ | Tail], ParsedFen) ->
-	parse(Tail, ParsedFen).
+    parse(Tail, ParsedFen).
 
 
 %% parse_position/1
 -spec parse_position(binary()) -> {ok, position()} | {error, position_error()}.
 parse_position(<<>>) ->
-	{error, empty_position};
+    {error, empty_position};
 parse_position(FenPosition) ->
-	case split_fen_position(FenPosition) of
-		{ok, Tuples} -> parse_position(Tuples, [], ?NO_PIECES_MAP);
-		error -> {error, not_8_ranks}
-	end.
+    case split_fen_position(FenPosition) of
+        {ok, Tuples} -> parse_position(Tuples, [], ?NO_PIECES_MAP);
+        error -> {error, not_8_ranks}
+    end.
 
 %% parse_position/3
 -spec parse_position([fen_rank_idx()], position(), pieces_totals()) -> {ok, position()} | {error, Error} when
-	Error :: pieces_totals_error() | empty_rank | rank_error().
+    Error :: pieces_totals_error() | empty_rank | rank_error().
 parse_position([], Position, Totals) ->
-	case validate_pieces_totals(Totals) of
-		ok    -> {ok, Position};
-		Error -> Error
-	end;
+    case validate_pieces_totals(Totals) of
+        ok    -> {ok, Position};
+        Error -> Error
+    end;
 parse_position([{<<>>, _} | _], _, _) ->
-	{error, empty_rank};
+    {error, empty_rank};
 parse_position([{Rank, Idx1} | Tail], Position, Totals) ->
-	case parse_pos_rank(Rank, Idx1, Position, Totals, Idx1) of
-		{ok, Position2, Totals2} -> parse_position(Tail, Position2, Totals2);
-		Error -> Error
-	end.
+    case parse_pos_rank(Rank, Idx1, Position, Totals, Idx1) of
+        {ok, Position2, Totals2} -> parse_position(Tail, Position2, Totals2);
+        Error -> Error
+    end.
 
 %% parse_pos_rank/5
 -spec parse_pos_rank(binary(), sq_idx(), position(), pieces_totals(), cur_idx()) -> {ok, position(), pieces_totals()} | {error, rank_error()}.
 parse_pos_rank(<<>>, Idx1, Position, Totals, CurIdx) ->
-	case CurIdx =:= (Idx1 + 8) of
-		true  ->
-			{ok, Position, Totals};
-		false ->
-			{error, {last_index_mismatch, CurIdx, {rank, binbo_board:rank_number(Idx1)}}}
-	end;
+    case CurIdx =:= (Idx1 + 8) of
+        true  ->
+            {ok, Position, Totals};
+        false ->
+            {error, {last_index_mismatch, CurIdx, {rank, binbo_board:rank_number(Idx1)}}}
+    end;
 parse_pos_rank(<<_/bits>>, Idx1, _, _, CurIdx) when CurIdx > (Idx1 + 7) ->
-	{error, {index_out_of_range, CurIdx, {rank, binbo_board:rank_number(Idx1)}}};
+    {error, {index_out_of_range, CurIdx, {rank, binbo_board:rank_number(Idx1)}}};
 parse_pos_rank(<<Char:8, Rest/bits>>, Idx1, Position, Totals, CurIdx) ->
-	case maps:find(Char, Totals) of
-		{ok, Num} -> % piece
-			Piece = ?CHAR_TO_PIECE(Char),
-			Position2 = [{CurIdx, Piece}|Position],
-			Totals2 = maps:update(Char, Num + 1, Totals),
-			parse_pos_rank(Rest, Idx1, Position2, Totals2, CurIdx + 1);
-		error -> % not piece
-			case (Char >= $1 andalso Char =< $8) of
-				true  ->
-					% $0 =:= 48.
-					CurIdx2 = CurIdx + (Char - $0),
-					parse_pos_rank(Rest, Idx1, Position, Totals, CurIdx2);
-				false ->
-					{error, {invalid_character, [Char]}}
-			end
-	end.
+    case maps:find(Char, Totals) of
+        {ok, Num} -> % piece
+            Piece = ?CHAR_TO_PIECE(Char),
+            Position2 = [{CurIdx, Piece}|Position],
+            Totals2 = maps:update(Char, Num + 1, Totals),
+            parse_pos_rank(Rest, Idx1, Position2, Totals2, CurIdx + 1);
+        error -> % not piece
+            case (Char >= $1 andalso Char =< $8) of
+                true  ->
+                    % $0 =:= 48.
+                    CurIdx2 = CurIdx + (Char - $0),
+                    parse_pos_rank(Rest, Idx1, Position, Totals, CurIdx2);
+                false ->
+                    {error, {invalid_character, [Char]}}
+            end
+    end.
 
 
 % validate_pieces_totals/1
 -spec validate_pieces_totals(pieces_totals() | [Tuple]) -> ok | {error, pieces_totals_error()} when
-	Tuple :: {atom_color(), P :: qty(), N :: qty(), B :: qty(), R :: qty(), Q :: qty(), K :: qty()}.
+    Tuple :: {atom_color(), P :: qty(), N :: qty(), B :: qty(), R :: qty(), Q :: qty(), K :: qty()}.
 validate_pieces_totals(Totals) when is_map(Totals) ->
-	#{
-		?WP := Wp, ?WN := Wn, ?WB := Wb, ?WR := Wr, ?WQ := Wq, ?WK := Wk,
-		?BP := Bp, ?BN := Bn, ?BB := Bb, ?BR := Br, ?BQ := Bq, ?BK := Bk
-	} = Totals,
-	Wtuple = {white, Wp,Wn,Wb,Wr,Wq,Wk},
-	Btuple = {black, Bp,Bn,Bb,Br,Bq,Bk},
-	validate_pieces_totals([Wtuple, Btuple]);
+    #{
+        ?WP := Wp, ?WN := Wn, ?WB := Wb, ?WR := Wr, ?WQ := Wq, ?WK := Wk,
+        ?BP := Bp, ?BN := Bn, ?BB := Bb, ?BR := Br, ?BQ := Bq, ?BK := Bk
+    } = Totals,
+    Wtuple = {white, Wp,Wn,Wb,Wr,Wq,Wk},
+    Btuple = {black, Bp,Bn,Bb,Br,Bq,Bk},
+    validate_pieces_totals([Wtuple, Btuple]);
 validate_pieces_totals([]) -> ok;
 validate_pieces_totals([{Color, P, N, B, R, Q, K} | Tail]) ->
-	Total = P + N + B + R + Q + K,
-	IsOk = (K =:= 1) andalso (Total < 17) andalso (P < 9),
-	case IsOk of
-		true  ->
-			validate_pieces_totals(Tail);
-		false when K < 1 ->
-			{error, {no_kings, Color}};
-		false when K > 1 ->
-			{error, {too_many_kings, Color, K}};
-		false when P > 8 ->
-			{error, {too_many_pawns, Color, P}};
-		false ->
-			{error, {bad_totals, Color, {total, Total}, {pawns, P}, {knights, N}, {bishops, B}, {rooks, R}, {queens, Q}, {kings, K}}}
-	end.
+    Total = P + N + B + R + Q + K,
+    IsOk = (K =:= 1) andalso (Total < 17) andalso (P < 9),
+    case IsOk of
+        true  ->
+            validate_pieces_totals(Tail);
+        false when K < 1 ->
+            {error, {no_kings, Color}};
+        false when K > 1 ->
+            {error, {too_many_kings, Color, K}};
+        false when P > 8 ->
+            {error, {too_many_pawns, Color, P}};
+        false ->
+            {error, {bad_totals, Color, {total, Total}, {pawns, P}, {knights, N}, {bishops, B}, {rooks, R}, {queens, Q}, {kings, K}}}
+    end.
 
 
 %% parse_castling/2
 -spec parse_castling(binary(), parsed_fen()) -> {castling, parsed_fen()} | {error, Error} when
-	Error :: empty_castling | {invalid_character, [byte()]}.
+    Error :: empty_castling | {invalid_character, [byte()]}.
 parse_castling(<<>>, _) ->
-	{error, empty_castling};
+    {error, empty_castling};
 parse_castling(<<"-">>, ParsedFen) -> % neither side can castle
-	ParsedFen2 = ParsedFen#parsed_fen{castling = ?CASTLING_NONE},
-	{castling, ParsedFen2};
+    ParsedFen2 = ParsedFen#parsed_fen{castling = ?CASTLING_NONE},
+    {castling, ParsedFen2};
 parse_castling(Castling, ParsedFen) ->
-	parse_castling_1(Castling, ParsedFen).
+    parse_castling_1(Castling, ParsedFen).
 
 %% parse_castling_1/2
 -spec parse_castling_1(binary(), parsed_fen()) -> {castling, parsed_fen()} | {error, {invalid_character, [byte()]}}.
 parse_castling_1(<<>>, ParsedFen) ->
-	{castling, ParsedFen};
+    {castling, ParsedFen};
 parse_castling_1(<<Char:8, Rest/bits>>, #parsed_fen{castling = Castling} = ParsedFen) ->
-	Castling2 = case Char of
-		?WK -> (Castling bor ?CASTLING_W_OO);
-		?WQ -> (Castling bor ?CASTLING_W_OOO);
-		?BK -> (Castling bor ?CASTLING_B_OO);
-		?BQ -> (Castling bor ?CASTLING_B_OOO);
-		_   -> error
-	end,
-	case is_integer(Castling2) of
-		true ->
-			parse_castling_1(Rest, ParsedFen#parsed_fen{castling = Castling2});
-		false ->
-			{error, {invalid_character, [Char]}}
-	end.
+    Castling2 = case Char of
+        ?WK -> (Castling bor ?CASTLING_W_OO);
+        ?WQ -> (Castling bor ?CASTLING_W_OOO);
+        ?BK -> (Castling bor ?CASTLING_B_OO);
+        ?BQ -> (Castling bor ?CASTLING_B_OOO);
+        _   -> error
+    end,
+    case is_integer(Castling2) of
+        true ->
+            parse_castling_1(Rest, ParsedFen#parsed_fen{castling = Castling2});
+        false ->
+            {error, {invalid_character, [Char]}}
+    end.
 
 
 %% parse_enpassant/1
 -spec parse_enpassant(binary()) -> {ok, none | binbo_board:square_index()} | error.
 parse_enpassant(<<"-">>) ->
-	{ok, none};
+    {ok, none};
 parse_enpassant(<<F:8, R:8>>) when (F >= $a andalso F =< $h) andalso (R =:= $3 orelse R =:= $6) ->
-	{ok, binbo_board:notation_to_index(F, R)};
+    {ok, binbo_board:notation_to_index(F, R)};
 parse_enpassant(_) ->
-	error.
+    error.
 
 %% parse_halfmove/1
 -spec parse_halfmove(binary()) -> {ok, halfmove()} | error.
 parse_halfmove(Bin) ->
-	try erlang:binary_to_integer(Bin) of
-		Num when Num >= 0 -> {ok, Num};
-		_ -> error
-	catch
-		_:_ -> error
-	end.
+    try erlang:binary_to_integer(Bin) of
+        Num when Num >= 0 -> {ok, Num};
+        _ -> error
+    catch
+        _:_ -> error
+    end.
 
 
 %% parse_fullmove/1
 -spec parse_fullmove(binary()) -> {ok, fullmove()} | error.
 parse_fullmove(Bin) ->
-	try erlang:binary_to_integer(Bin) of
-		Num when Num > 0 -> {ok, Num};
-		0 -> {ok, 1};
-		_ -> error
-	catch
-		_:_ -> error
-	end.
+    try erlang:binary_to_integer(Bin) of
+        Num when Num > 0 -> {ok, Num};
+        0 -> {ok, 1};
+        _ -> error
+    catch
+        _:_ -> error
+    end.
 
 
 %%%------------------------------------------------------------------------------

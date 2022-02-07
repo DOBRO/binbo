@@ -25,19 +25,19 @@ all() -> [test_global].
 
 %% init_per_suite/1
 init_per_suite(Config) ->
-	Config.
+    Config.
 
 %% end_per_suite/1
 end_per_suite(_Config) ->
-	ok.
+    ok.
 
 %% test/1
 test_global(_Config) ->
-	Mod = 'binbo_global_suite_test',
-	Value = 'test',
-	ok = binbo_global:put(Mod, Value),
-	{file, _} = code:is_loaded(Mod),
-	Value = binbo_global:get(Mod),
-	Bool = binbo_global:delete(Mod),
-	true = erlang:is_boolean(Bool),
-	false = code:is_loaded(Mod).
+    Mod = 'binbo_global_suite_test',
+    Value = 'test',
+    ok = binbo_global:put(Mod, Value),
+    {file, _} = code:is_loaded(Mod),
+    Value = binbo_global:get(Mod),
+    Bool = binbo_global:delete(Mod),
+    true = erlang:is_boolean(Bool),
+    false = code:is_loaded(Mod).

@@ -13,8 +13,8 @@
 %% limitations under the License.
 
 %%%------------------------------------------------------------------------------
-%%%	Inspired by mochiglobal module:
-%%%	https://github.com/mochi/mochiweb/blob/master/src/mochiglobal.erl
+%%% Inspired by mochiglobal module:
+%%% https://github.com/mochi/mochiweb/blob/master/src/mochiglobal.erl
 %%%
 %%% Slightly patched for performance
 %%%------------------------------------------------------------------------------
@@ -35,22 +35,22 @@
 %% get/1
 -spec get(module()) -> value().
 get(Mod) ->
-	Mod:value().
+    Mod:value().
 
 %% put/2
 -spec put(module(), value()) -> ok.
 put(Mod, V) ->
-	Bin = compile(Mod, V),
-	_ = code:purge(Mod),
-	Filename = atom_to_list(Mod) ++ ".erl",
-	{module, Mod} = code:load_binary(Mod, Filename, Bin),
-	ok.
+    Bin = compile(Mod, V),
+    _ = code:purge(Mod),
+    Filename = atom_to_list(Mod) ++ ".erl",
+    {module, Mod} = code:load_binary(Mod, Filename, Bin),
+    ok.
 
 %% delete/1
 -spec delete(module()) -> boolean().
 delete(Mod) ->
-	_ = code:purge(Mod),
-	code:delete(Mod).
+    _ = code:purge(Mod),
+    code:delete(Mod).
 
 
 %%%------------------------------------------------------------------------------
@@ -60,39 +60,39 @@ delete(Mod) ->
 %% compile/2
 -spec compile(module(), value()) -> binary().
 compile(Module, Value) ->
-	{ok, Module, Bin} = compile:forms(forms(Module, Value),
-									  [verbose, report_errors]),
-	Bin.
+    {ok, Module, Bin} = compile:forms(forms(Module, Value),
+                                      [verbose, report_errors]),
+    Bin.
 
 
 %% forms/2
 -spec forms(module(), value()) -> [erl_syntax:syntaxTree()].
 forms(Module, Value) ->
-	[erl_syntax:revert(X) || X <- term_to_abstract(Module, value, Value)].
+    [erl_syntax:revert(X) || X <- term_to_abstract(Module, value, Value)].
 
 
 %% term_to_abstract/3
 -spec term_to_abstract(atom(), value, value()) -> [erl_syntax:syntaxTree()].
 term_to_abstract(Module, Getter, Value) ->
-	[
-		%% -module(Module).
-		erl_syntax:attribute(
-			erl_syntax:atom(module),
-			[erl_syntax:atom(Module)]
-		),
-		%% -export([Getter/0]).
-		erl_syntax:attribute(
-			erl_syntax:atom(export),
-			[erl_syntax:list(
-				[erl_syntax:arity_qualifier(
-					erl_syntax:atom(Getter),
-					erl_syntax:integer(0))
-				])
-			]
-		),
-		%% Getter() -> Value.
-		erl_syntax:function(
-			erl_syntax:atom(Getter),
-			[erl_syntax:clause([], none, [erl_syntax:abstract(Value)])]
-		)
-	].
+    [
+        %% -module(Module).
+        erl_syntax:attribute(
+            erl_syntax:atom(module),
+            [erl_syntax:atom(Module)]
+        ),
+        %% -export([Getter/0]).
+        erl_syntax:attribute(
+            erl_syntax:atom(export),
+            [erl_syntax:list(
+                [erl_syntax:arity_qualifier(
+                    erl_syntax:atom(Getter),
+                    erl_syntax:integer(0))
+                ])
+            ]
+        ),
+        %% Getter() -> Value.
+        erl_syntax:function(
+            erl_syntax:atom(Getter),
+            [erl_syntax:clause([], none, [erl_syntax:abstract(Value)])]
+        )
+    ].

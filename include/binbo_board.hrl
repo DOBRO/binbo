@@ -247,64 +247,64 @@
 
 
 -define(CHAR_TO_PIECE(C), (case (C) of
-	?WP -> ?WHITE_PAWN;
-	?WN -> ?WHITE_KNIGHT;
-	?WB -> ?WHITE_BISHOP;
-	?WR -> ?WHITE_ROOK;
-	?WQ -> ?WHITE_QUEEN;
-	?WK -> ?WHITE_KING;
-	?BP -> ?BLACK_PAWN;
-	?BN -> ?BLACK_KNIGHT;
-	?BB -> ?BLACK_BISHOP;
-	?BR -> ?BLACK_ROOK;
-	?BQ -> ?BLACK_QUEEN;
-	?BK -> ?BLACK_KING
+    ?WP -> ?WHITE_PAWN;
+    ?WN -> ?WHITE_KNIGHT;
+    ?WB -> ?WHITE_BISHOP;
+    ?WR -> ?WHITE_ROOK;
+    ?WQ -> ?WHITE_QUEEN;
+    ?WK -> ?WHITE_KING;
+    ?BP -> ?BLACK_PAWN;
+    ?BN -> ?BLACK_KNIGHT;
+    ?BB -> ?BLACK_BISHOP;
+    ?BR -> ?BLACK_ROOK;
+    ?BQ -> ?BLACK_QUEEN;
+    ?BK -> ?BLACK_KING
 end)).
 
 
 -define(PIECE_TO_CHAR(P), (case (P) of
-	?WHITE_PAWN   -> ?WP;
-	?WHITE_KNIGHT -> ?WN;
-	?WHITE_BISHOP -> ?WB;
-	?WHITE_ROOK   -> ?WR;
-	?WHITE_QUEEN  -> ?WQ;
-	?WHITE_KING   -> ?WK;
-	?BLACK_PAWN   -> ?BP;
-	?BLACK_KNIGHT -> ?BN;
-	?BLACK_BISHOP -> ?BB;
-	?BLACK_ROOK   -> ?BR;
-	?BLACK_QUEEN  -> ?BQ;
-	?BLACK_KING   -> ?BK
+    ?WHITE_PAWN   -> ?WP;
+    ?WHITE_KNIGHT -> ?WN;
+    ?WHITE_BISHOP -> ?WB;
+    ?WHITE_ROOK   -> ?WR;
+    ?WHITE_QUEEN  -> ?WQ;
+    ?WHITE_KING   -> ?WK;
+    ?BLACK_PAWN   -> ?BP;
+    ?BLACK_KNIGHT -> ?BN;
+    ?BLACK_BISHOP -> ?BB;
+    ?BLACK_ROOK   -> ?BR;
+    ?BLACK_QUEEN  -> ?BQ;
+    ?BLACK_KING   -> ?BK
 end)).
 
 
 -define(PIECE_TO_ATOM(P), (case (P) of
-	?WHITE_PAWN   -> 'WHITE_PAWN';
-	?WHITE_KNIGHT -> 'WHITE_KNIGHT';
-	?WHITE_BISHOP -> 'WHITE_BISHOP';
-	?WHITE_ROOK   -> 'WHITE_ROOK';
-	?WHITE_QUEEN  -> 'WHITE_QUEEN';
-	?WHITE_KING   -> 'WHITE_KING';
-	?BLACK_PAWN   -> 'BLACK_PAWN';
-	?BLACK_KNIGHT -> 'BLACK_KNIGHT';
-	?BLACK_BISHOP -> 'BLACK_BISHOP';
-	?BLACK_ROOK   -> 'BLACK_ROOK';
-	?BLACK_QUEEN  -> 'BLACK_QUEEN';
-	?BLACK_KING   -> 'BLACK_KING'
+    ?WHITE_PAWN   -> 'WHITE_PAWN';
+    ?WHITE_KNIGHT -> 'WHITE_KNIGHT';
+    ?WHITE_BISHOP -> 'WHITE_BISHOP';
+    ?WHITE_ROOK   -> 'WHITE_ROOK';
+    ?WHITE_QUEEN  -> 'WHITE_QUEEN';
+    ?WHITE_KING   -> 'WHITE_KING';
+    ?BLACK_PAWN   -> 'BLACK_PAWN';
+    ?BLACK_KNIGHT -> 'BLACK_KNIGHT';
+    ?BLACK_BISHOP -> 'BLACK_BISHOP';
+    ?BLACK_ROOK   -> 'BLACK_ROOK';
+    ?BLACK_QUEEN  -> 'BLACK_QUEEN';
+    ?BLACK_KING   -> 'BLACK_KING'
 end)).
 
 
 -define(PIECE_TO_TUPLE(P), (case (P) of
-	?WHITE_PAWN   -> {white, pawn};
-	?WHITE_KNIGHT -> {white, knight};
-	?WHITE_BISHOP -> {white, bishop};
-	?WHITE_ROOK   -> {white, rook};
-	?WHITE_QUEEN  -> {white, queen};
-	?WHITE_KING   -> {white, king};
-	?BLACK_PAWN   -> {black, pawn};
-	?BLACK_KNIGHT -> {black, knight};
-	?BLACK_BISHOP -> {black, bishop};
-	?BLACK_ROOK   -> {black, rook};
-	?BLACK_QUEEN  -> {black, queen};
-	?BLACK_KING   -> {black, king}
+    ?WHITE_PAWN   -> {white, pawn};
+    ?WHITE_KNIGHT -> {white, knight};
+    ?WHITE_BISHOP -> {white, bishop};
+    ?WHITE_ROOK   -> {white, rook};
+    ?WHITE_QUEEN  -> {white, queen};
+    ?WHITE_KING   -> {white, king};
+    ?BLACK_PAWN   -> {black, pawn};
+    ?BLACK_KNIGHT -> {black, knight};
+    ?BLACK_BISHOP -> {black, bishop};
+    ?BLACK_ROOK   -> {black, rook};
+    ?BLACK_QUEEN  -> {black, queen};
+    ?BLACK_KING   -> {black, king}
 end)).

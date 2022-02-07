@@ -22,8 +22,8 @@
 %%%   Types
 %%%------------------------------------------------------------------------------
 -record(app_state, {
-	attack_mods = undefined :: undefined | [module()],
-	hash_mods   = undefined :: undefined | [module()]
+    attack_mods = undefined :: undefined | [module()],
+    hash_mods   = undefined :: undefined | [module()]
 }).
 
 -type state() :: #app_state{}.
@@ -35,18 +35,18 @@
 %% start/2
 -spec start(_, _) -> {ok, pid(), state()}.
 start(_Type, _Args) ->
-	AttackMods = binbo_attacks:init(), % init persistent attacks first
-	HashMods = binbo_hash:init(),
-	State = #app_state{attack_mods = AttackMods, hash_mods = HashMods},
-	{ok, Pid} = binbo_sup:start_link(),
-	{ok, Pid, State}.
+    AttackMods = binbo_attacks:init(), % init persistent attacks first
+    HashMods = binbo_hash:init(),
+    State = #app_state{attack_mods = AttackMods, hash_mods = HashMods},
+    {ok, Pid} = binbo_sup:start_link(),
+    {ok, Pid, State}.
 
 %% stop/1
 -spec stop(state()) -> ok.
 stop(#app_state{attack_mods = AttackMods, hash_mods = HashMods}) ->
-	ok = unload_dynamic_mods(AttackMods),
-	ok = unload_dynamic_mods(HashMods),
-	ok.
+    ok = unload_dynamic_mods(AttackMods),
+    ok = unload_dynamic_mods(HashMods),
+    ok.
 
 
 %%%------------------------------------------------------------------------------
@@ -56,8 +56,8 @@ stop(#app_state{attack_mods = AttackMods, hash_mods = HashMods}) ->
 %% unload_dynamic_mods/1
 -spec unload_dynamic_mods(undefined | [module()]) -> ok.
 unload_dynamic_mods([_|_] = DynMods) ->
-	lists:foreach(fun(Mod) ->
-		binbo_global:delete(Mod)
-	end, DynMods);
+    lists:foreach(fun(Mod) ->
+        binbo_global:delete(Mod)
+    end, DynMods);
 unload_dynamic_mods(_) ->
-	ok.
+    ok.
