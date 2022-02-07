@@ -43,7 +43,7 @@ The `master` branch corresponds to the current release. The `develop` branch is 
 
 ## Coding Style
 
-Use horizontal tabs for indentation. Use one tab per indentation level.
+Use spaces for indentation. Use 4 spaces per indentation level.
 
 There is no hard limit for line length, just try to keep it as readable as possible.
 
