@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+- Environment variable `UCI_ENGINE_PATH` renamed to `BINBO_UCI_ENGINE_PATH`.
+
 ## [3.0.0] - 2021-01-30
 
 - In case of **checkmate** the functions listed bellow now return `{ok, {checkmate, white_wins}}` or `{ok, {checkmate, black_wins}}`:
