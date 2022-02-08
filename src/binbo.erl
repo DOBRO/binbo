@@ -243,7 +243,7 @@ uci_bestmove(Pid) ->
     binbo_server:uci_bestmove(Pid, #{}).
 
 %% uci_bestmove/2
--spec uci_bestmove(pid(), binbo_uci:bestmove_opts()) -> binbo_server:uci_bestmove_ret().
+-spec uci_bestmove(pid(), binbo_uci_protocol:bestmove_opts()) -> binbo_server:uci_bestmove_ret().
 uci_bestmove(Pid, Opts) ->
     binbo_server:uci_bestmove(Pid, Opts).
 
@@ -253,12 +253,12 @@ set_uci_handler(Pid, Handler) ->
     binbo_server:set_uci_handler(Pid, Handler).
 
 %% uci_play/2
--spec uci_play(pid(), binbo_uci:bestmove_opts()) -> binbo_server:uci_play_ret().
+-spec uci_play(pid(), binbo_uci_protocol:bestmove_opts()) -> binbo_server:uci_play_ret().
 uci_play(Pid, BestMoveOpts) ->
     binbo_server:uci_play(Pid, BestMoveOpts).
 
 %% uci_play/3
--spec uci_play(pid(), binbo_uci:bestmove_opts(), binbo_move:sq_move()) -> binbo_server:uci_play_ret().
+-spec uci_play(pid(), binbo_uci_protocol:bestmove_opts(), binbo_move:sq_move()) -> binbo_server:uci_play_ret().
 uci_play(Pid, BestMoveOpts, Move) ->
     binbo_server:uci_play(Pid, BestMoveOpts, Move).
 

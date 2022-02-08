@@ -1215,7 +1215,7 @@ Handler :: undefined | default | fun().
 
 If `Handler` is `undefined`, no operations are performed (the initial behaviour).
 
-If `Handler` is set to `default`, function `binbo_uci:default_handler/1` from module link:src/binbo_uci.erl[binbo_uci] is performed. It just prints the message to the Erlang shell.
+If `Handler` is set to `default`, function `binbo_uci_protocol:default_handler/1` from module link:src/binbo_uci_protocol.erl[binbo_uci_protocol] is performed. It just prints the message to the Erlang shell.
 
 If `Handler` is a **function of arity 1**, this function is performed. The only argument the function takes is the message received from the engine.
 

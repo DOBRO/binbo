@@ -65,14 +65,14 @@
 -type all_legal_moves_ret() :: binbo_game:all_legal_moves_ret().
 -type uci_bestmove_ret() :: {ok, binary()} | {error, term()}.
 -type uci_play_ret() :: {ok, game_status(), sq_move()} | {error, term()}.
--type engine_path() :: binbo_uci:engine_path().
+-type engine_path() :: binbo_uci_protocol:engine_path().
 -type uci_game_opts() :: #{
     engine_path := engine_path(),
     fen => fen()
 }.
 -type init_uci_game_error() :: {could_not_open_port, term()}.
 -type uci_handler() :: undefined | default | fun((binary()) -> term()).
--type uci_cmd_spec() :: iodata() | binbo_uci:command_spec() | {set_position, fen()} | sync_position.
+-type uci_cmd_spec() :: iodata() | binbo_uci_protocol:command_spec() | {set_position, fen()} | sync_position.
 
 -type uci_wait_prefix() :: binary().
 -type uci_wait_prefix_size() :: pos_integer().
@@ -328,7 +328,7 @@ do_handle_cast({update_game_state, Game}, State) ->
 do_handle_cast({set_uci_handler, Handler}, State0) ->
     NewHandler = case Handler of
         default ->
-            fun binbo_uci:default_handler/1;
+            fun binbo_uci_protocol:default_handler/1;
         _ when is_function(Handler) ->
             case erlang:fun_info(Handler, arity) of
                 {arity,1} -> Handler;
@@ -499,13 +499,13 @@ uci_command_cast(Pid, Command) ->
 %% uci_mode/1
 -spec uci_mode(pid()) -> ok | {error, term()}.
 uci_mode(Pid) ->
-    uci_command_call(Pid, binbo_uci:command_spec_uci()).
+    uci_command_call(Pid, binbo_uci_protocol:command_spec_uci()).
 
 %% uci_bestmove/2
--spec uci_bestmove(pid(), binbo_uci:bestmove_opts()) -> uci_bestmove_ret().
+-spec uci_bestmove(pid(), binbo_uci_protocol:bestmove_opts()) -> uci_bestmove_ret().
 uci_bestmove(Pid, Opts) ->
-    Movetime = binbo_uci:bestmove_search_time(Opts),
-    CommandSpec = binbo_uci:command_spec_bestmove(Opts, Movetime),
+    Movetime = binbo_uci_protocol:bestmove_search_time(Opts),
+    CommandSpec = binbo_uci_protocol:command_spec_bestmove(Opts, Movetime),
     Timeout = case is_integer(Movetime) of
         true  ->
             % The engine searches the best move exactly Movetime milliseconds.
@@ -523,14 +523,14 @@ set_uci_handler(Pid, Handler) ->
     cast(Pid, {set_uci_handler, Handler}).
 
 %% uci_play/2
--spec uci_play(pid(), binbo_uci:bestmove_opts()) -> uci_play_ret().
+-spec uci_play(pid(), binbo_uci_protocol:bestmove_opts()) -> uci_play_ret().
 uci_play(Pid, BestMoveOpts) ->
     Game = game_state(Pid),
     % Do NOT call uci_play/3 here! Do call uci_play_bestmove/3 directly!
     uci_play_bestmove(Pid, BestMoveOpts, Game).
 
 %% uci_play/3
--spec uci_play(pid(), binbo_uci:bestmove_opts(), sq_move()) -> uci_play_ret().
+-spec uci_play(pid(), binbo_uci_protocol:bestmove_opts(), sq_move()) -> uci_play_ret().
 uci_play(Pid, BestMoveOpts, Move) ->
     Game0 = game_state(Pid),
     case binbo_game:move(sq, Move, Game0) of
@@ -734,12 +734,12 @@ maybe_close_uci_port(Port) ->
 %% open_uci_port/1
 -spec open_uci_port(engine_path()) -> {ok, port()} | {error, any()}.
 open_uci_port(EnginePath) ->
-    binbo_uci:open_port(EnginePath).
+    binbo_uci_protocol:open_port(EnginePath).
 
 %% uci_port_command/2
 -spec uci_port_command(port(), iodata()) -> ok.
 uci_port_command(Port, Command) ->
-    binbo_uci:send_command(Port, Command).
+    binbo_uci_protocol:send_command(Port, Command).
 
 %% maybe_handle_uci_message/2
 -spec maybe_handle_uci_message(uci_handler(), binary()) -> term().
@@ -750,7 +750,7 @@ maybe_handle_uci_message(Handler, Data) ->
     end.
 
 %% uci_play_bestmove/3
--spec uci_play_bestmove(pid(), binbo_uci:bestmove_opts(), bb_game()) -> uci_play_ret().
+-spec uci_play_bestmove(pid(), binbo_uci_protocol:bestmove_opts(), bb_game()) -> uci_play_ret().
 uci_play_bestmove(Pid, BestMoveOpts, Game) ->
     case uci_bestmove(Pid, BestMoveOpts) of
         {ok, BestMove} ->

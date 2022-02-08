@@ -12,7 +12,7 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
--module(binbo_uci).
+-module(binbo_uci_protocol).
 
 -export([open_port/1]).
 -export([send_command/2]).
