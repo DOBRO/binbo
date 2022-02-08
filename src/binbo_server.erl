@@ -682,13 +682,13 @@ init_uci_game([fen|Tail], Opts, State) ->
 init_uci_game([close_port|Tail], Opts, State) ->
     #state{uci_port = Port} = State,
     _ = maybe_close_uci_port(Port),
-    State2 = state_without_uci_port(State),
+    State2 = state_without_uci_connection(State),
     init_uci_game(Tail, Opts, State2);
 init_uci_game([open_port|Tail], Opts, State) ->
     EnginePath = maps:get(engine_path, Opts, undefined),
     case uci_connect(EnginePath) of
         {ok, Port} ->
-            State2 = state_with_uci_port(State, Port),
+            State2 = state_with_uci_connection(State, Port),
             init_uci_game(Tail, Opts, State2);
         {error, Reason} ->
             {error, {could_not_open_port, Reason}, State}
@@ -705,14 +705,14 @@ init_uci_game([uci_commands|Tail], Opts, State) ->
     init_uci_game(Tail, Opts, State).
 
 
-%% state_with_uci_port/1
--spec state_with_uci_port(state(), port()) -> state().
-state_with_uci_port(State, Port) ->
+%% state_with_uci_connection/1
+-spec state_with_uci_connection(state(), port()) -> state().
+state_with_uci_connection(State, Port) ->
     State#state{uci_port = Port}.
 
-%% state_without_uci_port/1
--spec state_without_uci_port(state()) -> state().
-state_without_uci_port(State) ->
+%% state_without_uci_connection/1
+-spec state_without_uci_connection(state()) -> state().
+state_without_uci_connection(State) ->
     State#state{uci_port = undefined}.
 
 %% maybe_close_uci_port/1
