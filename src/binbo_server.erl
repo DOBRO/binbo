@@ -265,7 +265,7 @@ do_handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_port = Port
                 "ucinewgame", $\n,
                 "position fen ", Fen
             ],
-            _ = uci_port_command(Port, Command),
+            _ = uci_send_command(Port, Command),
             {{ok, GameStatus}, State#state{game = Game}};
         {error, _} = Error ->
             {Error, State}
@@ -279,14 +279,14 @@ do_handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_port
                 "ucinewgame", $\n,
                 "position fen ", Fen
             ],
-            _ = uci_port_command(Port, Command),
+            _ = uci_send_command(Port, Command),
             ok;
         {error, _} = Error ->
             Error
     end,
     {reply, Reply, State};
 do_handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uci_port = Port} = State0) ->
-    _ = uci_port_command(Port, Command),
+    _ = uci_send_command(Port, Command),
     State = State0#state{
         uci_from = From,
         uci_wait_prefix = WaitPrefix,
@@ -296,7 +296,7 @@ do_handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state
     % Do NOT reply here. Reply later in handle_info/2.
     {noreply, State};
 do_handle_call({uci_command, Command}, _From, #state{uci_port = Port} = State) ->
-    _ = uci_port_command(Port, Command),
+    _ = uci_send_command(Port, Command),
     {reply, ok, State};
 do_handle_call({set_server_options, Opts}, _From, State) ->
     {Reply, NewState} = case update_server_opts(Opts, State) of
@@ -320,7 +320,7 @@ do_handle_call(_Msg, _From, State) ->
 do_handle_cast({uci_command, Command}, #state{uci_port = Port} = State) ->
     _ = case Port of
         undefined -> ok;
-        _ -> uci_port_command(Port, Command)
+        _ -> uci_send_command(Port, Command)
     end,
     {noreply, State};
 do_handle_cast({update_game_state, Game}, State) ->
@@ -701,7 +701,7 @@ init_uci_game([uci_commands|Tail], Opts, State) ->
         "ucinewgame", $\n,
         "position fen ", Fen
     ],
-    _ = uci_port_command(Port, Command),
+    _ = uci_send_command(Port, Command),
     init_uci_game(Tail, Opts, State).
 
 
@@ -725,9 +725,9 @@ uci_connect(EnginePath) ->
 uci_disconnect(Port) ->
     binbo_uci_connection:disconnect(Port).
 
-%% uci_port_command/2
--spec uci_port_command(port(), iodata()) -> ok.
-uci_port_command(Port, Command) ->
+%% uci_send_command/2
+-spec uci_send_command(port(), iodata()) -> ok.
+uci_send_command(Port, Command) ->
     binbo_uci_connection:send_command(Port, Command).
 
 %% maybe_handle_uci_message/2
