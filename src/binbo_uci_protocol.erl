@@ -14,8 +14,6 @@
 
 -module(binbo_uci_protocol).
 
--export([open_port/1]).
--export([send_command/2]).
 -export([command_spec_uci/0, command_spec_bestmove/2]).
 -export([simple_prefix_handler/3]).
 -export([bestmove_prefix_handler/3]).
@@ -31,7 +29,7 @@
 %%%------------------------------------------------------------------------------
 %%%   Types
 %%%------------------------------------------------------------------------------
--type engine_path() :: binary() | string().
+
 -type bestmove_opt_key() :: depth | wtime | btime | winc | binc | movestogo | nodes | movetime.
 -type bestmove_opts() :: #{
     depth       => pos_integer(),       % depth <x> (search x plies only)
@@ -45,28 +43,12 @@
 }.
 -type command_spec() :: {binary(), binary(), fun()}.
 
--export_type([engine_path/0]).
 -export_type([command_spec/0]).
 -export_type([bestmove_opts/0]).
 
 %%%------------------------------------------------------------------------------
 %%%   API
 %%%------------------------------------------------------------------------------
-
-%% open_port/1
--spec open_port(engine_path()) -> {ok, port()} | {error, any()}.
-open_port(EnginePath) ->
-    try erlang:open_port({spawn_executable, EnginePath}, [binary, stream]) of
-        Port -> {ok, Port}
-    catch
-        _:Reason -> {error, Reason}
-    end.
-
-%% send_command/2
--spec send_command(port(), iodata()) -> ok.
-send_command(Port, Command) ->
-    _ = erlang:port_command(Port, [Command, $\n]),
-    ok.
 
 %% command_spec_uci/0
 -spec command_spec_uci() -> command_spec().

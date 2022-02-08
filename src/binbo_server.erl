@@ -65,7 +65,7 @@
 -type all_legal_moves_ret() :: binbo_game:all_legal_moves_ret().
 -type uci_bestmove_ret() :: {ok, binary()} | {error, term()}.
 -type uci_play_ret() :: {ok, game_status(), sq_move()} | {error, term()}.
--type engine_path() :: binbo_uci_protocol:engine_path().
+-type engine_path() :: binbo_uci_connection:engine_path().
 -type uci_game_opts() :: #{
     engine_path := engine_path(),
     fen => fen()
@@ -734,12 +734,12 @@ maybe_close_uci_port(Port) ->
 %% open_uci_port/1
 -spec open_uci_port(engine_path()) -> {ok, port()} | {error, any()}.
 open_uci_port(EnginePath) ->
-    binbo_uci_protocol:open_port(EnginePath).
+    binbo_uci_connection:connect(EnginePath).
 
 %% uci_port_command/2
 -spec uci_port_command(port(), iodata()) -> ok.
 uci_port_command(Port, Command) ->
-    binbo_uci_protocol:send_command(Port, Command).
+    binbo_uci_connection:send_command(Port, Command).
 
 %% maybe_handle_uci_message/2
 -spec maybe_handle_uci_message(uci_handler(), binary()) -> term().
