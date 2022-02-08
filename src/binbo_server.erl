@@ -168,7 +168,7 @@ handle_info(Msg, State) ->
 -spec terminate(term(), state()) -> ok.
 terminate(Reason, State) ->
     #state{uci_port = Port} = State,
-    _ = maybe_close_uci_port(Port),
+    _ = uci_disconnect(Port),
     _ = handle_onterminate(Reason, State),
     ok.
 
@@ -681,7 +681,7 @@ init_uci_game([fen|Tail], Opts, State) ->
     end;
 init_uci_game([close_port|Tail], Opts, State) ->
     #state{uci_port = Port} = State,
-    _ = maybe_close_uci_port(Port),
+    _ = uci_disconnect(Port),
     State2 = state_without_uci_connection(State),
     init_uci_game(Tail, Opts, State2);
 init_uci_game([open_port|Tail], Opts, State) ->
@@ -715,26 +715,15 @@ state_with_uci_connection(State, Port) ->
 state_without_uci_connection(State) ->
     State#state{uci_port = undefined}.
 
-%% maybe_close_uci_port/1
--spec maybe_close_uci_port(term()) -> ok.
-maybe_close_uci_port(Port) ->
-    _ = case erlang:port_info(Port, id) of
-        undefined ->
-            undefined;
-        _ ->
-            try
-                _ = uci_port_command(Port, "quit"),
-                erlang:port_close(Port)
-            catch
-                _:_ -> ok % we don't care
-            end
-    end,
-    ok.
-
 %% uci_connect/1
 -spec uci_connect(engine_path()) -> {ok, port()} | {error, any()}.
 uci_connect(EnginePath) ->
     binbo_uci_connection:connect(EnginePath).
+
+%% uci_disconnect/1
+-spec uci_disconnect(term()) -> ok.
+uci_disconnect(Port) ->
+    binbo_uci_connection:disconnect(Port).
 
 %% uci_port_command/2
 -spec uci_port_command(port(), iodata()) -> ok.

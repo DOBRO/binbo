@@ -14,7 +14,7 @@
 
 -module(binbo_uci_connection).
 
--export([connect/1]).
+-export([connect/1, disconnect/1]).
 -export([send_command/2]).
 
 %%%------------------------------------------------------------------------------
@@ -37,6 +37,22 @@ connect(EnginePath) ->
     catch
         _:Reason -> {error, Reason}
     end.
+
+%% disconnect/1
+-spec disconnect(term()) -> ok.
+disconnect(Port) ->
+    _ = case erlang:port_info(Port, id) of
+        undefined ->
+            undefined;
+        _ ->
+            try
+                _ = send_command(Port, "quit"),
+                erlang:port_close(Port)
+            catch
+                _:_ -> ok % we don't care
+            end
+    end,
+    ok.
 
 %% send_command/2
 -spec send_command(port(), iodata()) -> ok.
