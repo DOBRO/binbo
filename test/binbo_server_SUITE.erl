@@ -60,8 +60,11 @@ init_per_suite(Config) ->
     ok = binbo_test_lib:all_group_testcases_exported(?MODULE),
     {ok, _} = binbo:start(),
 
+    % 'extra_sleep_millis' - adds some extra (small) time to wait before checking that process is stopped.
+    % Occasionally, if this value is too small, tests not passed on some CI due to stripped-down resources of containers.
+    % @todo: try to find a workaround
     ExtraSleepMillis = case os:type() of
-        {unix,darwin} -> 300; % more time for macOS (see below)
+        {unix,darwin} -> 300; % more time for macOS
         _             -> 100
     end,
 
@@ -70,9 +73,6 @@ init_per_suite(Config) ->
     },
 
     [
-        % 'extra_sleep_millis' - adds some extra (small) time to wait before checking that process is stopped.
-        % Occasionally, if this value is too small, tests not passed on some CI due to stripped-down resources of containers.
-        % @todo: try to find a workaround
         {extra_sleep_millis, ExtraSleepMillis},
         {default_server_opts, DefaultServerOpts}
         | Config
