@@ -686,7 +686,7 @@ init_uci_game([close_port|Tail], Opts, State) ->
     init_uci_game(Tail, Opts, State2);
 init_uci_game([open_port|Tail], Opts, State) ->
     EnginePath = maps:get(engine_path, Opts, undefined),
-    case open_uci_port(EnginePath) of
+    case uci_connect(EnginePath) of
         {ok, Port} ->
             State2 = state_with_uci_port(State, Port),
             init_uci_game(Tail, Opts, State2);
@@ -731,9 +731,9 @@ maybe_close_uci_port(Port) ->
     end,
     ok.
 
-%% open_uci_port/1
--spec open_uci_port(engine_path()) -> {ok, port()} | {error, any()}.
-open_uci_port(EnginePath) ->
+%% uci_connect/1
+-spec uci_connect(engine_path()) -> {ok, port()} | {error, any()}.
+uci_connect(EnginePath) ->
     binbo_uci_connection:connect(EnginePath).
 
 %% uci_port_command/2
