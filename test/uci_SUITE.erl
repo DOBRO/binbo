@@ -27,7 +27,7 @@ all() -> [uci_test].
 
 %% init_per_suite/1
 init_per_suite(Config) ->
-    EnginePath = os:getenv("UCI_ENGINE_PATH"),
+    EnginePath = os:getenv("BINBO_UCI_ENGINE_PATH"),
     case validate_engine_path(EnginePath) of
         ok ->
             {ok, _} = binbo:start(),

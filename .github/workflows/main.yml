@@ -54,7 +54,7 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        export UCI_ENGINE_PATH=${HOME}/stockfish-${STOCKFISH_VERSION}-linux/Linux/stockfish_${STOCKFISH_VERSION}_x64
+        export BINBO_UCI_ENGINE_PATH=${HOME}/stockfish-${STOCKFISH_VERSION}-linux/Linux/stockfish_${STOCKFISH_VERSION}_x64
         rebar3 ct
     - name: Dialyzer
       run: rebar3 dialyzer
@@ -100,7 +100,7 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        export UCI_ENGINE_PATH=/usr/local/bin/stockfish
+        export BINBO_UCI_ENGINE_PATH=/usr/local/bin/stockfish
         rebar3 ct
     - name: Code coverage
       run: rebar3 cover
@@ -139,8 +139,8 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        $env:UCI_ENGINE_PATH = (Resolve-Path '~/stockfish-11-win/Windows/stockfish_20011801_x64.exe').Path.replace('\', '/')
-        echo "UCI_ENGINE_PATH=$env:UCI_ENGINE_PATH"
+        $env:BINBO_UCI_ENGINE_PATH = (Resolve-Path '~/stockfish-11-win/Windows/stockfish_20011801_x64.exe').Path.replace('\', '/')
+        echo "BINBO_UCI_ENGINE_PATH=$env:BINBO_UCI_ENGINE_PATH"
         rebar3 ct
     - name: Code coverage
       run: rebar3 cover
