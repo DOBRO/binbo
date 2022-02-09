@@ -82,7 +82,7 @@
     game = undefined :: undefined | bb_game(),
     idle_timestamp = undefined :: undefined | integer(),
     server_opts = #{} :: server_opts(),
-    uci_sockinfo = undefined :: undefined | port(),
+    uci_sockinfo = undefined :: undefined | binbo_uci_connection:socket_info(),
     uci_from = undefined :: undefined | from(),
     uci_wait_prefix = undefined :: undefined | uci_wait_prefix(),
     uci_wait_prefix_size = undefined :: undefined | uci_wait_prefix_size(),
@@ -167,9 +167,8 @@ handle_info(Msg, State) ->
 %% terminate/2
 -spec terminate(term(), state()) -> ok.
 terminate(Reason, State) ->
-    #state{uci_sockinfo = Port} = State,
-    _ = uci_disconnect(Port),
-    _ = handle_onterminate(Reason, State),
+    {ok, State2} = uci_disconnect(State),
+    _ = handle_onterminate(Reason, State2),
     ok.
 
 %% code_change/3
@@ -257,7 +256,7 @@ do_handle_call({new_uci_game, Opts}, _From, State0) ->
     {reply, Reply, NewState};
 do_handle_call({uci_command, _}, _From, #state{uci_sockinfo = undefined} = State0) ->
     {reply, {error, no_uci_connection}, State0};
-do_handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_sockinfo = Port} = State) ->
+do_handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_sockinfo = SocketInfo} = State) ->
     {Reply, NewState} = case binbo_game:new(Fen) of
         {ok, {Game, GameStatus}} ->
             Command = [
@@ -265,13 +264,13 @@ do_handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_sockinfo = 
                 "ucinewgame", $\n,
                 "position fen ", Fen
             ],
-            _ = uci_send_command(Port, Command),
+            _ = uci_send_command(SocketInfo, Command),
             {{ok, GameStatus}, State#state{game = Game}};
         {error, _} = Error ->
             {Error, State}
     end,
     {reply, Reply, NewState};
-do_handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_sockinfo = Port} = State) ->
+do_handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_sockinfo = SocketInfo} = State) ->
     Reply = case binbo_game:get_fen(Game) of
         {ok, Fen} ->
             Command = [
@@ -279,14 +278,14 @@ do_handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_sock
                 "ucinewgame", $\n,
                 "position fen ", Fen
             ],
-            _ = uci_send_command(Port, Command),
+            _ = uci_send_command(SocketInfo, Command),
             ok;
         {error, _} = Error ->
             Error
     end,
     {reply, Reply, State};
-do_handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uci_sockinfo = Port} = State0) ->
-    _ = uci_send_command(Port, Command),
+do_handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uci_sockinfo = SocketInfo} = State0) ->
+    _ = uci_send_command(SocketInfo, Command),
     State = State0#state{
         uci_from = From,
         uci_wait_prefix = WaitPrefix,
@@ -295,8 +294,8 @@ do_handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state
     },
     % Do NOT reply here. Reply later in handle_info/2.
     {noreply, State};
-do_handle_call({uci_command, Command}, _From, #state{uci_sockinfo = Port} = State) ->
-    _ = uci_send_command(Port, Command),
+do_handle_call({uci_command, Command}, _From, #state{uci_sockinfo = SocketInfo} = State) ->
+    _ = uci_send_command(SocketInfo, Command),
     {reply, ok, State};
 do_handle_call({set_server_options, Opts}, _From, State) ->
     {Reply, NewState} = case update_server_opts(Opts, State) of
@@ -317,10 +316,10 @@ do_handle_call(_Msg, _From, State) ->
 
 %% do_handle_cast/2
 -spec do_handle_cast(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
-do_handle_cast({uci_command, Command}, #state{uci_sockinfo = Port} = State) ->
-    _ = case Port of
+do_handle_cast({uci_command, Command}, #state{uci_sockinfo = SocketInfo} = State) ->
+    _ = case SocketInfo of
         undefined -> ok;
-        _ -> uci_send_command(Port, Command)
+        _ -> uci_send_command(SocketInfo, Command)
     end,
     {noreply, State};
 do_handle_cast({update_game_state, Game}, State) ->
@@ -346,7 +345,7 @@ do_handle_cast(_Msg, State) ->
 
 %% do_handle_info/2
 -spec do_handle_info(term(), state()) -> {noreply, state()} | {stop, Reason :: term(), state()}.
-do_handle_info({Port, {data, Data}}, #state{uci_sockinfo = Port, uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
+do_handle_info({Port, {data, Data}}, #state{uci_sockinfo = {erlang, Port}, uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
     #state{uci_wait_prefix_size = PrefixSize, uci_wait_prefix_handler = PrefixHandler} = State0,
     NewState = case PrefixHandler(Data, Prefix, PrefixSize) of
         skip ->
@@ -367,10 +366,10 @@ do_handle_info({Port, {data, Data}}, #state{uci_sockinfo = Port, uci_wait_prefix
     end,
     _ = maybe_handle_uci_message(State0#state.uci_handler, Data),
     {noreply, NewState};
-do_handle_info({Port, {data, Data}}, #state{uci_sockinfo = Port} = State0) ->
+do_handle_info({Port, {data, Data}}, #state{uci_sockinfo = {erlang, Port}} = State0) ->
     _ = maybe_handle_uci_message(State0#state.uci_handler, Data),
     {noreply, State0};
-do_handle_info({'EXIT', Port, _}, #state{uci_sockinfo = Port} = State0) -> % Handle UCI port exit
+do_handle_info({'EXIT', Port, _}, #state{uci_sockinfo = {erlang, Port}} = State0) -> % Handle UCI port exit
     {noreply, State0#state{uci_sockinfo = undefined}};
 do_handle_info(timeout, State) -> % Handle idle timeout
     % Since any process can send 'timeout' to our process (e.g. just for fun),
@@ -680,18 +679,15 @@ init_uci_game([fen|Tail], Opts, State) ->
             {error, Reason, State}
     end;
 init_uci_game([disconnect|Tail], Opts, State) ->
-    #state{uci_sockinfo = Port} = State,
-    _ = uci_disconnect(Port),
-    State2 = state_without_uci_connection(State),
+    {ok, State2} = uci_disconnect(State),
     init_uci_game(Tail, Opts, State2);
 init_uci_game([connect|Tail], Opts, State) ->
     EnginePath = maps:get(engine_path, Opts, undefined),
-    case uci_connect(EnginePath) of
-        {ok, Port} ->
-            State2 = state_with_uci_connection(State, Port),
+    case uci_connect(State, EnginePath) of
+        {ok, State2} ->
             init_uci_game(Tail, Opts, State2);
-        {error, Reason} ->
-            {error, {uci_connection_failed, Reason}, State}
+        {error, Reason, State2} ->
+            {error, {uci_connection_failed, Reason}, State2}
     end;
 init_uci_game([uci_commands|Tail], Opts, State) ->
     #state{uci_sockinfo = Port, game = Game} = State,
@@ -705,30 +701,26 @@ init_uci_game([uci_commands|Tail], Opts, State) ->
     init_uci_game(Tail, Opts, State).
 
 
-%% state_with_uci_connection/1
--spec state_with_uci_connection(state(), port()) -> state().
-state_with_uci_connection(State, Port) ->
-    State#state{uci_sockinfo = Port}.
-
-%% state_without_uci_connection/1
--spec state_without_uci_connection(state()) -> state().
-state_without_uci_connection(State) ->
-    State#state{uci_sockinfo = undefined}.
-
 %% uci_connect/1
--spec uci_connect(engine_path()) -> {ok, port()} | {error, any()}.
-uci_connect(EnginePath) ->
-    binbo_uci_connection:connect(EnginePath).
+-spec uci_connect(state(), engine_path()) -> {ok, state()} | {error, Reason :: any(), state()}.
+uci_connect(State, EnginePath) ->
+    case binbo_uci_connection:connect(EnginePath) of
+        {ok, SocketInfo} ->
+            {ok, State#state{uci_sockinfo = SocketInfo}};
+        {error, Reason} ->
+            {error, Reason, State}
+    end.
 
 %% uci_disconnect/1
--spec uci_disconnect(term()) -> ok.
-uci_disconnect(Port) ->
-    binbo_uci_connection:disconnect(Port).
+-spec uci_disconnect(state()) -> {ok, state()}.
+uci_disconnect(#state{uci_sockinfo = SocketInfo} = State) ->
+    ok = binbo_uci_connection:disconnect(SocketInfo),
+    {ok, State#state{uci_sockinfo = undefined}}.
 
 %% uci_send_command/2
--spec uci_send_command(port(), iodata()) -> ok.
-uci_send_command(Port, Command) ->
-    binbo_uci_connection:send_command(Port, Command).
+-spec uci_send_command(binbo_uci_connection:socket_info(), iodata()) -> ok.
+uci_send_command(SocketInfo, Command) ->
+    binbo_uci_connection:send_command(SocketInfo, Command).
 
 %% maybe_handle_uci_message/2
 -spec maybe_handle_uci_message(uci_handler(), binary()) -> term().

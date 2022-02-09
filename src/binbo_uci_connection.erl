@@ -20,9 +20,10 @@
 %%%------------------------------------------------------------------------------
 %%%   Types
 %%%------------------------------------------------------------------------------
+-type socket_info() :: {erlang, port()}.
 -type engine_path() :: binary() | string().
 
--export_type([engine_path/0]).
+-export_type([socket_info/0, engine_path/0]).
 
 
 %%%------------------------------------------------------------------------------
@@ -30,32 +31,44 @@
 %%%------------------------------------------------------------------------------
 
 %% connect/1
--spec connect(engine_path()) -> {ok, port()} | {error, any()}.
-connect(EnginePath) ->
+-spec connect(engine_path()) -> {ok, socket_info()} | {error, any()}.
+connect(EnginePath) when is_list(EnginePath) orelse is_binary(EnginePath) ->
     try erlang:open_port({spawn_executable, EnginePath}, [binary, stream]) of
-        Port -> {ok, Port}
+        Port -> {ok, {erlang, Port}}
     catch
         _:Reason -> {error, Reason}
     end.
 
 %% disconnect/1
--spec disconnect(term()) -> ok.
-disconnect(Port) ->
+-spec disconnect(socket_info() | undefined) -> ok.
+disconnect({erlang, Port} = SocketInfo) ->
     _ = case erlang:port_info(Port, id) of
         undefined ->
             undefined;
         _ ->
             try
-                _ = send_command(Port, "quit"),
+                _ = send_command(SocketInfo, "quit"),
                 erlang:port_close(Port)
             catch
                 _:_ -> ok % we don't care
             end
     end,
+    ok;
+disconnect(undefined) ->
     ok.
 
 %% send_command/2
--spec send_command(port(), iodata()) -> ok.
-send_command(Port, Command) ->
-    _ = erlang:port_command(Port, [Command, $\n]),
+-spec send_command(socket_info(), iodata()) -> ok.
+send_command(SocketInfo, Command) ->
+    send(SocketInfo, [Command, $\n]).
+
+
+%%%------------------------------------------------------------------------------
+%%%   Internal functions
+%%%------------------------------------------------------------------------------
+
+%% send/2
+-spec send(socket_info(), iodata()) -> ok.
+send({erlang, Port}, IoData) ->
+    _ = erlang:port_command(Port, IoData),
     ok.
