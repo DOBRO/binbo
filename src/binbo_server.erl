@@ -82,7 +82,7 @@
     game = undefined :: undefined | bb_game(),
     idle_timestamp = undefined :: undefined | integer(),
     server_opts = #{} :: server_opts(),
-    uci_port = undefined :: undefined | port(),
+    uci_sockinfo = undefined :: undefined | port(),
     uci_from = undefined :: undefined | from(),
     uci_wait_prefix = undefined :: undefined | uci_wait_prefix(),
     uci_wait_prefix_size = undefined :: undefined | uci_wait_prefix_size(),
@@ -167,7 +167,7 @@ handle_info(Msg, State) ->
 %% terminate/2
 -spec terminate(term(), state()) -> ok.
 terminate(Reason, State) ->
-    #state{uci_port = Port} = State,
+    #state{uci_sockinfo = Port} = State,
     _ = uci_disconnect(Port),
     _ = handle_onterminate(Reason, State),
     ok.
@@ -255,9 +255,9 @@ do_handle_call({new_uci_game, Opts}, _From, State0) ->
             {{error, Reason}, State}
     end,
     {reply, Reply, NewState};
-do_handle_call({uci_command, _}, _From, #state{uci_port = undefined} = State0) ->
+do_handle_call({uci_command, _}, _From, #state{uci_sockinfo = undefined} = State0) ->
     {reply, {error, no_uci_connection}, State0};
-do_handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_port = Port} = State) ->
+do_handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_sockinfo = Port} = State) ->
     {Reply, NewState} = case binbo_game:new(Fen) of
         {ok, {Game, GameStatus}} ->
             Command = [
@@ -271,7 +271,7 @@ do_handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_port = Port
             {Error, State}
     end,
     {reply, Reply, NewState};
-do_handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_port = Port} = State) ->
+do_handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_sockinfo = Port} = State) ->
     Reply = case binbo_game:get_fen(Game) of
         {ok, Fen} ->
             Command = [
@@ -285,7 +285,7 @@ do_handle_call({uci_command, sync_position}, _From, #state{game = Game, uci_port
             Error
     end,
     {reply, Reply, State};
-do_handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uci_port = Port} = State0) ->
+do_handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state{uci_sockinfo = Port} = State0) ->
     _ = uci_send_command(Port, Command),
     State = State0#state{
         uci_from = From,
@@ -295,7 +295,7 @@ do_handle_call({uci_command, {Command, WaitPrefix, PrefixHandler}}, From, #state
     },
     % Do NOT reply here. Reply later in handle_info/2.
     {noreply, State};
-do_handle_call({uci_command, Command}, _From, #state{uci_port = Port} = State) ->
+do_handle_call({uci_command, Command}, _From, #state{uci_sockinfo = Port} = State) ->
     _ = uci_send_command(Port, Command),
     {reply, ok, State};
 do_handle_call({set_server_options, Opts}, _From, State) ->
@@ -317,7 +317,7 @@ do_handle_call(_Msg, _From, State) ->
 
 %% do_handle_cast/2
 -spec do_handle_cast(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
-do_handle_cast({uci_command, Command}, #state{uci_port = Port} = State) ->
+do_handle_cast({uci_command, Command}, #state{uci_sockinfo = Port} = State) ->
     _ = case Port of
         undefined -> ok;
         _ -> uci_send_command(Port, Command)
@@ -346,7 +346,7 @@ do_handle_cast(_Msg, State) ->
 
 %% do_handle_info/2
 -spec do_handle_info(term(), state()) -> {noreply, state()} | {stop, Reason :: term(), state()}.
-do_handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
+do_handle_info({Port, {data, Data}}, #state{uci_sockinfo = Port, uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
     #state{uci_wait_prefix_size = PrefixSize, uci_wait_prefix_handler = PrefixHandler} = State0,
     NewState = case PrefixHandler(Data, Prefix, PrefixSize) of
         skip ->
@@ -367,11 +367,11 @@ do_handle_info({Port, {data, Data}}, #state{uci_port = Port, uci_wait_prefix = P
     end,
     _ = maybe_handle_uci_message(State0#state.uci_handler, Data),
     {noreply, NewState};
-do_handle_info({Port, {data, Data}}, #state{uci_port = Port} = State0) ->
+do_handle_info({Port, {data, Data}}, #state{uci_sockinfo = Port} = State0) ->
     _ = maybe_handle_uci_message(State0#state.uci_handler, Data),
     {noreply, State0};
-do_handle_info({'EXIT', Port, _}, #state{uci_port = Port} = State0) -> % Handle UCI port exit
-    {noreply, State0#state{uci_port = undefined}};
+do_handle_info({'EXIT', Port, _}, #state{uci_sockinfo = Port} = State0) -> % Handle UCI port exit
+    {noreply, State0#state{uci_sockinfo = undefined}};
 do_handle_info(timeout, State) -> % Handle idle timeout
     % Since any process can send 'timeout' to our process (e.g. just for fun),
     % we should check if it is a really valid message.
@@ -680,7 +680,7 @@ init_uci_game([fen|Tail], Opts, State) ->
             {error, Reason, State}
     end;
 init_uci_game([disconnect|Tail], Opts, State) ->
-    #state{uci_port = Port} = State,
+    #state{uci_sockinfo = Port} = State,
     _ = uci_disconnect(Port),
     State2 = state_without_uci_connection(State),
     init_uci_game(Tail, Opts, State2);
@@ -694,7 +694,7 @@ init_uci_game([connect|Tail], Opts, State) ->
             {error, {uci_connection_failed, Reason}, State}
     end;
 init_uci_game([uci_commands|Tail], Opts, State) ->
-    #state{uci_port = Port, game = Game} = State,
+    #state{uci_sockinfo = Port, game = Game} = State,
     {ok, Fen} = binbo_game:get_fen(Game),
     Command = [
         "uci", $\n,
@@ -708,12 +708,12 @@ init_uci_game([uci_commands|Tail], Opts, State) ->
 %% state_with_uci_connection/1
 -spec state_with_uci_connection(state(), port()) -> state().
 state_with_uci_connection(State, Port) ->
-    State#state{uci_port = Port}.
+    State#state{uci_sockinfo = Port}.
 
 %% state_without_uci_connection/1
 -spec state_without_uci_connection(state()) -> state().
 state_without_uci_connection(State) ->
-    State#state{uci_port = undefined}.
+    State#state{uci_sockinfo = undefined}.
 
 %% uci_connect/1
 -spec uci_connect(engine_path()) -> {ok, port()} | {error, any()}.
