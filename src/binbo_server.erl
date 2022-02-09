@@ -256,7 +256,7 @@ do_handle_call({new_uci_game, Opts}, _From, State0) ->
     end,
     {reply, Reply, NewState};
 do_handle_call({uci_command, _}, _From, #state{uci_port = undefined} = State0) ->
-    {reply, {error, uci_port_not_open}, State0};
+    {reply, {error, no_uci_connection}, State0};
 do_handle_call({uci_command, {set_position, Fen}}, _From, #state{uci_port = Port} = State) ->
     {Reply, NewState} = case binbo_game:new(Fen) of
         {ok, {Game, GameStatus}} ->

@@ -1169,7 +1169,7 @@ binbo:uci_command_cast(Pid, Command) -> ok.
 
 You can send any command to the engine with functions `binbo:uci_command_call/2` and `binbo:uci_command_cast/2`.
 
-`binbo:uci_command_call/2` is a synchronous function, it calls https://erlang.org/doc/man/gen_server.html#call-2[gen_server:call/2] inside. Returns `ok` if `Command` is sent, or tuple `{error, uci_port_not_open}` if the engine's process is not connected to the game process.
+`binbo:uci_command_call/2` is a synchronous function, it calls https://erlang.org/doc/man/gen_server.html#call-2[gen_server:call/2] inside. Returns `ok` if `Command` is sent, or tuple `{error, no_uci_connection}` if the engine's process is not connected to the game process.
 
 `binbo:uci_command_cast/2` is an asynchronous function, it calls https://erlang.org/doc/man/gen_server.html#cast-2[gen_server:cast/2] inside. Returns `ok`. It also checks if the engine's process is connected to the game process before sending message and, if not connected, returns `ok` anyway.
 
