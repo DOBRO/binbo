@@ -70,7 +70,7 @@
     engine_path := engine_path(),
     fen => fen()
 }.
--type init_uci_game_error() :: {could_not_open_port, term()}.
+-type init_uci_game_error() :: {uci_connection_failed, term()}.
 -type uci_handler() :: undefined | default | fun((binary()) -> term()).
 -type uci_cmd_spec() :: iodata() | binbo_uci_protocol:command_spec() | {set_position, fen()} | sync_position.
 
@@ -664,11 +664,11 @@ do_update_server_opts([{OptKey, OptVal} | OtherOpts], #state{server_opts = Opts}
 %% init_uci_game/2
 -spec init_uci_game(uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error(), state()}.
 init_uci_game(Opts, State) ->
-    Steps = [fen, close_port, open_port, uci_commands],
+    Steps = [fen, disconnect, connect, uci_commands],
     init_uci_game(Steps, Opts, State).
 
 %% init_uci_game/3
--spec init_uci_game([fen|close_port|open_port|uci_commands], uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error(), state()}.
+-spec init_uci_game([fen|disconnect|connect|uci_commands], uci_game_opts(), state()) -> {ok, state()} | {error, init_uci_game_error(), state()}.
 init_uci_game([], _Opts, State) ->
     {ok, State};
 init_uci_game([fen|Tail], Opts, State) ->
@@ -679,19 +679,19 @@ init_uci_game([fen|Tail], Opts, State) ->
         {error, Reason} ->
             {error, Reason, State}
     end;
-init_uci_game([close_port|Tail], Opts, State) ->
+init_uci_game([disconnect|Tail], Opts, State) ->
     #state{uci_port = Port} = State,
     _ = uci_disconnect(Port),
     State2 = state_without_uci_connection(State),
     init_uci_game(Tail, Opts, State2);
-init_uci_game([open_port|Tail], Opts, State) ->
+init_uci_game([connect|Tail], Opts, State) ->
     EnginePath = maps:get(engine_path, Opts, undefined),
     case uci_connect(EnginePath) of
         {ok, Port} ->
             State2 = state_with_uci_connection(State, Port),
             init_uci_game(Tail, Opts, State2);
         {error, Reason} ->
-            {error, {could_not_open_port, Reason}, State}
+            {error, {uci_connection_failed, Reason}, State}
     end;
 init_uci_game([uci_commands|Tail], Opts, State) ->
     #state{uci_port = Port, game = Game} = State,
