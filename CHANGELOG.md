@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-- Environment variable `UCI_ENGINE_PATH` renamed to `BINBO_UCI_ENGINE_PATH`.
+- Environment variable `UCI_ENGINE_PATH` renamed to `BINBO_UCI_ENGINE_PATH` used in UCI tests.
 
 ## [3.0.0] - 2021-01-30
 
