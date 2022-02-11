@@ -20,14 +20,14 @@
 %%%------------------------------------------------------------------------------
 %%%   Types
 %%%------------------------------------------------------------------------------
--type engine_path() :: binary() | string().
 -type tcp_host() :: inet:socket_address() | inet:hostname().
 -type tcp_port() :: inet:port_number().
 -type tcp_socket() :: inet:socket().
 
 -type socket_info() :: {erlang, port()} | {gen_tcp, tcp_socket()}.
 
--export_type([socket_info/0, engine_path/0]).
+-export_type([tcp_host/0, tcp_port/0]).
+-export_type([socket_info/0]).
 
 
 %%%------------------------------------------------------------------------------
@@ -35,7 +35,7 @@
 %%%------------------------------------------------------------------------------
 
 %% connect/1
--spec connect(engine_path()) -> {ok, {erlang, port()}} | {error, any()}.
+-spec connect(binary() | string()) -> {ok, {erlang, port()}} | {error, any()}.
 connect(EnginePath) when is_list(EnginePath) orelse is_binary(EnginePath) ->
     try erlang:open_port({spawn_executable, EnginePath}, [binary, stream]) of
         Port -> {ok, {erlang, Port}}

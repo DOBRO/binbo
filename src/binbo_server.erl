@@ -66,7 +66,7 @@
 -type all_legal_moves_ret() :: binbo_game:all_legal_moves_ret().
 -type uci_bestmove_ret() :: {ok, binary()} | {error, term()}.
 -type uci_play_ret() :: {ok, game_status(), sq_move()} | {error, term()}.
--type engine_path() :: binbo_uci_connection:engine_path().
+-type engine_path() :: binary() | string() | {binbo_uci_connection:tcp_host(), binbo_uci_connection:tcp_port(), timeout()}.
 -type uci_game_opts() :: #{
     engine_path := engine_path(),
     fen => fen()
@@ -370,31 +370,15 @@ do_handle_cast(_Msg, State) ->
 
 %% do_handle_info/2
 -spec do_handle_info(term(), state()) -> {noreply, state()} | {stop, Reason :: term(), state()}.
-do_handle_info({Port, {data, Data}}, #state{uci_sockinfo = {erlang, Port}, uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
-    #state{uci_wait_prefix_size = PrefixSize, uci_wait_prefix_handler = PrefixHandler} = State0,
-    NewState = case PrefixHandler(Data, Prefix, PrefixSize) of
-        skip ->
-            State0;
-        Reply ->
-            Result = case Reply of
-                reply_ok -> ok;
-                {reply, Val} -> {ok, Val}
-            end,
-            ReplyTo = State0#state.uci_from,
-            _ = gen_server:reply(ReplyTo, Result), % reply here
-            State0#state{
-                uci_from = undefined,
-                uci_wait_prefix = undefined,
-                uci_wait_prefix_size = undefined,
-                uci_wait_prefix_handler = undefined
-            }
-    end,
-    _ = maybe_handle_uci_message(State0#state.uci_handler, Data),
-    {noreply, NewState};
 do_handle_info({Port, {data, Data}}, #state{uci_sockinfo = {erlang, Port}} = State0) ->
-    _ = maybe_handle_uci_message(State0#state.uci_handler, Data),
-    {noreply, State0};
+    NewState = handle_uci_packet(Data, State0),
+    {noreply, NewState};
+do_handle_info({tcp, Socket, Data}, #state{uci_sockinfo = {gen_tcp, Socket}} = State0) ->
+    NewState = handle_uci_packet(Data, State0),
+    {noreply, NewState};
 do_handle_info({'EXIT', Port, _}, #state{uci_sockinfo = {erlang, Port}} = State0) -> % Handle UCI port exit
+    {noreply, State0#state{uci_sockinfo = undefined}};
+do_handle_info({tcp_closed, Socket}, #state{uci_sockinfo = {gen_tcp, Socket}} = State0) -> % TCP connection closed
     {noreply, State0#state{uci_sockinfo = undefined}};
 do_handle_info(timeout, State) -> % Handle idle timeout
     % Since any process can send 'timeout' to our process (e.g. just for fun),
@@ -716,8 +700,8 @@ init_uci_game([connect|Tail], Opts, State) ->
     case uci_connect(State, EnginePath) of
         {ok, State2} ->
             init_uci_game(Tail, Opts, State2);
-        {error, Reason, State2} ->
-            {error, {uci_connection_failed, Reason}, State2}
+        {error, Reason} ->
+            {error, {uci_connection_failed, Reason}, State}
     end;
 init_uci_game([uci_commands|Tail], Opts, State) ->
     #state{uci_sockinfo = Port, game = Game} = State,
@@ -732,13 +716,19 @@ init_uci_game([uci_commands|Tail], Opts, State) ->
 
 
 %% uci_connect/1
--spec uci_connect(state(), engine_path()) -> {ok, state()} | {error, Reason :: any(), state()}.
+-spec uci_connect(state(), engine_path()) -> {ok, state()} | {error, any()}.
 uci_connect(State, EnginePath) ->
-    case binbo_uci_connection:connect(EnginePath) of
+    ConnectResult = case EnginePath of
+        {Host, Port, Timeout} ->
+            binbo_uci_connection:connect(Host, Port, Timeout);
+        _ ->
+            binbo_uci_connection:connect(EnginePath)
+    end,
+    case ConnectResult of
         {ok, SocketInfo} ->
             {ok, State#state{uci_sockinfo = SocketInfo}};
         {error, Reason} ->
-            {error, Reason, State}
+            {error, Reason}
     end.
 
 %% uci_disconnect/1
@@ -752,9 +742,9 @@ uci_disconnect(#state{uci_sockinfo = SocketInfo} = State) ->
 uci_send_command(SocketInfo, Command) ->
     binbo_uci_connection:send_command(SocketInfo, Command).
 
-%% maybe_handle_uci_message/2
--spec maybe_handle_uci_message(uci_handler(), binary()) -> term().
-maybe_handle_uci_message(Handler, Data) ->
+%% maybe_perform_uci_handler/2
+-spec maybe_perform_uci_handler(uci_handler(), binary()) -> term().
+maybe_perform_uci_handler(Handler, Data) ->
     case Handler of
         undefined -> undefined;
         _ -> Handler(Data)
@@ -787,6 +777,33 @@ uci_play_update(Pid, BestMove, Game0) ->
 uci_send_game_position(Pid, Game) ->
     {ok, Fen} = binbo_game:get_fen(Game),
     uci_command_cast(Pid, <<"position fen ", Fen/bits>>).
+
+%% handle_uci_packet/2
+-spec handle_uci_packet(binary(), state()) -> state().
+handle_uci_packet(Data, #state{uci_wait_prefix = Prefix} = State0) when is_binary(Prefix) ->
+    #state{uci_wait_prefix_size = PrefixSize, uci_wait_prefix_handler = PrefixHandler} = State0,
+    NewState = case PrefixHandler(Data, Prefix, PrefixSize) of
+        skip ->
+            State0;
+        Reply ->
+            Result = case Reply of
+                reply_ok -> ok;
+                {reply, Val} -> {ok, Val}
+            end,
+            ReplyTo = State0#state.uci_from,
+            _ = gen_server:reply(ReplyTo, Result), % reply here
+            State0#state{
+                uci_from = undefined,
+                uci_wait_prefix = undefined,
+                uci_wait_prefix_size = undefined,
+                uci_wait_prefix_handler = undefined
+            }
+    end,
+    _ = maybe_perform_uci_handler(State0#state.uci_handler, Data),
+    NewState;
+handle_uci_packet(Data, State0) ->
+    _ = maybe_perform_uci_handler(State0#state.uci_handler, Data),
+    State0.
 
 %% handle_onterminate/2
 -spec handle_onterminate(Reason :: any(), state()) -> term().
