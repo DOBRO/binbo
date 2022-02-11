@@ -29,6 +29,7 @@
 -export([uci_set_position/2, uci_sync_position/1]).
 -export([set_uci_handler/2]).
 -export([get_pieces_list/2]).
+-export([set_info_logger/2]).
 
 %%% gen_server export.
 -export([init/1]).
@@ -78,6 +79,8 @@
 -type uci_wait_prefix_size() :: pos_integer().
 -type uci_wait_prefix_handler() :: fun((Message :: binary(), uci_wait_prefix(), uci_wait_prefix_size()) -> reply_ok | {reply, term()} | skip).
 
+-type info_logger() :: undefined | default | fun((term()) -> term()).
+
 -record(state, {
     game = undefined :: undefined | bb_game(),
     idle_timestamp = undefined :: undefined | integer(),
@@ -87,7 +90,8 @@
     uci_wait_prefix = undefined :: undefined | uci_wait_prefix(),
     uci_wait_prefix_size = undefined :: undefined | uci_wait_prefix_size(),
     uci_wait_prefix_handler = undefined :: undefined | uci_wait_prefix_handler(),
-    uci_handler = undefined :: uci_handler()
+    uci_handler = undefined :: uci_handler(),
+    info_logger = undefined :: info_logger()
 }).
 -type state() :: #state{}.
 
@@ -100,6 +104,7 @@
 -export_type([new_uci_game_ret/0, uci_bestmove_ret/0, uci_play_ret/0]).
 -export_type([uci_game_opts/0]).
 -export_type([uci_handler/0]).
+-export_type([info_logger/0]).
 
 %%%------------------------------------------------------------------------------
 %%% start/stop
@@ -157,6 +162,11 @@ handle_cast(Msg, State) ->
 %% handle_info/2
 -spec handle_info(term(), state()) -> {noreply, state(), timeout()} | {stop, Reason :: term(), state()}.
 handle_info(Msg, State) ->
+    #state{info_logger = Logger} = State,
+    _ = case erlang:is_function(Logger) of
+        true  -> Logger(Msg);
+        false -> ok
+    end,
     case do_handle_info(Msg, State) of
         {noreply, NewState} ->
             noreply_with_timeout(NewState);
@@ -310,6 +320,21 @@ do_handle_call(get_server_options, _From, #state{server_opts = Opts} = State) ->
 do_handle_call({get_pieces_list, SquareType}, _From, #state{game = Game} = State) ->
     Reply = binbo_game:get_pieces_list(Game, SquareType),
     {reply, Reply, State};
+do_handle_call({set_info_logger, Logger}, _From, State) ->
+    {Reply, NewState} = case Logger of
+        default ->
+            {ok, State#state{info_logger = fun default_info_logger/1}};
+        _ when is_function(Logger) ->
+            case erlang:fun_info(Logger, arity) of
+                {arity,1} ->
+                    {ok, State#state{info_logger = Logger}};
+                _ ->
+                    {{error, bad_logger_fun_arity}, State}
+            end;
+        _ ->
+            {ok, State#state{info_logger = undefined}}
+    end,
+    {reply, Reply, NewState};
 do_handle_call(_Msg, _From, State) ->
     {reply, ignored, State}.
 
@@ -556,6 +581,11 @@ uci_sync_position(Pid) ->
 get_pieces_list(Pid, SquareType) ->
     call(Pid, {get_pieces_list, SquareType}).
 
+%% set_info_logger/2
+-spec set_info_logger(pid(), info_logger()) -> ok | {error, term()}.
+set_info_logger(Pid, Logger) ->
+    call(Pid, {set_info_logger, Logger}).
+
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
 %%%------------------------------------------------------------------------------
@@ -769,4 +799,10 @@ handle_onterminate(Reason, #state{server_opts = #{onterminate := {Fun, Arg}}} = 
         Fun(Pid, Reason, Game, Arg)
     end);
 handle_onterminate(_Reason, _State) ->
+    ok.
+
+%% default_info_logger/1
+-spec default_info_logger(term()) -> ok.
+default_info_logger(Msg) ->
+    _ = io:format("~n--- handle_info begin ---~n~p~n--- handle_info end ---~n", [Msg]),
     ok.
