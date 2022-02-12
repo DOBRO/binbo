@@ -66,7 +66,7 @@
 -type all_legal_moves_ret() :: binbo_game:all_legal_moves_ret().
 -type uci_bestmove_ret() :: {ok, binary()} | {error, term()}.
 -type uci_play_ret() :: {ok, game_status(), sq_move()} | {error, term()}.
--type engine_path() :: binary() | string() | {binbo_uci_connection:tcp_host(), binbo_uci_connection:tcp_port(), timeout()}.
+-type engine_path() :: binbo_uci_connection:engine_path().
 -type uci_game_opts() :: #{
     engine_path := engine_path(),
     fen => fen()
@@ -718,13 +718,7 @@ init_uci_game([uci_commands|Tail], Opts, State) ->
 %% uci_connect/1
 -spec uci_connect(state(), engine_path()) -> {ok, state()} | {error, any()}.
 uci_connect(State, EnginePath) ->
-    ConnectResult = case EnginePath of
-        {Host, Port, Timeout} ->
-            binbo_uci_connection:connect(Host, Port, Timeout);
-        _ ->
-            binbo_uci_connection:connect(EnginePath)
-    end,
-    case ConnectResult of
+    case binbo_uci_connection:connect(EnginePath) of
         {ok, SocketInfo} ->
             {ok, State#state{uci_sockinfo = SocketInfo}};
         {error, Reason} ->

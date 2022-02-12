@@ -14,7 +14,7 @@
 
 -module(binbo_uci_connection).
 
--export([connect/1, connect/3, disconnect/1]).
+-export([connect/1, disconnect/1]).
 -export([send_command/2]).
 
 %%%------------------------------------------------------------------------------
@@ -23,10 +23,12 @@
 -type tcp_host() :: inet:socket_address() | inet:hostname().
 -type tcp_port() :: inet:port_number().
 -type tcp_socket() :: inet:socket().
+-type engine_path() :: binary() | string() | {tcp_host(), tcp_port(), timeout()}.
 
 -type socket_info() :: {erlang, port()} | {gen_tcp, tcp_socket()}.
 
 -export_type([tcp_host/0, tcp_port/0]).
+-export_type([engine_path/0]).
 -export_type([socket_info/0]).
 
 
@@ -35,17 +37,17 @@
 %%%------------------------------------------------------------------------------
 
 %% connect/1
--spec connect(binary() | string()) -> {ok, {erlang, port()}} | {error, any()}.
+-spec connect(binary() | string())
+                    -> {ok, {erlang, port()}} | {error, any()}
+            ;({tcp_host(), tcp_port(), timeout()})
+                    -> {ok, {gen_tcp, tcp_socket()}} | {error, timeout | inet:posix()}.
 connect(EnginePath) when is_list(EnginePath) orelse is_binary(EnginePath) ->
     try erlang:open_port({spawn_executable, EnginePath}, [binary, stream]) of
         Port -> {ok, {erlang, Port}}
     catch
         _:Reason -> {error, Reason}
-    end.
-
-%% connect/3
--spec connect(tcp_host(), tcp_port(), timeout()) -> {ok, {gen_tcp, tcp_socket()}} | {error, timeout | inet:posix()}.
-connect(Host, Port, Timeout) ->
+    end;
+connect({Host, Port, Timeout}) ->
     Opts = [binary, {active, true}, {packet, raw}],
     case gen_tcp:connect(Host, Port, Opts, Timeout) of
         {ok, Socket} ->
