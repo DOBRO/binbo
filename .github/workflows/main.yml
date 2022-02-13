@@ -89,6 +89,8 @@ jobs:
       run: brew install rebar3
     - name: Install Stockfish
       run: brew install stockfish
+    - name: Start Stockfish TCP Server
+      run: launchctl load test/stockfish-tcp/org.stockfish.plist
     - name: Cache Hex packages
       uses: actions/cache@v2
       with:
@@ -101,6 +103,8 @@ jobs:
     - name: CT tests
       run: |
         export BINBO_UCI_ENGINE_PATH=/usr/local/bin/stockfish
+        export BINBO_UCI_ENGINE_HOST=localhost
+        export BINBO_UCI_ENGINE_PORT=9010
         rebar3 ct
     - name: Code coverage
       run: rebar3 cover

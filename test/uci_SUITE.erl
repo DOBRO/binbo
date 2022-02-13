@@ -18,31 +18,75 @@
 -include("binbo_test_lib.hrl").
 
 -export([all/0]).
+-export([groups/0]).
 -export([init_per_suite/1, end_per_suite/1]).
--export([uci_test/1]).
+-export([init_per_testcase/2, end_per_testcase/2]).
 
+-export([
+    uci_test_engine_local/1,
+    uci_test_engine_tcp/1
+]).
 
 %% all/0
-all() -> [uci_test].
+all() -> [{group, all_uci_tests}].
+
+%% groups/0
+groups() ->
+    [{all_uci_tests, [parallel], [
+        uci_test_engine_local,
+        uci_test_engine_tcp
+    ]}].
+
 
 %% init_per_suite/1
 init_per_suite(Config) ->
-    EnginePath = os:getenv("BINBO_UCI_ENGINE_PATH"),
-    case validate_engine_path(EnginePath) of
-        ok ->
-            {ok, _} = binbo:start(),
-            [{engine_path, EnginePath} | Config];
-        {error, Reason} ->
-            {skip, {Reason, EnginePath}}
-    end.
+    ok = binbo_test_lib:all_group_testcases_exported(?MODULE),
+    {ok, _} = binbo:start(),
+    Config.
 
 %% end_per_suite/1
 end_per_suite(_Config) ->
     ok = binbo:stop(),
     ok.
 
-%% uci_test/1
-uci_test(Config) ->
+%% init_per_testcase/2
+init_per_testcase(uci_test_engine_local, Config) ->
+    EnginePath = os:getenv("BINBO_UCI_ENGINE_PATH"),
+    case validate_engine_file_path(EnginePath) of
+        ok ->
+            [{engine_path, EnginePath} | Config];
+        {error, Reason} ->
+            {skip, {Reason, EnginePath}}
+    end;
+init_per_testcase(uci_test_engine_tcp, Config) ->
+    EnvEngineHost = os:getenv("BINBO_UCI_ENGINE_HOST"),
+    EnvEnginePort = os:getenv("BINBO_UCI_ENGINE_PORT"),
+    case {EnvEngineHost, EnvEnginePort} of
+        {[_|_], [_|_]} ->
+            EnginePort = erlang:list_to_integer(EnvEnginePort),
+            EnginePath = {EnvEngineHost, EnginePort, 5000},
+            [{engine_path, EnginePath} | Config];
+        {_, _} ->
+            {skip, {{engine_host, EnvEngineHost}, {engine_port, EnvEnginePort}}}
+    end.
+
+
+%% end_per_testcase/2
+end_per_testcase(_TestCase, _Config) ->
+    ok.
+
+%% uci_test_engine_local/1
+uci_test_engine_local(Config) ->
+    _ = uci_test_play_game(Config),
+    ok.
+
+%% uci_test_engine_tcp/1
+uci_test_engine_tcp(Config) ->
+    _ = uci_test_play_game(Config),
+    ok.
+
+%% uci_test_play_game/1
+uci_test_play_game(Config) ->
     EnginePath = ?value(engine_path, Config),
     InitialFen = binbo_fen:initial(),
 
@@ -93,10 +137,8 @@ uci_test(Config) ->
     ok = binbo:stop_server(Pid),
     ok.
 
-
-
-%% validate_engine_path/1
-validate_engine_path([_|_] = EnginePath) ->
+%% validate_engine_file_path/1
+validate_engine_file_path([_|_] = EnginePath) ->
     case file:read_file_info(EnginePath) of
         {ok, #file_info{type = regular}} ->
             ok;
@@ -105,5 +147,5 @@ validate_engine_path([_|_] = EnginePath) ->
         {error, Reason} ->
             {error, Reason}
     end;
-validate_engine_path(_) ->
+validate_engine_file_path(_) ->
     {error, no_egine_path_provided}.
