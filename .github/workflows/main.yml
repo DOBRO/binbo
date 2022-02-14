@@ -64,7 +64,7 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        export BINBO_UCI_ENGINE_PATH=${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64/stockfish_${STOCKFISH_VERSION}_linux_x64
+        export BINBO_UCI_ENGINE_PATH=${STOCKFISH_PATH}
         rebar3 ct
     - name: Dialyzer
       run: rebar3 dialyzer
