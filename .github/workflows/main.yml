@@ -44,8 +44,6 @@ jobs:
         curl https://stockfishchess.org/files/stockfish_${STOCKFISH_VERSION}_linux_x64.zip -o ${STOCKFISH_DIR}.zip
         unzip ${STOCKFISH_DIR}.zip -d ${HOME}
         chmod +x ${STOCKFISH_PATH}
-    - name: Start Stockfish TCP Server
-      run: |
         socat tcp-listen:9010,reuseaddr,fork exec:${STOCKFISH_PATH} &
     - name: Cache Dialyzer PLTs
       uses: actions/cache@v2
@@ -67,7 +65,7 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        export BINBO_UCI_ENGINE_PATH=${STOCKFISH_PATH}
+        export BINBO_UCI_ENGINE_PATH=${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64/stockfish_${STOCKFISH_VERSION}_linux_x64
         export BINBO_UCI_ENGINE_HOST=localhost
         export BINBO_UCI_ENGINE_PORT=9010
         rebar3 ct
