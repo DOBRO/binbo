@@ -140,6 +140,16 @@ uci_test_play_game(Config) ->
     {error, invalid_handler} = binbo:set_uci_handler(Pid, test_invalid),
     {error, bad_function_arity} = binbo:set_uci_handler(Pid, fun(Msg1, Msg2) -> io:format("~p ~p", [Msg1, Msg2]) end),
 
+    % Send invalid command
+    ok = binbo:uci_command_call(Pid, "invalid command"),
+    ok = binbo:uci_command_cast(Pid, "invalid command"),
+
+    % Send 'quit'
+    ok = binbo:uci_command_call(Pid, "quit"),
+    _ = timer:sleep(500),
+    {error,no_uci_connection} = binbo:uci_command_call(Pid, "uci"),
+    ok = binbo:uci_command_cast(Pid, "uci"),
+
     % Stop the game process
     ok = binbo:stop_server(Pid),
     ok.
