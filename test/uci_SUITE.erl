@@ -24,7 +24,8 @@
 
 -export([
     uci_test_engine_local/1,
-    uci_test_engine_tcp/1
+    uci_test_engine_tcp/1,
+    uci_test_failed_connection/1
 ]).
 
 %% all/0
@@ -34,7 +35,8 @@ all() -> [{group, all_uci_tests}].
 groups() ->
     [{all_uci_tests, [parallel], [
         uci_test_engine_local,
-        uci_test_engine_tcp
+        uci_test_engine_tcp,
+        uci_test_failed_connection
     ]}].
 
 
@@ -68,8 +70,9 @@ init_per_testcase(uci_test_engine_tcp, Config) ->
             [{engine_path, EnginePath} | Config];
         {_, _} ->
             {skip, {{engine_host, EnvEngineHost}, {engine_port, EnvEnginePort}}}
-    end.
-
+    end;
+init_per_testcase(_TestCase, Config) ->
+    Config.
 
 %% end_per_testcase/2
 end_per_testcase(_TestCase, _Config) ->
@@ -132,6 +135,23 @@ uci_test_play_game(Config) ->
     ok = binbo:set_uci_handler(Pid, fun(Msg) -> Self ! Msg end),
     ok = binbo:uci_command_cast(Pid, "uci"),
     ok = binbo:set_uci_handler(Pid, undefined),
+
+    % Stop the game process
+    ok = binbo:stop_server(Pid),
+    ok.
+
+%% uci_test_failed_connection/1
+uci_test_failed_connection(_Config) ->
+    % Start new process for the game
+    {ok, Pid} = binbo:new_server(),
+
+    {error,{uci_connection_failed,enoent}} = binbo:new_uci_game(Pid, #{
+        engine_path => "/usr/local/bin/stockfish-test-0123456789"
+    }),
+
+    {error,{uci_connection_failed,nxdomain}} = binbo:new_uci_game(Pid, #{
+        engine_path => {"localhost-test-0123456789", 9011, 1000}
+    }),
 
     % Stop the game process
     ok = binbo:stop_server(Pid),
