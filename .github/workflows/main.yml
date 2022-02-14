@@ -33,8 +33,8 @@ jobs:
         whoami
     - name: Install system packages
       run: |
-        sudo apt update
-        sudo apt install socat -y
+        apt update
+        apt install socat -y
     - name: Install Stockfish
       run: |
         export STOCKFISH_DIR=${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64
