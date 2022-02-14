@@ -19,7 +19,7 @@ jobs:
       image: erlang:${{ matrix.otp_version }}
 
     env:
-      STOCKFISH_VERSION: 10
+      STOCKFISH_VERSION: 14.1
 
     steps:
     - name: Checkout
@@ -29,11 +29,11 @@ jobs:
       id: extract_branch
     - name: Install Stockfish
       run: |
-        rm -fr ${HOME}/stockfish-${STOCKFISH_VERSION}-linux
-        rm -f ${HOME}/stockfish-${STOCKFISH_VERSION}-linux.zip
-        curl https://stockfishchess.org/files/stockfish-${STOCKFISH_VERSION}-linux.zip -o ${HOME}/stockfish-${STOCKFISH_VERSION}-linux.zip
-        unzip ${HOME}/stockfish-${STOCKFISH_VERSION}-linux.zip -d ${HOME}
-        chmod +x ${HOME}/stockfish-${STOCKFISH_VERSION}-linux/Linux/stockfish_${STOCKFISH_VERSION}_x64
+        rm -fr ${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64
+        rm -f ${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64.zip
+        curl https://stockfishchess.org/files/stockfish_${STOCKFISH_VERSION}_linux_x64.zip -o ${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64.zip
+        unzip ${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64.zip -d ${HOME}
+        chmod +x ${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64/stockfish_${STOCKFISH_VERSION}_linux_x64
     - name: Cache Dialyzer PLTs
       uses: actions/cache@v2
       with:
@@ -54,7 +54,7 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        export BINBO_UCI_ENGINE_PATH=${HOME}/stockfish-${STOCKFISH_VERSION}-linux/Linux/stockfish_${STOCKFISH_VERSION}_x64
+        export BINBO_UCI_ENGINE_PATH=${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64/stockfish_${STOCKFISH_VERSION}_linux_x64
         rebar3 ct
     - name: Dialyzer
       run: rebar3 dialyzer
