@@ -1219,8 +1219,6 @@ If `Handler` is set to `default`, function `binbo_uci_protocol:default_handler/1
 
 If `Handler` is a **function of arity 1**, this function is performed. The only argument the function takes is the message received from the engine.
 
-`binbo:set_uci_handler/1` is an asynchronous function. You are able to call it any time you want.
-
 **Note**: all the messages received from the engine are of `binary()` type.
 
 .Example with default handler:

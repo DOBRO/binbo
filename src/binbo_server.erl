@@ -310,6 +310,23 @@ do_handle_call(get_server_options, _From, #state{server_opts = Opts} = State) ->
 do_handle_call({get_pieces_list, SquareType}, _From, #state{game = Game} = State) ->
     Reply = binbo_game:get_pieces_list(Game, SquareType),
     {reply, Reply, State};
+do_handle_call({set_uci_handler, Handler}, _From, State0) ->
+    {Reply, NewState} = case Handler of
+        default ->
+            {ok, State0#state{uci_handler = fun binbo_uci_protocol:default_handler/1}};
+        _ when is_function(Handler) ->
+            case erlang:fun_info(Handler, arity) of
+                {arity,1} ->
+                    {ok, State0#state{uci_handler = Handler}};
+                _ ->
+                    {{error, bad_function_arity}, State0}
+            end;
+        undefined ->
+            {ok, State0#state{uci_handler = undefined}};
+        _ ->
+            {{error, invalid_handler}, State0}
+    end,
+    {reply, Reply, NewState};
 do_handle_call(_Msg, _From, State) ->
     {reply, ignored, State}.
 
@@ -324,19 +341,6 @@ do_handle_cast({uci_command, Command}, #state{uci_sockinfo = SocketInfo} = State
     {noreply, State};
 do_handle_cast({update_game_state, Game}, State) ->
     {noreply, State#state{game = Game}};
-do_handle_cast({set_uci_handler, Handler}, State0) ->
-    NewHandler = case Handler of
-        default ->
-            fun binbo_uci_protocol:default_handler/1;
-        _ when is_function(Handler) ->
-            case erlang:fun_info(Handler, arity) of
-                {arity,1} -> Handler;
-                _ -> undefined
-            end;
-        _ ->
-            undefined
-    end,
-    {noreply, State0#state{uci_handler = NewHandler}};
 do_handle_cast(stop, State) ->
     {stop, normal, State};
 do_handle_cast(_Msg, State) ->
@@ -503,7 +507,7 @@ uci_bestmove(Pid, Opts) ->
 %% set_uci_handler/2
 -spec set_uci_handler(pid(), uci_handler()) -> ok.
 set_uci_handler(Pid, Handler) ->
-    cast(Pid, {set_uci_handler, Handler}).
+    call(Pid, {set_uci_handler, Handler}).
 
 %% uci_play/2
 -spec uci_play(pid(), binbo_uci_protocol:bestmove_opts()) -> uci_play_ret().
