@@ -27,6 +27,10 @@ jobs:
     - name: Extract branch name
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
       id: extract_branch
+    - name: Get some info
+      run: |
+        pwd
+        whoami
     - name: Install Stockfish
       run: |
         rm -fr ${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64
