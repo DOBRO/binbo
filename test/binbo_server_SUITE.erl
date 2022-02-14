@@ -134,6 +134,9 @@ test_bad_server_options(_Config) ->
     {error, {bad_server_options_type, _}} = binbo:set_server_options(Pid, {a, 1}),
     {error, {bad_server_options_type, _}} = binbo:set_server_options(Pid, <<"">>),
     {error, {bad_server_option, {unknown_option, value}}} = binbo:set_server_options(Pid, #{unknown_option => value}),
+
+    {error,{not_pid,undefined}} = binbo:stop_server(undefined),
+
     ok.
 
 %% start_server_with_idle_timeout/1

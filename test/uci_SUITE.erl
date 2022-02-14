@@ -145,13 +145,20 @@ uci_test_failed_connection(_Config) ->
     % Start new process for the game
     {ok, Pid} = binbo:new_server(),
 
+    % Connect to local engine
     {error,{uci_connection_failed,enoent}} = binbo:new_uci_game(Pid, #{
         engine_path => "/usr/local/bin/stockfish-test-0123456789"
     }),
 
+    % Connect over TCP
     {error,{uci_connection_failed,nxdomain}} = binbo:new_uci_game(Pid, #{
         engine_path => {"localhost-test-0123456789", 9011, 1000}
     }),
+
+    % Send commands
+    ok = binbo:uci_command_cast(Pid, "uci"),
+    {error,no_uci_connection} = binbo:uci_mode(Pid),
+    {error,no_uci_connection} = binbo:uci_command_call(Pid, "uci"),
 
     % Stop the game process
     ok = binbo:stop_server(Pid),
