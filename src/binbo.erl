@@ -32,7 +32,6 @@
 -export([uci_set_position/2, uci_sync_position/1]).
 -export([set_uci_handler/2]).
 -export([get_pieces_list/2]).
--export([set_info_logger/2]).
 
 -define(APPLICATION, ?MODULE).
 
@@ -277,8 +276,3 @@ uci_sync_position(Pid) ->
 -spec get_pieces_list(pid(), index | notation) -> {ok, [binbo_position:sq_piece_tuple()]} | {error, term()}.
 get_pieces_list(Pid, SquareType) ->
     binbo_server:get_pieces_list(Pid, SquareType).
-
-%% set_info_logger/2
--spec set_info_logger(pid(), binbo_server:info_logger()) -> ok | {error, term()}.
-set_info_logger(Pid, Logger) ->
-    binbo_server:set_info_logger(Pid, Logger).
