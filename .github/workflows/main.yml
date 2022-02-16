@@ -145,9 +145,9 @@ jobs:
         Copy-Item -Path .\test\helper-files\rebar3.cmd -Destination ~/rebar3-dl/rebar3.cmd
     - name: Install Stockfish
       run: |
-        Invoke-WebRequest -Uri https://stockfishchess.org/files/stockfish-11-win.zip -OutFile ~/stockfish-11-win.zip
-        Expand-Archive -LiteralPath '~/stockfish-11-win.zip' -DestinationPath ~/
-        ls ~/stockfish-11-win/Windows
+        Invoke-WebRequest -Uri https://stockfishchess.org/files/stockfish_14.1_win_x64.zip -OutFile ~/stockfish_14.1_win_x64.zip
+        Expand-Archive -LiteralPath '~/stockfish_14.1_win_x64.zip' -DestinationPath ~/
+        ls ~/stockfish_14.1_win_x64/Windows
     - name: Cache Hex packages
       uses: actions/cache@v2
       with:
@@ -159,7 +159,7 @@ jobs:
       run: ~/rebar3-dl/rebar3.cmd compile
     - name: CT tests
       run: |
-        $env:BINBO_UCI_ENGINE_PATH = (Resolve-Path '~/stockfish-11-win/Windows/stockfish_20011801_x64.exe').Path.replace('\', '/')
+        $env:BINBO_UCI_ENGINE_PATH = (Resolve-Path '~/stockfish_14.1_win_x64/stockfish_14.1_win_x64.exe').Path.replace('\', '/')
         echo "BINBO_UCI_ENGINE_PATH=$env:BINBO_UCI_ENGINE_PATH"
         ~/rebar3-dl/rebar3.cmd ct
     - name: Code coverage
