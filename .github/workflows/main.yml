@@ -139,7 +139,10 @@ jobs:
     - name: Install Erlang
       run: choco install erlang -y
     - name: Install rebar3
-      run: choco install rebar3 -y
+      run: |
+        mkdir ~/rebar3-dl
+        Invoke-WebRequest -Uri https://github.com/erlang/rebar3/releases/download/3.18.0/rebar3 -OutFile ~/rebar3-dl/rebar3
+        Copy-Item -Path .\test\helper-files\rebar3.cmd -Destination ~/rebar3-dl/rebar3.cmd
     - name: Install Stockfish
       run: |
         Invoke-WebRequest -Uri https://stockfishchess.org/files/stockfish-11-win.zip -OutFile ~/stockfish-11-win.zip
@@ -153,11 +156,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-
     - name: Compile
-      run: rebar3 compile
+      run: ~/rebar3-dl/rebar3.cmd compile
     - name: CT tests
       run: |
         $env:BINBO_UCI_ENGINE_PATH = (Resolve-Path '~/stockfish-11-win/Windows/stockfish_20011801_x64.exe').Path.replace('\', '/')
         echo "BINBO_UCI_ENGINE_PATH=$env:BINBO_UCI_ENGINE_PATH"
-        rebar3 ct
+        ~/rebar3-dl/rebar3.cmd ct
     - name: Code coverage
-      run: rebar3 cover
+      run: ~/rebar3-dl/rebar3.cmd cover
