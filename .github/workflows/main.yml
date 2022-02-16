@@ -103,7 +103,7 @@ jobs:
     - name: Install Stockfish
       run: brew install stockfish
     - name: Start Stockfish TCP Server
-      run: launchctl load test/stockfish-tcp/org.stockfish.plist
+      run: launchctl load test/helper-files/org.stockfish.plist
     - name: Cache Hex packages
       uses: actions/cache@v2
       with:
