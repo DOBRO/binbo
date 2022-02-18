@@ -16,7 +16,7 @@ Binbo also uses the https://www.chessprogramming.org/Magic_Bitboards[Magic Bitbo
 
 **Note:** it's not a chess engine but it could be a good starting point for it. It can play the role of a core (regarding move generation and validation) for multiple chess engines running on distributed Erlang nodes, since Binbo is an OTP application itself.
 
-In addition, the application is able to communicate with https://www.chessprogramming.org/Category:UCI[chess engines that support UCI protocol] (https://www.chessprogramming.org/UCI[Universal Chess Interface]) such as _Stockfish_, _Shredder_, _Houdini_, etc. You can therefore write your own client-side or server-side **chess bot** application on top of Binbo, or just play with engine right in Erlang shell.
+In addition, the application is able to communicate with https://www.chessprogramming.org/Category:UCI[chess engines that support UCI protocol] (https://www.chessprogramming.org/UCI[Universal Chess Interface]) such as _Stockfish_, _Shredder_, _Houdini_, etc. You can therefore write your own client-side or server-side **chess bot** application on top of Binbo, or just play with engine right in Erlang shell. TCP connections to remote chess engines are also supported.
 
 Binbo is part of the https://github.com/h4cc/awesome-elixir[Awesome Elixir] list.
 
@@ -47,6 +47,7 @@ toc::[]
 * Unicode chess symbols support for the board visualization right in Erlang shell: +
 &#9817;{nbsp}&#9816;{nbsp}&#9815;{nbsp}&#9814;{nbsp}&#9813;{nbsp}&#9812;{nbsp}{nbsp}{nbsp}{nbsp}&#9823;{nbsp}&#9822;{nbsp}&#9821;{nbsp}&#9820;{nbsp}&#9819;{nbsp}&#9818;
 * UCI protocol support.
+* Support for TCP connections to remote UCI chess engines.
 * Passes all https://www.chessprogramming.org/Perft_Results[perft] tests.
 * Cross-platform application. It can run on Linux, Unix, Windows, and macOS.
 * Ready for use on game servers.
@@ -124,7 +125,7 @@ binbo:print_board(Pid, [unicode]).
 ----
 
 [[quickstart-play-with-engine]]
-=== Play with engine
+=== Play with engine on local machine
 
 .In the Erlang shell:
 [source,erlang]
@@ -216,6 +217,67 @@ binbo:print_board(Pid, [unicode, flip]).
   Status: continue
 
 {ok,continue,<<"d2d4">>}
+----
+
+[[quickstart-uci-over-tcp]]
+=== Connect to remote engine over TCP
+
+The examples below assume that Stockfish is used as the chess engine and its path is `/usr/local/bin/stockfish`, change it according to your environment.
+TCP service starts on local machine on port `9010`.
+
+If you are on Linux, install `socat` and start TCP service. On macOS just use file `org.stockfish.plist` provided in the `test` folder (see below).
+
+.On Ubuntu/Debian:
+[source,bash]
+----
+$ apt install socat -y
+$ socat TCP-LISTEN:9010,reuseaddr,fork EXEC:/usr/local/bin/stockfish &
+$ git clone https://github.com/DOBRO/binbo.git
+$ cd binbo
+$ rebar3 shell
+----
+
+.On Centos/Fedora:
+[source,bash]
+----
+$ dnf install socat -y
+$ socat TCP-LISTEN:9010,reuseaddr,fork EXEC:/usr/local/bin/stockfish &
+$ git clone https://github.com/DOBRO/binbo.git
+$ cd binbo
+$ rebar3 shell
+----
+
+.On macOS:
+[source,bash]
+----
+$ git clone https://github.com/DOBRO/binbo.git
+$ cd binbo
+$ launchctl load test/helper-files/org.stockfish.plist
+$ rebar3 shell
+----
+
+.Now in the Erlang shell:
+[source,erlang]
+----
+%% Start Binbo application first:
+> binbo:start().
+{ok,[compiler,syntax_tools,uef,binbo]}
+
+%% Start new process for the game:
+> {ok, Pid} = binbo:new_server().
+{ok,<0.282.0>}
+
+%% Set path to the remote engine as tuple {Host, Port, Timeout}:
+> EnginePath = {"localhost", 9010, 5000}.
+{"localhost",9010,5000}
+
+%% Start new game in the process:
+> binbo:new_uci_game(Pid, #{engine_path => EnginePath}).
+{ok,continue}
+
+%% UCI-over-TCP connection made, start playing:
+> binbo:uci_play(Pid, #{movetime => 100}, <<"e2e4">>).
+{ok,continue,<<"c7c5">>} % the engine's move was "c7c5"
 ----
 
 == Interface
@@ -963,14 +1025,17 @@ Options :: #{
   fen => Fen
 }.
 
-EnginePath :: binary() | string().
+EnginePath :: binary() | string() | {TCPHost, TCPPort, timeout()}.
+TCPHost :: inet:socket_address() | inet:hostname().
+TCPPort :: inet:port_number().
+
 Fen :: binary() | string().
 ----
 
 
 .where:
 * `Pid` is the `pid` of the process where the game is to be initialized;
-* `EnginePath` is the full path to the engine's executable file (e.g. `/usr/local/bin/stockfish`);
+* `EnginePath` is the full path to the engine's executable file (e.g. `/usr/local/bin/stockfish`) or tuple `{Host, Port, Timeout}` for TCP connection;
 * `Fen` is the Forsyth–Edwards Notation (FEN), defaults to initial if omitted;
 * `GameStatus` is the link:#game-status[game status].
 
@@ -1436,14 +1501,20 @@ $ rebar3 dialyzer
 ----
 $ make test
 
-$ BINBO_UCI_ENGINE_PATH="/path/to/engine" make test
+$ export BINBO_UCI_ENGINE_PATH="/path/to/engine"
+$ export BINBO_UCI_ENGINE_HOST=localhost
+$ export BINBO_UCI_ENGINE_HOST=9010
+$ make test
 ----
 
 [source,bash]
 ----
 $ rebar3 ct --verbose
 
-$ BINBO_UCI_ENGINE_PATH="/path/to/engine" rebar3 ct --verbose
+$ export BINBO_UCI_ENGINE_PATH="/path/to/engine"
+$ export BINBO_UCI_ENGINE_HOST=localhost
+$ export BINBO_UCI_ENGINE_HOST=9010
+$ rebar3 ct --verbose
 ----
 
 === Code coverage
