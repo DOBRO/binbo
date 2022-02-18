@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [4.0.0] - 2022-02-18
 
 - Support for TCP connections to remote UCI chess engines.
 - Environment variable `UCI_ENGINE_PATH` renamed to `BINBO_UCI_ENGINE_PATH` used in UCI tests.
