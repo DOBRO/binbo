@@ -80,6 +80,14 @@ test_initial_fen(Config) ->
 test_legal_string_fens(Config) ->
     Pid = get_pid(Config),
     {ok,continue} = binbo:new_game(Pid, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
+    % Issue #8 https://github.com/DOBRO/binbo/issues/8
+    {ok,continue} = binbo:new_game(Pid, "r3k2r/2p1qppp/p3p3/n2n4/P2P4/P2QPNP1/1p1N1PBP/2r1RRK1 b kq - 0 1"),
+    % 3 rooks, white to move
+    {ok,continue} = binbo:new_game(Pid, "r3k2r/pbqpbppp/1p2pn2/8/1R6/B1NPPN2/P1PQBPPP/R3K2R w KQkq - 0 1"),
+    % 4 white rooks, white to move
+    {ok,continue} = binbo:new_game(Pid, "r3k2r/pbq1bppp/1p2pn2/6r1/1R6/B1NPPN2/P1RQBPPP/R3K2R w KQkq - 0 1"),
+    % 4 black rooks, black to move
+    {ok,continue} = binbo:new_game(Pid, "r3k2r/pbqrbppp/1p3n2/6r1/1R6/B1NPPN2/P1RQBPPP/R3K2R b KQkq - 0 1"),
     ok.
 
 %% test_bad_fens/1
