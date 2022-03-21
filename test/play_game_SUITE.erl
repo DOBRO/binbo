@@ -60,7 +60,8 @@ groups() ->
         set_game_state,
         get_pieces_list,
         index_moves,
-        set_game_winner
+        set_game_winner,
+        rule50
     ]}].
 
 %% init_per_suite/1
@@ -157,7 +158,7 @@ stalemate_black(Config) ->
 rule50(Config) ->
     Pid = get_pid(Config),
     {ok, continue} = binbo:new_game(Pid, <<"6R1/7k/8/8/1r3B2/5K2/8/8 w - - 99 119">>),
-    {ok, {draw,rule50}} = binbo:move(Pid, <<"Ra4">>),
+    {ok, {draw,rule50}} = binbo:move(Pid, <<"g8a8">>),
     {ok, {draw,rule50}} = binbo:game_status(Pid),
     ok.
 
