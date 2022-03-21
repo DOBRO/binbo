@@ -2,9 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+- Fixed: the fifty-move rule was not applied correctly.
+
 ## [4.0.1] - 2022-03-18
 
-- Fix: castling was not legal when more than two rooks of the same side on the board.
+- Fixed: castling was not legal when more than two rooks of the same side on the board.
 
 ## [4.0.0] - 2022-02-18
 
