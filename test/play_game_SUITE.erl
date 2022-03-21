@@ -24,6 +24,7 @@
 -export([move_all_pieces/1,
     checkmate_white/1, checkmate_black/1,
     stalemate_white/1, stalemate_black/1,
+    rule50/1,
     castling_kingside/1, castling_queenside/1,
     castling_white_after_king_move/1,
     castling_white_after_rook_move/1,
@@ -150,6 +151,14 @@ stalemate_black(Config) ->
     {ok, continue} = binbo:new_game(Pid, <<"1q2b1b1/8/8/8/8/7k/8/K7 b - -">>),
     {ok, {draw,stalemate}} = binbo:move(Pid, <<"e8g6">>),
     {ok, {draw,stalemate}} = binbo:game_status(Pid),
+    ok.
+
+%% rule50/1
+rule50(Config) ->
+    Pid = get_pid(Config),
+    {ok, continue} = binbo:new_game(Pid, <<"6R1/7k/8/8/1r3B2/5K2/8/8 w - - 99 119">>),
+    {ok, {draw,rule50}} = binbo:move(Pid, <<"Ra4">>),
+    {ok, {draw,rule50}} = binbo:game_status(Pid),
     ok.
 
 %% castling_kingside/1
