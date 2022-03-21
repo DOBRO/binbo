@@ -754,15 +754,7 @@ update_hashmap(Game) ->
 %% https://en.wikipedia.org/wiki/Fifty-move_rule
 -spec is_rule50(bb_game()) -> boolean().
 is_rule50(Game) ->
-    case (get_halfmove(Game) < 50) of
-        true  ->
-            false;
-        false ->
-            case (get_fullmove(Game) < 75) of
-                true  -> false;
-                false -> true
-            end
-    end.
+    get_halfmove(Game) > 99.
 
 %% is_k_vs_k/2
 %% Returns true when:
