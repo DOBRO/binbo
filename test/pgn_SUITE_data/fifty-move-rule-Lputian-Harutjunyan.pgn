@@ -1,0 +1,46 @@
+[Event "ch-ARM"]
+[Site "Yerevan ARM"]
+[Date "2001.09.13"]
+[EventDate "2001.09.13"]
+[Round "1"]
+[White "Smbat Gariginovich Lputian"]
+[Black "Gevorg Harutjunyan"]
+[ECO "E97"]
+[WhiteElo "2608"]
+[BlackElo "2346"]
+
+{
+    Original PGN https://www.chessgames.com/perl/nph-chesspgn?text=1&gid=1196357
+    changed for testing the fifty-move rule in Binbo application.
+}
+
+1. d4 g6 2. c4 Bg7 3. Nc3 Nf6 4. e4 d6 5. Nf3 O-O 6. Be2 e5
+7. O-O Nc6 8. d5 Ne7 9. b4 a5 10. bxa5 Rxa5 11. a4 b6 12. Nd2
+Ra8 13. Nb3 Nd7 14. a5 Ba6 15. axb6 cxb6 16. Bd2 Qb8 17. Ra4
+f5 18. Qa1 Bb7 19. Rxa8 Bxa8 20. Qa3 Nc8 21. f3 Bb7 22. Rb1
+Rf7 23. Nc1 Nc5 24. Nd3 Qc7 25. Nxc5 dxc5 26. Qb2 Bf6 27. Nb5
+Qe7 28. Bc3 fxe4 29. fxe4 h5 30. Rd1 Bg7 31. d6 Qf6 32. Bf3
+Rd7 33. Rf1 Qg5 34. h4 Qe3+ 35. Kh2 Qd3 36. Re1 Qxc4 37. Rd1
+Qf7 38. Bxe5 Bc6 39. Bxg7 Qxg7 40. e5 Bxb5 41. Qb3+ Kh7
+42. Re1 Na7 43. Kh1 Qf8 44. Qd5 Qd8 45. Qe4 Rg7 46. Qf4 Nc8
+47. Bd5 Bd3 48. Be6 Na7 49. Rd1 Be2 50. Rd2 Bb5 51. Qf6 Nc6
+52. d7 Re7 53. Rd6 c4 54. Bf5 Nxe5 55. Bxg6+ Kg8 56. Bf5 Nf7
+57. Qg6+ Kf8 58. Rf6 Rxd7 59. Bxd7 Qxd7 60. Rxb6 Qe8 61. Qxh5
+Qe1+ 62. Kh2 Be8 63. Qc5+ Kg7 64. Qxc4 Qe5+ 65. g3 Qf5
+66. Qd4+ Kh7 67. Rf6 Qc2+ 68. Rf2 Qg6 69. g4 Nh6 70. Kg3 Bf7
+71. Rf6 Qb1 72. Qe3 Qb8+ 73. Kh3 Bg6 74. Qe7+ Bf7 75. Rxf7+
+Nxf7 76. Qxf7+ Kh8 77. Qf3 Qb1 78. h5 Qe1 79. g5 Qe6+ 80. Kg2
+Kg7 81. Qb7+ Kh8 82. Qb8+ Kg7 83. Qc7+ Kh8 84. Qd8+ Kg7
+85. Qd4+ Kg8 86. h6 Qe2+ 87. Kg3 Qe1+ 88. Kg4 Qe2+ 89. Kg3
+Qe1+ 90. Qf2 Qe5+ 91. Qf4 Qe1+ 92. Kg2 Qe2+ 93. Kh3 Qe6+
+94. Kh4 Qe1+ 95. Kh5 Qe2+ 96. Kh4 Qe1+ 97. Kg4 Qe6+ 98. Qf5
+Qe2+ 99. Qf3 Qe6+ 100. Kh4 Qe1+ 101. Kh3 Qe6+ 102. Kg2 Qe5
+103. Qb3+ Kh8 104. Qg3 Qe2+ 105. Kg1 Qd1+ 106. Kf2 Qd2+
+107. Kf3 Qd3+ 108. Kf4 Qd6+ 109. Kg4 Qe6+ 110. Kh5 Qe2+
+111. Kh4 Qe4+ 112. Kh3 Qh1+ 113. Kg4 Qe4+ 114. Qf4 Qe6+
+115. Kh4 Qe1+ 116. Kh5 Qe2+ 117. Kg6 Qe8+ 118. Qf7 Qe4+
+119. Qf5 Qe8+ 120. Kf6 Qf7+ 121. Ke5 Qe7+ 122. Kf4 Qb4+
+123. Qe4 Qd2+ 124. Kg4 Qd7+ 125. Kh4 Qf7 126. Qd4+ Kh7
+127. Qd3+ Kh8 128. Qc3+ Kh7 129. Qd4 Kg8 130. Qd3 Kh8 131. Kg3
+Qc7+ 132. Kg4 Qc8+ 133. Kh4 Qb7 134. Qc3+ Kh7 135. Qd3+ Kh8
+136. Qd4+

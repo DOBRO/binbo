@@ -1,0 +1,41 @@
+[Event "Aeroflot Open"]
+[Site "Moscow RUS"]
+[Date "2008.02.22"]
+[EventDate "2008.02.14"]
+[Round "9"]
+[White "Ngoc Truongson Nguyen"]
+[Black "Maxime Vachier-Lagrave"]
+[ECO "B90"]
+[WhiteElo "2551"]
+[BlackElo "2637"]
+
+{
+    Original PGN https://www.chessgames.com/perl/nph-chesspgn?text=1&gid=1486011
+    changed for testing the fifty-move rule in Binbo application.
+}
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5
+7. Nb3 Be7 8. Be2 Be6 9. f4 exf4 10. Bxf4 O-O 11. Qd2 d5
+12. e5 Ne4 13. Nxe4 dxe4 14. Qe3 Nc6 15. c3 Na5 16. Nd2 Rc8
+17. Rd1 Qc7 18. Nxe4 Nc4 19. Qg3 Kh8 20. b3 Qc6 21. Bf3 Bd5
+22. Nd6 Bxf3 23. Qxf3 Bh4+ 24. Ke2 Qxf3+ 25. gxf3 Nxd6
+26. Rxd6 Rxc3 27. Rc1 Rxc1 28. Bxc1 Rd8 29. Kd3 h5 30. Ke4 Kh7
+31. f4 Rc8 32. Be3 Rc7 33. f5 Be7 34. Rd1 Ba3 35. Bf4 Re7
+36. Rd8 Bb2 37. Rd5 Kg8 38. Be3 Rc7 39. Bc5 Rc6 40. b4 Rc8
+41. Rd7 a5 42. Rxb7 axb4 43. Bxb4 Rc2 44. Bd6 Rxh2 45. e6 Rh4+
+46. Kf3 fxe6 47. fxe6 Bf6 48. Rb8+ Kh7 49. e7 Bxe7 50. Bxe7
+Ra4 51. a3 g5 52. Rb6 Rc4 53. Ra6 g4+ 54. Kg3 Rc3+ 55. Kh4
+Rh3+ 56. Kg5 g3 57. Ra7 g2 58. Bf6+ Kg8 59. Rg7+ Kf8 60. Kh6
+g1=Q 61. Rxg1 Rxa3 62. Kg6 Re3 63. Rd1 Re2 64. Rd8+ Re8
+65. Rd7 Re2 66. Rh7 Ke8 67. Kf5 Ra2 68. Re7+ Kf8 69. Rd7 Ke8
+70. Rb7 h4 71. Bxh4 Ra5+ 72. Kg6 Re5 73. Bf6 Re2 74. Ra7 Re1
+75. Kf5 Rb1 76. Bd4 Kd8 77. Ke6 Kc8 78. Be5 Rc1 79. Rf7 Rc2
+80. Bd6 Rc1 81. Kd5 Ra1 82. Rh7 Ra2 83. Bf4 Ra6 84. Be5 Rb6
+85. Rc7+ Kd8 86. Ra7 Kc8 87. Rc7+ Kd8 88. Bd6 Rb1 89. Ra7 Re1
+90. Be5 Rd1+ 91. Ke6 Rc1 92. Rb7 Rc2 93. Rb3 Rc6+ 94. Bd6 Rc1
+95. Rh3 Kc8 96. Rh8+ Kb7 97. Rb8+ Ka7 98. Rb4 Rd1 99. Kd7 Rc1
+100. Bc7 Rh1 101. Bf4 Rh3 102. Be5 Rh1 103. Bd6 Rc1 104. Bf4
+Rc2 105. Bc7 Rc1 106. Rb5 Rc2 107. Rb6 Rg2 108. Rb3 Rc2
+109. Rb1 Rc3 110. Be5 Rc2 111. Kd6 Rd2+ 112. Kc6 Rc2+ 113. Kd5
+Rg2 114. Bd6 Rg5+ 115. Kc6 Ka6 116. Rb8 Rg7 117. Rb6+ Ka7
+118. Rb1 Ka8 119. Re1 Rb7 120. Re8+ Ka7 121. Bc5+

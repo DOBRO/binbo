@@ -1,0 +1,39 @@
+[Event "Hoogovens Open"]
+[Site "Wijk aan Zee NED"]
+[Date "1995.01.27"]
+[EventDate "?"]
+[Round "10"]
+[White "Jan Timman"]
+[Black "Christopher Lutz"]
+[ECO "E59"]
+[WhiteElo "?"]
+[BlackElo "?"]
+
+{
+    Original PGN https://www.chessgames.com/perl/nph-chesspgn?text=1&gid=1143375
+    changed for testing the fifty-move rule in Binbo application.
+}
+
+1.d4 Nf6 2.c4 e6 3.Nc3 Bb4 4.e3 O-O 5.Bd3 d5 6.Nf3 c5 7.O-O
+Nc6 8.a3 Bxc3 9.bxc3 dxc4 10.Bxc4 Qc7 11.Bb5 a6 12.Bd3 e5
+13.Qc2 b5 14.e4 exd4 15.cxd4 c4 16.Be2 Re8 17.d5 Ne5 18.Bb2
+Nxf3+ 19.Bxf3 Bg4 20.d6 Qc6 21.Bxg4 Nxg4 22.h3 Ne5 23.Rad1 Nd7
+24.Rfe1 a5 25.Bc3 f6 26.Qd2 Rxe4 27.Rxe4 Qxe4 28.Bxa5 Re8
+29.Bb4 Re5 30.f3 Qe3+ 31.Qxe3 Rxe3 32.Kf2 Re8 33.f4 Kf7 34.Rd5
+Rb8 35.Ke3 Ke6 36.Rd1 f5 37.g4 fxg4 38.hxg4 Nf6 39.f5+ Kd7
+40.g5 Re8+ 41.Kf4 Nh5+ 42.Kg4 g6 43.fxg6 hxg6 44.Rd5 Ng7
+45.Rxb5 Nf5 46.Rb7+ Ke6 47.Rc7 Rh8 48.Kf3 Rh3+ 49.Kf2 Rh2+
+50.Ke1 Rh1+ 51.Kf2 Rh2+ 52.Kf1 Rh1+ 53.Kg2 Rd1 54.Kf2 Rd4
+55.Ke1 Rh4 56.Kd2 Rh2+ 57.Kc3 Rh3+ 58.Kxc4 Nxd6+ 59.Kc5 Ne4+
+60.Kb5 Nxg5 61.a4 Nf3 62.a5 Nd4+ 63.Kc4 Rh4 64.Bc5 Nc6 65.Kb5
+Nxa5 66.Kxa5 g5 67.Kb5 g4 68.Rg7 g3 69.Rxg3 Rh1 70.Kc6 Re1
+71.Bd4 Rc1+ 72.Bc3 Rd1 73.Re3+ Kf5 74.Kc5 Rd8 75.Be5 Rc8+
+76.Kd5 Ra8 77.Rf3+ Kg4 78.Rf7 Ra5+ 79.Ke4 Ra4+ 80.Bd4 Kg5
+81.Rg7+ Kh4 82.Ke5 Kh3 83.Rg1 Rb4 84.Be3 Rg4 85.Ra1 Kg2 86.Bf4
+Rg8 87.Ra2+ Kf3 88.Ra3+ Ke2 89.Ke4 Re8+ 90.Be5 Re7 91.Ra2+ Ke1
+92.Kd4 Kf1 93.Bf4 Re2 94.Ra8 Re7 95.Kd3 Kg2 96.Rf8 Re6 97.Rf7
+Re8 98.Be3 Ra8 99.Bc5 Ra4 100.Ke3 Rg4 101.Bd6 Rg6 102.Rf2+ Kh3
+103.Be5 Kg4 104.Ke4 Kh5 105.Bf6 Kg4 106.Rf4+ Kg3 107.Ke3 Kh3
+108.Rf5 Rg3+ 109.Kf2 Rg2+ 110.Kf1 Rc2 111.Rg5 Rc4 112.Be5 Kh4
+113.Rg8 Re4 114.Bg3+ Kh5 115.Kf2 Ra4 116.Kf3 Kh6 117.Be5 Rb4
+118.Bf4+ Kh7
