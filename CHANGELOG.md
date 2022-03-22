@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [4.0.2]
 
 - Fixed: the fifty-move rule was not applied correctly.
 
