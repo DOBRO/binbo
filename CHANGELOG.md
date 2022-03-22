@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [4.0.2]
+## [4.0.2] - 2022-03-22
 
 - Fixed: the fifty-move rule was not applied correctly.
 
