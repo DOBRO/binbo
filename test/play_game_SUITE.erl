@@ -36,7 +36,8 @@
     set_game_state/1,
     get_pieces_list/1,
     index_moves/1,
-    set_game_winner/1
+    set_game_winner/1,
+    print_board_when_game_undefined/1
 ]).
 
 
@@ -61,7 +62,8 @@ groups() ->
         get_pieces_list,
         index_moves,
         set_game_winner,
-        rule50
+        rule50,
+        print_board_when_game_undefined
     ]}].
 
 %% init_per_suite/1
@@ -515,6 +517,7 @@ index_moves(Config) ->
 
     ok.
 
+%% set_game_winner/1
 set_game_winner(Config) ->
     Pid = get_pid(Config),
     % winner1
@@ -550,6 +553,13 @@ set_game_winner(Config) ->
     {error,{{game_over,{winner,winner2,{manual,test_reason2}}}, <<"e2e4">>}} = binbo:move(Pid, <<"e2e4">>),
 
     ok.
+
+%% print_board_when_game_undefined
+print_board_when_game_undefined(Config) ->
+    Pid = get_pid(Config),
+    {error,{bad_game,undefined}} = binbo:print_board(Pid),
+    ok.
+
 
 %%%------------------------------------------------------------------------------
 %%%   Internal helpers
