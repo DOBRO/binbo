@@ -415,10 +415,16 @@ simple_game(Config) ->
     {ok, continue} = binbo:game_status(Pid),
     {ok, <<"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1">>} = binbo:get_fen(Pid),
 
+    ok = binbo:print_board(Pid),
+    ok = binbo:print_board(Pid, [unicode, flip]),
+
     {ok, continue} = binbo:move(Pid, "e7e5"),
     {ok, white} = binbo:side_to_move(Pid),
     {ok, continue} = binbo:game_status(Pid),
     {ok, <<"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2">>} = binbo:get_fen(Pid),
+
+    ok = binbo:print_board(Pid),
+    ok = binbo:print_board(Pid, [unicode, flip]),
 
     {ok, continue} = binbo:new_game(Pid),
     {ok, continue} = binbo:san_move(Pid, <<"e4">>),
