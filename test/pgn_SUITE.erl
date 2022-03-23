@@ -32,7 +32,8 @@
     load_pgn_from_file_fifty_move_rule_timman_lutz/1,
     load_pgn_from_file_fifty_move_rule_karpov_kasparov/1,
     load_pgn_from_file_fifty_move_rule_lputian_harutjunyan/1,
-    load_pgn_from_file_fifty_move_rule_nguyen_vachier_lagrave/1
+    load_pgn_from_file_fifty_move_rule_nguyen_vachier_lagrave/1,
+    load_pgn_from_file_threefold_repetition_spassky_fischer/1
     ]).
 
 %% all/0
@@ -51,7 +52,8 @@ groups() ->
         load_pgn_from_file_fifty_move_rule_timman_lutz,
         load_pgn_from_file_fifty_move_rule_karpov_kasparov,
         load_pgn_from_file_fifty_move_rule_lputian_harutjunyan,
-        load_pgn_from_file_fifty_move_rule_nguyen_vachier_lagrave
+        load_pgn_from_file_fifty_move_rule_nguyen_vachier_lagrave,
+        load_pgn_from_file_threefold_repetition_spassky_fischer
     ]}].
 
 %% init_per_suite/1
@@ -188,6 +190,16 @@ load_pgn_from_file_fifty_move_rule_nguyen_vachier_lagrave(Config) ->
     {ok,{draw,rule50}} = binbo:game_status(Pid),
     ok.
 
+%% load_pgn_from_file_threefold_repetition_spassky_fischer/1
+load_pgn_from_file_threefold_repetition_spassky_fischer(Config) ->
+    Pid = get_pid(Config),
+    DataDir = ?value(data_dir, Config), % ./pgn_SUITE_data/
+    Filename = filename:join(DataDir, "threefold-repetition-Spassky-Fischer.pgn"),
+    {ok,continue} = binbo:load_pgn_file(Pid, Filename),
+    {ok,continue} = binbo:game_status(Pid),
+    {ok,{draw,threefold_repetition}} = binbo:san_move(Pid, <<"Qh6">>),
+    {ok,{draw,threefold_repetition}} = binbo:game_status(Pid),
+    ok.
 
 %%%------------------------------------------------------------------------------
 %%%   PGNs
