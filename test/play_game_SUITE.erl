@@ -37,6 +37,7 @@
     get_pieces_list/1,
     index_moves/1,
     set_game_winner/1,
+    draw_when_king_and_bishop_versus_king/1,
     print_board_when_game_undefined/1
 ]).
 
@@ -63,6 +64,7 @@ groups() ->
         index_moves,
         set_game_winner,
         rule50,
+        draw_when_king_and_bishop_versus_king,
         print_board_when_game_undefined
     ]}].
 
@@ -557,6 +559,27 @@ set_game_winner(Config) ->
     {ok, continue} = binbo:new_game(Pid),
     ok = binbo:set_game_winner(Pid, winner2, test_reason2),
     {error,{{game_over,{winner,winner2,{manual,test_reason2}}}, <<"e2e4">>}} = binbo:move(Pid, <<"e2e4">>),
+
+    ok.
+
+%% draw_when_king_and_bishop_versus_king/1
+draw_when_king_and_bishop_versus_king(Config) ->
+    Pid = get_pid(Config),
+    % White King and Bishop on light square vs Black King
+    {ok,{draw,insufficient_material}} = binbo:new_game(Pid, <<"8/8/8/2k5/8/8/1K2B3/8 w - - 0 1">>),
+    {ok,{draw,insufficient_material}} = binbo:game_status(Pid),
+
+    % White King and Bishop on dark square vs Black King
+    {ok,{draw,insufficient_material}} = binbo:new_game(Pid, <<"8/8/8/2k5/8/8/1K1B4/8 w - - 0 1">>),
+    {ok,{draw,insufficient_material}} = binbo:game_status(Pid),
+
+    % Black King and Bishop on light square vs White King
+    {ok,{draw,insufficient_material}} = binbo:new_game(Pid, <<"8/5b2/2k5/8/8/8/1K6/8 w - - 0 1">>),
+    {ok,{draw,insufficient_material}} = binbo:game_status(Pid),
+
+    % Black King and Bishop on dark square vs White King
+    {ok,{draw,insufficient_material}} = binbo:new_game(Pid, <<"8/4b3/2k5/8/8/8/1K6/8 w - - 0 1">>),
+    {ok,{draw,insufficient_material}} = binbo:game_status(Pid),
 
     ok.
 
