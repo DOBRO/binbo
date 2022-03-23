@@ -31,7 +31,6 @@
 -export([is_in_check/2]).
 -export([own_side_bb/2]).
 -export([get_enpassant_bb/1]).
--export([get_side_indexes/2]).
 -export([get_piece_indexes/2, get_piece_indexes_on_file/3, get_piece_indexes_on_rank/3]).
 
 %%%------------------------------------------------------------------------------
@@ -196,12 +195,6 @@ own_side_bb(Color, Game) ->
     OwnSideKey = ?OWN_SIDE_KEY(Color),
     #{OwnSideKey := SideBB} = Game,
     SideBB.
-
-%% get_side_indexes/2
--spec get_side_indexes(color(), bb_game()) -> [sq_idx()].
-get_side_indexes(Color, Game) ->
-    SideBB = own_side_bb(Color, Game),
-    binbo_bb:to_index_list(SideBB).
 
 %% with_status/3
 -spec with_status(bb_game(), boolean(), boolean()) -> bb_game().

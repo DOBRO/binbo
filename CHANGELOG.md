@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+- Unused function `binbo_position:get_side_indexes/2` deleted.
+
 ## [4.0.2] - 2022-03-22
 
 - Fixed: the fifty-move rule was not applied correctly.
