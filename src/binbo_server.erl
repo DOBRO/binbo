@@ -39,6 +39,20 @@
 -export([code_change/3]).
 
 %%%------------------------------------------------------------------------------
+%%%   Macros
+%%%------------------------------------------------------------------------------
+-ifdef(OTP_RELEASE). % since OTP-21
+    -if(?OTP_RELEASE >= 25).
+        -type from() :: {pid(), gen_server:reply_tag()}.
+    -elif(?OTP_RELEASE < 25).
+        -type from() :: {pid(), reference()}.
+    -endif.
+-else. % OTP-20
+    -type from() :: {pid(), reference()}.
+-endif.
+
+
+%%%------------------------------------------------------------------------------
 %%%   Types
 %%%------------------------------------------------------------------------------
 -type onterminate_callback() :: fun((pid(), Reason :: term(), Game :: game_state_ret(), Arg :: term()) -> term()).
@@ -47,7 +61,6 @@
     onterminate  => undefined | {onterminate_callback(), Arg :: term()}
 }.
 -type stop_ret() :: ok | {error, {not_pid, term()}}.
--type from() :: {pid(), reference()}.
 -type bb_game() :: binbo_position:bb_game().
 -type fen() :: binbo_game:game_fen().
 -type sq_move() :: binbo_move:sq_move().
