@@ -225,7 +225,7 @@ binbo:print_board(Pid, [unicode, flip]).
 The examples below assume that Stockfish is used as the chess engine and its path is `/usr/local/bin/stockfish`, change it according to your environment.
 TCP service starts on local machine on port `9010`.
 
-If you are on Linux, install `socat` and start TCP service. On macOS just use file `org.stockfish.plist` provided in the `test` folder (see below).
+If you are on Linux, install `socat` and start TCP service. On macOS just use file `org.stockfish.x86.plist` (for Intel-based devices) or `org.stockfish.arm.plist` (for Apple silicon) provided in the `test` folder (see below).
 
 .On Ubuntu/Debian:
 [source,bash]
@@ -247,12 +247,21 @@ $ cd binbo
 $ rebar3 shell
 ----
 
-.On macOS:
+.On macOS (Intel x86 Architecture):
 [source,bash]
 ----
 $ git clone https://github.com/DOBRO/binbo.git
 $ cd binbo
-$ launchctl load test/helper-files/org.stockfish.plist
+$ launchctl load test/helper-files/org.stockfish.x86.plist
+$ rebar3 shell
+----
+
+.On macOS (Apple silicon):
+[source,bash]
+----
+$ git clone https://github.com/DOBRO/binbo.git
+$ cd binbo
+$ launchctl load test/helper-files/org.stockfish.arm.plist
 $ rebar3 shell
 ----
 
