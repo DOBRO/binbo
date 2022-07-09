@@ -2,9 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [4.0.3]
 
 - Unused function `binbo_position:get_side_indexes/2` deleted.
+- Fixed OTP-25 dialyzer warnings.
+- Added support for testing on Apple silicon SoC.
 
 ## [4.0.2] - 2022-03-22
 
