@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [4.0.3]
+## [4.0.3] - 2022-07-09
 
 - Unused function `binbo_position:get_side_indexes/2` deleted.
 - Fixed OTP-25 dialyzer warnings.
