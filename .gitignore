@@ -1,5 +1,7 @@
 _build
 doc/*
 !doc/overview.edoc
+README.md
+README.xml
 # macOS annoying file
 .DS_Store
