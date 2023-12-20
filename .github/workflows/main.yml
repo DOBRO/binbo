@@ -35,7 +35,7 @@ jobs:
         apt install socat -y
     - name: Run Stockfish as TCP service
       run: |
-        export STOCKFISH_EXEC_PATH="`which stockfish`"
+        export STOCKFISH_EXEC_PATH=$(which stockfish)
         echo "Stockfish exec path is: ${STOCKFISH_EXEC_PATH}"
         socat TCP-LISTEN:9010,reuseaddr,fork EXEC:${STOCKFISH_EXEC_PATH} &
     - name: Cache Dialyzer PLTs
@@ -58,7 +58,7 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        export BINBO_UCI_ENGINE_PATH="`which stockfish`"
+        export BINBO_UCI_ENGINE_PATH=$(which stockfish)
         export BINBO_UCI_ENGINE_HOST=localhost
         export BINBO_UCI_ENGINE_PORT=9010
         rebar3 ct
