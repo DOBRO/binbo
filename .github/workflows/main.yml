@@ -19,7 +19,7 @@ jobs:
       image: erlang:${{ matrix.otp_version }}
 
     env:
-      STOCKFISH_VERSION: 14.1
+      STOCKFISH_VERSION: 16
 
     steps:
     - name: Checkout
@@ -37,14 +37,17 @@ jobs:
         apt install socat -y
     - name: Install Stockfish
       run: |
-        export STOCKFISH_DIR=${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64
-        export STOCKFISH_PATH=${STOCKFISH_DIR}/stockfish_${STOCKFISH_VERSION}_linux_x64
-        rm -fr ${STOCKFISH_DIR}
-        rm -f ${STOCKFISH_DIR}.zip
-        curl https://stockfishchess.org/files/stockfish_${STOCKFISH_VERSION}_linux_x64.zip -o ${STOCKFISH_DIR}.zip
-        unzip ${STOCKFISH_DIR}.zip -d ${HOME}
-        chmod +x ${STOCKFISH_PATH}
-        socat TCP-LISTEN:9010,reuseaddr,fork EXEC:${STOCKFISH_PATH} &
+        export STOCKFISH_DIR=${HOME}/stockfish-download-dir
+        export STOCKFISH_ARCHIVE_FILE=stockfish-${STOCKFISH_VERSION}.tar
+        export STOCKFISH_DOWNLOAD_PATH=${STOCKFISH_DIR}/${STOCKFISH_ARCHIVE_FILE}
+        export STOCKFISH_EXEC_PATH=${STOCKFISH_DIR}/stockfish/stockfish-ubuntu-x86-64
+        mkdir -p ${STOCKFISH_DIR}
+        rm -fr ${STOCKFISH_DIR}/*
+        cd ${STOCKFISH_DIR}
+        curl https://github.com/official-stockfish/Stockfish/releases/download/sf_16/stockfish-ubuntu-x86-64.tar -L -o ${STOCKFISH_DOWNLOAD_PATH}
+        tar -xvf ${STOCKFISH_DOWNLOAD_PATH}
+        chmod +x ${STOCKFISH_EXEC_PATH}
+        socat TCP-LISTEN:9010,reuseaddr,fork EXEC:${STOCKFISH_EXEC_PATH} &
     - name: Cache Dialyzer PLTs
       uses: actions/cache@v2
       with:
@@ -65,7 +68,9 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        export BINBO_UCI_ENGINE_PATH=${HOME}/stockfish_${STOCKFISH_VERSION}_linux_x64/stockfish_${STOCKFISH_VERSION}_linux_x64
+        export STOCKFISH_DIR=${HOME}/stockfish-download-dir
+        export STOCKFISH_EXEC_PATH=${STOCKFISH_DIR}/stockfish/stockfish-ubuntu-x86-64
+        export BINBO_UCI_ENGINE_PATH=${STOCKFISH_EXEC_PATH}
         export BINBO_UCI_ENGINE_HOST=localhost
         export BINBO_UCI_ENGINE_PORT=9010
         rebar3 ct
@@ -145,8 +150,8 @@ jobs:
         Copy-Item -Path .\test\helper-files\rebar3.cmd -Destination ~/rebar3-dl/rebar3.cmd
     - name: Install Stockfish
       run: |
-        Invoke-WebRequest -Uri https://stockfishchess.org/files/stockfish_14.1_win_x64.zip -OutFile ~/stockfish_14.1_win_x64.zip
-        Expand-Archive -LiteralPath '~/stockfish_14.1_win_x64.zip' -DestinationPath ~/
+        Invoke-WebRequest -Uri https://github.com/official-stockfish/Stockfish/releases/download/sf_16/stockfish-windows-x86-64.zip -OutFile ~/stockfish-windows-x86-64.zip
+        Expand-Archive -LiteralPath '~/stockfish-windows-x86-64.zip' -DestinationPath ~/
     - name: Cache Hex packages
       uses: actions/cache@v2
       with:
@@ -158,7 +163,7 @@ jobs:
       run: ~/rebar3-dl/rebar3.cmd compile
     - name: CT tests
       run: |
-        $env:BINBO_UCI_ENGINE_PATH = (Resolve-Path '~/stockfish_14.1_win_x64/stockfish_14.1_win_x64.exe').Path.replace('\', '/')
+        $env:BINBO_UCI_ENGINE_PATH = (Resolve-Path '~/stockfish/stockfish-windows-x86-64.exe').Path.replace('\', '/')
         echo "BINBO_UCI_ENGINE_PATH=$env:BINBO_UCI_ENGINE_PATH"
         ~/rebar3-dl/rebar3.cmd ct
     - name: Code coverage
