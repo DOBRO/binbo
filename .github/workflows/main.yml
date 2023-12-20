@@ -18,9 +18,6 @@ jobs:
     container:
       image: erlang:${{ matrix.otp_version }}
 
-    env:
-      STOCKFISH_VERSION: 16
-
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -34,19 +31,11 @@ jobs:
     - name: Install system packages
       run: |
         apt update
+        apt install stockfish -y
         apt install socat -y
-    - name: Install Stockfish
+    - name: Run Stockfish as TCP service
       run: |
-        export STOCKFISH_DIR=${HOME}/stockfish-download-dir
-        export STOCKFISH_ARCHIVE_FILE=stockfish-${STOCKFISH_VERSION}.tar
-        export STOCKFISH_DOWNLOAD_PATH=${STOCKFISH_DIR}/${STOCKFISH_ARCHIVE_FILE}
-        export STOCKFISH_EXEC_PATH=${STOCKFISH_DIR}/stockfish/stockfish-ubuntu-x86-64
-        mkdir -p ${STOCKFISH_DIR}
-        rm -fr ${STOCKFISH_DIR}/*
-        cd ${STOCKFISH_DIR}
-        curl https://github.com/official-stockfish/Stockfish/releases/download/sf_16/stockfish-ubuntu-x86-64.tar -L -o ${STOCKFISH_DOWNLOAD_PATH}
-        tar -xvf ${STOCKFISH_DOWNLOAD_PATH}
-        chmod +x ${STOCKFISH_EXEC_PATH}
+        export STOCKFISH_EXEC_PATH=`which stockfish`
         socat TCP-LISTEN:9010,reuseaddr,fork EXEC:${STOCKFISH_EXEC_PATH} &
     - name: Cache Dialyzer PLTs
       uses: actions/cache@v2
@@ -68,9 +57,7 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        export STOCKFISH_DIR=${HOME}/stockfish-download-dir
-        export STOCKFISH_EXEC_PATH=${STOCKFISH_DIR}/stockfish/stockfish-ubuntu-x86-64
-        export BINBO_UCI_ENGINE_PATH=${STOCKFISH_EXEC_PATH}
+        export BINBO_UCI_ENGINE_PATH=`which stockfish`
         export BINBO_UCI_ENGINE_HOST=localhost
         export BINBO_UCI_ENGINE_PORT=9010
         rebar3 ct
