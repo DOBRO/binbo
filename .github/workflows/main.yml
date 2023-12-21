@@ -20,10 +20,11 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
-    - name: Extract branch name
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      id: extract_branch
+      uses: actions/checkout@v4
+    - name: Get branch name
+      id: branch-name
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
     - name: Get some info
       run: |
         pwd
@@ -39,21 +40,21 @@ jobs:
         ls -l ${STOCKFISH_EXEC_PATH}
         socat TCP-LISTEN:9010,reuseaddr,fork EXEC:${STOCKFISH_EXEC_PATH} &
     - name: Cache Dialyzer PLTs
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ~/.cache/rebar3/rebar3_*_plt
           _build/default/rebar3_*_plt
-        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-otp-${{ matrix.otp_version }}-plt-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.config')) }}
+        key: ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-otp-${{ matrix.otp_version }}-plt-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.config')) }}
         restore-keys: |
-          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-otp-${{ matrix.otp_version }}-plt-
+          ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-otp-${{ matrix.otp_version }}-plt-
     - name: Cache Hex packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/rebar3/hex/hexpm/packages
-        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-otp-${{ matrix.otp_version }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
+        key: ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-otp-${{ matrix.otp_version }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
         restore-keys: |
-          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-otp-${{ matrix.otp_version }}-hex-
+          ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-otp-${{ matrix.otp_version }}-hex-
     - name: Compile
       run: rebar3 compile
     - name: CT tests
@@ -85,10 +86,11 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
-    - name: Extract branch name
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      id: extract_branch
+      uses: actions/checkout@v4
+    - name: Get branch name
+      id: branch-name
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
     - name: Install Erlang
       run: brew install erlang
     - name: Install rebar3
@@ -97,13 +99,22 @@ jobs:
       run: brew install stockfish
     - name: Start Stockfish TCP Server
       run: launchctl load test/helper-files/org.stockfish.x86.plist
+    - name: Cache Dialyzer PLTs
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/rebar3/rebar3_*_plt
+          _build/default/rebar3_*_plt
+        key: ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-plt-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.config')) }}
+        restore-keys: |
+          ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-plt-
     - name: Cache Hex packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/rebar3/hex/hexpm/packages
-        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
+        key: ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
         restore-keys: |
-          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-
+          ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-hex-
     - name: Compile
       run: rebar3 compile
     - name: CT tests
@@ -128,7 +139,11 @@ jobs:
         os: [windows-latest]
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+    - name: Get branch name
+      id: branch-name
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
     - name: Install Erlang
       run: choco install erlang -y
     - name: Install rebar3
@@ -140,13 +155,22 @@ jobs:
       run: |
         Invoke-WebRequest -Uri https://github.com/official-stockfish/Stockfish/releases/download/sf_16/stockfish-windows-x86-64.zip -OutFile ~/stockfish-windows-x86-64.zip
         Expand-Archive -LiteralPath '~/stockfish-windows-x86-64.zip' -DestinationPath ~/
+    - name: Cache Dialyzer PLTs
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/rebar3/rebar3_*_plt
+          _build/default/rebar3_*_plt
+        key: ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-plt-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.config')) }}
+        restore-keys: |
+          ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-plt-
     - name: Cache Hex packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/rebar3/hex/hexpm/packages
-        key: ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
+        key: ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-hex-${{ hashFiles(format('{0}{1}', github.workspace, '/rebar.lock')) }}
         restore-keys: |
-          ${{ runner.os }}-${{ steps.extract_branch.outputs.branch }}-hex-
+          ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-hex-
     - name: Compile
       run: ~/rebar3-dl/rebar3.cmd compile
     - name: CT tests
