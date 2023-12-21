@@ -123,6 +123,8 @@ jobs:
         export BINBO_UCI_ENGINE_HOST=localhost
         export BINBO_UCI_ENGINE_PORT=9010
         rebar3 ct
+    - name: Dialyzer
+      run: rebar3 dialyzer
     - name: Code coverage
       run: rebar3 cover
 
@@ -147,10 +149,7 @@ jobs:
     - name: Install Erlang
       run: choco install erlang -y
     - name: Install rebar3
-      run: |
-        mkdir ~/rebar3-dl
-        Invoke-WebRequest -Uri https://github.com/erlang/rebar3/releases/download/3.18.0/rebar3 -OutFile ~/rebar3-dl/rebar3
-        Copy-Item -Path .\test\helper-files\rebar3.cmd -Destination ~/rebar3-dl/rebar3.cmd
+      run: choco install rebar3 -y
     - name: Install Stockfish
       run: |
         Invoke-WebRequest -Uri https://github.com/official-stockfish/Stockfish/releases/download/sf_16/stockfish-windows-x86-64.zip -OutFile ~/stockfish-windows-x86-64.zip
@@ -172,11 +171,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-${{ steps.branch-name.outputs.branch }}-hex-
     - name: Compile
-      run: ~/rebar3-dl/rebar3.cmd compile
+      run: rebar3 compile
     - name: CT tests
       run: |
         $env:BINBO_UCI_ENGINE_PATH = (Resolve-Path '~/stockfish/stockfish-windows-x86-64.exe').Path.replace('\', '/')
         echo "BINBO_UCI_ENGINE_PATH=$env:BINBO_UCI_ENGINE_PATH"
-        ~/rebar3-dl/rebar3.cmd ct
+        rebar3 ct
+    - name: Dialyzer
+      run: rebar3 dialyzer
     - name: Code coverage
-      run: ~/rebar3-dl/rebar3.cmd cover
+      run: rebar3 cover
