@@ -149,7 +149,7 @@ jobs:
     - name: Install Erlang
       run: choco install erlang -y
     - name: Install rebar3
-      run: choco install rebar3 -y
+      run: choco install rebar3 --version=3.13.1 -y
     - name: Install Stockfish
       run: |
         Invoke-WebRequest -Uri https://github.com/official-stockfish/Stockfish/releases/download/sf_16/stockfish-windows-x86-64.zip -OutFile ~/stockfish-windows-x86-64.zip
