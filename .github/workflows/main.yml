@@ -97,6 +97,8 @@ jobs:
       run: brew install rebar3
     - name: Install Stockfish
       run: brew install stockfish
+    - name: Path to Stockfish
+      run: which stockfish
     - name: Start Stockfish TCP Server
       run: launchctl load test/helper-files/org.stockfish.arm.plist
     - name: Cache Dialyzer PLTs
