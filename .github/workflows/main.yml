@@ -121,7 +121,7 @@ jobs:
       run: rebar3 compile
     - name: CT tests
       run: |
-        export BINBO_UCI_ENGINE_PATH=/usr/local/bin/stockfish
+        export BINBO_UCI_ENGINE_PATH=$(which stockfish)
         export BINBO_UCI_ENGINE_HOST=localhost
         export BINBO_UCI_ENGINE_PORT=9010
         rebar3 ct
