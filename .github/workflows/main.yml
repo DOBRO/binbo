@@ -98,7 +98,7 @@ jobs:
     - name: Install Stockfish
       run: brew install stockfish
     - name: Start Stockfish TCP Server
-      run: launchctl load test/helper-files/org.stockfish.x86.plist
+      run: launchctl load test/helper-files/org.stockfish.arm.plist
     - name: Cache Dialyzer PLTs
       uses: actions/cache@v3
       with:
