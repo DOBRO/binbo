@@ -155,7 +155,7 @@ jobs:
     - name: Install rebar3
       run: |
         mkdir ~/rebar3-dl
-        Invoke-WebRequest -Uri https://github.com/erlang/rebar3/releases/download/3.22.1/rebar3 -OutFile ~/rebar3-dl/rebar3
+        Invoke-WebRequest -Uri https://github.com/erlang/rebar3/releases/download/3.26.0/rebar3 -OutFile ~/rebar3-dl/rebar3
         Copy-Item -Path .\test\helper-files\rebar3.cmd -Destination ~/rebar3-dl/rebar3.cmd
     - name: Install Stockfish
       run: |
