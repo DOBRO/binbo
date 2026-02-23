@@ -148,6 +148,8 @@ jobs:
       id: branch-name
       shell: bash
       run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+    - name: Install IIS Crypto
+      run: choco install iiscrypto -y
     - name: Install Erlang
       run: choco install erlang -y
     - name: Install rebar3
