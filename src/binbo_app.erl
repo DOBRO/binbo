@@ -56,8 +56,6 @@ stop(#app_state{attack_mods = AttackMods, hash_mods = HashMods}) ->
 %% unload_dynamic_mods/1
 -spec unload_dynamic_mods(undefined | [module()]) -> ok.
 unload_dynamic_mods([_|_] = DynMods) ->
-    lists:foreach(fun(Mod) ->
-        binbo_global:delete(Mod)
-    end, DynMods);
+    lists:foreach(fun binbo_global:delete/1, DynMods);
 unload_dynamic_mods(_) ->
     ok.
