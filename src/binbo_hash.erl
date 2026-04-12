@@ -214,10 +214,10 @@ check_randoms([piece | Tail], Map0) ->
             lists:foldl(fun
                 (SqIdx, MapAcc2) when is_map(MapAcc2) ->
                     PieceHash = piece_hash(Piece, SqIdx),
-                    case maps:find(PieceHash, MapAcc2) of
-                        {ok, _} ->
+                    case MapAcc2 of
+                        #{PieceHash := _} ->
                             {duplicated, PieceHash};
-                        error ->
+                        #{} ->
                             MapAcc2#{PieceHash => 0}
                     end;
                 (_, {duplicated, Hash}) ->
@@ -234,10 +234,10 @@ check_randoms([enpa | Tail], Map0) ->
     Map = lists:foldl(fun
         (File, MapAcc) when is_map(MapAcc) ->
             EnpaHash = enpa_hash(File),
-            case maps:find(EnpaHash, MapAcc) of
-                {ok, _} ->
+            case MapAcc of
+                #{EnpaHash := _} ->
                     {duplicated, EnpaHash};
-                error ->
+                #{} ->
                     MapAcc#{EnpaHash => 0}
             end;
         (_, {duplicated, Hash}) ->
@@ -251,10 +251,10 @@ check_randoms([side | Tail], Map0) ->
     Map = lists:foldl(fun
         (Side, MapAcc) when is_map(MapAcc) ->
             SideHash = side_hash(Side),
-            case maps:find(SideHash, MapAcc) of
-                {ok, _} ->
+            case MapAcc of
+                #{SideHash := _} ->
                     {duplicated, SideHash};
-                error ->
+                #{} ->
                     MapAcc#{SideHash => 0}
             end;
         (_, {duplicated, Hash}) ->
@@ -268,10 +268,10 @@ check_randoms([castling | Tail], Map0) ->
     Map = lists:foldl(fun
         (Castling, MapAcc) when is_map(MapAcc) ->
             CastlingHash = castling_hash(Castling),
-            case maps:find(CastlingHash, MapAcc) of
-                {ok, _} ->
+            case MapAcc of
+                #{CastlingHash := _} ->
                     {duplicated, CastlingHash};
-                error ->
+                #{} ->
                     MapAcc#{CastlingHash => 0}
             end;
         (_, {duplicated, Hash}) ->
